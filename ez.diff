@@ -1,28 +1,8 @@
-Index: src/video/sdl_v.cpp
-===================================================================
---- src/video/sdl_v.cpp	(revision 11729)
-+++ src/video/sdl_v.cpp	(working copy)
-@@ -460,6 +460,7 @@
- 	int numkeys;
- 	Uint8 *keys;
- 
-+
- 	for (;;) {
- 		uint32 prev_cur_ticks = cur_ticks; // to check for wrapping
- 		InteractiveRandom(); // randomness
-@@ -497,6 +498,7 @@
- 				(keys[SDLK_UP]    ? 2 : 0) |
- 				(keys[SDLK_RIGHT] ? 4 : 0) |
- 				(keys[SDLK_DOWN]  ? 8 : 0);
-+
- 			GameLoop();
- 
- 			_screen.dst_ptr = _sdl_screen->pixels;
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 11729)
+--- src/sound.cpp	(revision 11813)
 +++ src/sound.cpp	(working copy)
-@@ -156,7 +156,7 @@
+@@ -155,7 +155,7 @@
  }
  
  
@@ -31,71 +11,11 @@ Index: src/sound.cpp
  assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_END - ZOOM_LVL_BEGIN);
  
  static const byte _sound_base_vol[] = {
-Index: src/newgrf.cpp
-===================================================================
---- src/newgrf.cpp	(revision 11729)
-+++ src/newgrf.cpp	(working copy)
-@@ -5607,38 +5607,48 @@
- 
- static void AfterLoadGRFs()
- {
-+	DEBUG(sprite, 2, "AfterLoadGRFs");
-+   if (_cur_dpi)
-+      DEBUG(sprite, 2, "zoom %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(sprite, 2, "zoom cur dpi unknown");
- 	/* Update the bitmasks for the vehicle lists */
- 	Player *p;
- 	FOR_ALL_PLAYERS(p) {
- 		p->avail_railtypes = GetPlayerRailtypes(p->index);
- 		p->avail_roadtypes = GetPlayerRoadtypes(p->index);
- 	}
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 1");
- 	/* Pre-calculate all refit masks after loading GRF files. */
- 	CalculateRefitMasks();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 2");
- 	/* Set the block size in the depot windows based on vehicle sprite sizes */
- 	InitDepotWindowBlockSizes();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 3");
- 	/* Add all new houses to the house array. */
- 	FinaliseHouseArray();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 4");
- 	/* Add all new industries to the industry array. */
- 	FinaliseIndustriesArray();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 5");
- 	/* Create dynamic list of industry legends for smallmap_gui.cpp */
- 	BuildIndustriesLegend();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 6");
- 	/* Map cargo strings. This is a separate step because cargos are
- 	 * loaded before strings... */
- 	MapNewCargoStrings();
--
-+	DEBUG(sprite, 2, "AfterLoadGRFs 7");
- 	/* Update the townname generators list */
- 	SortTownGeneratorNames();
-+   	DEBUG(sprite, 2, "AfterLoadGRFs end ");
- }
- 
- void LoadNewGRF(uint load_index, uint file_index)
- {
-+   if (_cur_dpi)
-+      DEBUG(sprite, 2, "LoadNewGrf zoom %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(sprite, 2, "LoadNewGrf zoom cur dpi unknown");
- 	InitializeGRFSpecial();
- 
- 	ResetNewGRFData();
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 11729)
+--- src/spriteloader/grf.cpp	(revision 11813)
 +++ src/spriteloader/grf.cpp	(working copy)
-@@ -9,11 +9,11 @@
+@@ -9,7 +9,7 @@
  #include "../core/alloc_func.hpp"
  #include "grf.hpp"
  
@@ -104,84 +24,9 @@ Index: src/spriteloader/grf.cpp
  {
  	/* Open the right file and go to the correct position */
  	FioSeekToFile(file_slot, file_pos);
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb after seek %d %d", file_slot, file_pos);
- 	/* Read the size and type */
- 	int num = FioReadWord();
- 	byte type = FioReadByte();
-@@ -25,15 +25,15 @@
- 	sprite->width  = FioReadWord();
- 	sprite->x_offs = FioReadWord();
- 	sprite->y_offs = FioReadWord();
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb h %d w %d", sprite->height,sprite->width);
- 	/* 0x02 indicates it is a compressed sprite, so we can't rely on 'num' to be valid.
- 	 *  In case it is uncompressed, the size is 'num' - 8 (header-size). */
- 	num = (type & 0x02) ? sprite->width * sprite->height : num - 8;
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb num %d type %d", num, type);
- 	/* XXX -- We should use a pre-located memory segment for this, malloc/free is pretty expensive */
- 	byte *dest_orig = MallocT<byte>(num);
- 	byte *dest = dest_orig;
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb before while");
- 	/* Read the file, which has some kind of compression */
- 	while (num > 0) {
- 		int8 code = FioReadByte();
-@@ -59,18 +59,19 @@
- 	}
- 
- 	assert(num == 0);
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb before calloc");
- 	sprite->data = CallocT<SpriteLoader::CommonPixel>(sprite->width * sprite->height);
--
-+//	DEBUG(sprite, 1, "GT:load sprite 8bb after calloc");
- 	/* When there are transparency pixels, this format has an other trick.. decode it */
- 	if (type & 0x08) {
-+//      	DEBUG(sprite, 1, "GT:load sprite 8bb before for");
- 		for (int y = 0; y < sprite->height; y++) {
- 			bool last_item = false;
- 			/* Look up in the header-table where the real data is stored for this row */
- 			int offset = (dest_orig[y * 2 + 1] << 8) | dest_orig[y * 2];
- 			/* Go to that row */
- 			dest = &dest_orig[offset];
--
-+//      	DEBUG(sprite, 1, "GT:load sprite 8bb before do");
- 			do {
- 				SpriteLoader::CommonPixel *data;
- 				/* Read the header:
-@@ -82,7 +83,7 @@
- 				int skip   =   *dest++;
- 
- 				data = &sprite->data[y * sprite->width + skip];
--
-+//      	DEBUG(sprite, 1, "GT:load sprite 8bb before for 2");
- 				for (int x = 0; x < length; x++) {
- 					data->m = *dest;
- 					dest++;
-@@ -91,15 +92,17 @@
- 			} while (!last_item);
- 		}
- 	} else {
-+//      DEBUG(sprite, 1, "GT:spriteloader else after calloc");
- 		dest = dest_orig;
- 		for (int i = 0; i < sprite->width * sprite->height; i++)
- 			sprite->data[i].m = dest[i];
- 	}
--
-+//	DEBUG(sprite, 1, "GT:spriteloader  before mark transparent");
- 	/* Make sure to mark all transparent pixels transparent on the alpha channel too */
- 	for (int i = 0; i < sprite->width * sprite->height; i++)
- 		if (sprite->data[i].m != 0) sprite->data[i].a = 0xFF;
- 
- 	free(dest_orig);
-+//  	DEBUG(sprite, 1, "GT:spriteloader 8bpp success ");
- 	return true;
- }
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 11729)
+--- src/spriteloader/spriteloader.hpp	(revision 11813)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -26,7 +26,7 @@
  	/**
@@ -194,7 +39,7 @@ Index: src/spriteloader/spriteloader.hpp
  };
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 11729)
+--- src/spriteloader/grf.hpp	(revision 11813)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -207,9 +52,9 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 11729)
+--- src/spriteloader/png.cpp	(revision 11813)
 +++ src/spriteloader/png.cpp	(working copy)
-@@ -31,21 +31,32 @@
+@@ -31,9 +31,18 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
  }
  
@@ -227,16 +72,9 @@ Index: src/spriteloader/png.cpp
 +		return true;
 +	}
  
-+//   DEBUG(sprite, 1, "GT: openpng file did not exist  %s", png_file);   
  	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d%s.png", filename, id, mask ? "m" : "");
-+//   DEBUG(sprite, 1, "GT: openpng file check mask file exist  %s", png_file);   
  	if (FioCheckFileExists(png_file)) {
- 		FioOpenFile(PNG_SLOT, png_file);
- 		return true;
- 	}
--
-+//   DEBUG(sprite, 1, "GT: openpng  maskfile did not exist  %s", png_file);   
- 	/* TODO -- Add TAR support */
+@@ -45,7 +54,7 @@
  	return false;
  }
  
@@ -245,7 +83,7 @@ Index: src/spriteloader/png.cpp
  {
  	png_byte header[8];
  	png_structp png_ptr;
-@@ -54,9 +65,9 @@
+@@ -54,9 +63,9 @@
  	uint i, pixelsize;
  	png_bytep row_pointer;
  	SpriteLoader::CommonPixel *dst;
@@ -258,7 +96,7 @@ Index: src/spriteloader/png.cpp
  	/* Check the header */
  	FioReadBlock(header, 8);
  	if (png_sig_cmp(header, 0, 8) != 0) return false;
-@@ -181,10 +192,10 @@
+@@ -181,10 +190,10 @@
  	return true;
  }
  
@@ -274,7 +112,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 11729)
+--- src/spriteloader/png.hpp	(revision 11813)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -287,17 +125,17 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 11729)
+--- src/spritecache.cpp	(revision 11813)
 +++ src/spritecache.cpp	(working copy)
-@@ -10,6 +10,7 @@
+@@ -7,6 +7,7 @@
+ #include "variables.h"
+ #include "debug.h"
  #include "spritecache.h"
++#include "gfx_func.h"
  #include "table/sprites.h"
  #include "fileio.h"
-+#include "gfx_func.h"
  #include "spriteloader/grf.hpp"
- #include "core/alloc_func.hpp"
- #include "core/math_func.hpp"
-@@ -17,13 +18,13 @@
+@@ -16,13 +17,13 @@
  #include "spriteloader/png.hpp"
  #endif /* WITH_PNG */
  #include "blitter/factory.hpp"
@@ -315,7 +153,7 @@ Index: src/spritecache.cpp
  	uint8 file_slot;
  	uint32 file_pos;
  	int16 lru;
-@@ -52,6 +53,10 @@
+@@ -51,6 +52,10 @@
  
  		_spritecache = ReallocT(_spritecache, items);
  
@@ -326,7 +164,7 @@ Index: src/spritecache.cpp
  		/* Reset the new items and update the count */
  		memset(_spritecache + _spritecache_items, 0, (items - _spritecache_items) * sizeof(*_spritecache));
  		_spritecache_items = items;
-@@ -125,8 +130,13 @@
+@@ -124,8 +129,13 @@
  {
  	uint8 file_slot = sc->file_slot;
  	uint32 file_pos = sc->file_pos;
@@ -341,7 +179,7 @@ Index: src/spritecache.cpp
  
  	if (!SpriteExists(id)) {
  		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", id);
-@@ -143,11 +153,11 @@
+@@ -142,11 +152,11 @@
  		SpriteLoaderPNG sprite_loader;
  		SpriteLoader::Sprite sprite;
  
@@ -356,16 +194,7 @@ Index: src/spritecache.cpp
  		}
  		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
  #else
-@@ -158,7 +168,7 @@
- 		}
- #endif /* WITH_PNG */
- 	}
--
-+//	DEBUG(sprite, 1, "GT:read sprite 32bpp did not exist, now trying 8bpp");
- 	FioSeekToFile(file_slot, file_pos);
- 
- 	/* Read the size and type */
-@@ -176,10 +186,10 @@
+@@ -175,10 +185,10 @@
  
  		byte *dest = (byte *)AllocSprite(num);
  
@@ -378,7 +207,7 @@ Index: src/spritecache.cpp
  	}
  	/* Ugly hack to work around the problem that the old landscape
  	 *  generator assumes that those sprites are stored uncompressed in
-@@ -198,7 +208,7 @@
+@@ -197,7 +207,7 @@
  
  		num = width * height;
  		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
@@ -387,7 +216,7 @@ Index: src/spritecache.cpp
  		sprite->height = height;
  		sprite->width  = width;
  		sprite->x_offs = FioReadWord();
-@@ -218,7 +228,7 @@
+@@ -217,7 +227,7 @@
  			}
  		}
  
@@ -396,7 +225,7 @@ Index: src/spritecache.cpp
  	}
  
  	if (!real_sprite) {
-@@ -228,14 +238,38 @@
+@@ -227,14 +237,38 @@
  	}
  
  	SpriteLoaderGrf sprite_loader;
@@ -439,7 +268,7 @@ Index: src/spritecache.cpp
  }
  
  
-@@ -253,7 +287,12 @@
+@@ -252,7 +286,12 @@
  	sc = AllocateSpriteCache(load_index);
  	sc->file_slot = file_slot;
  	sc->file_pos = file_pos;
@@ -453,7 +282,7 @@ Index: src/spritecache.cpp
  	sc->lru = 0;
  	sc->id = file_sprite_id;
  
-@@ -278,10 +317,12 @@
+@@ -277,10 +316,12 @@
  {
  	SpriteCache *scold = GetSpriteCache(old_spr);
  	SpriteCache *scnew = AllocateSpriteCache(new_spr);
@@ -467,7 +296,7 @@ Index: src/spritecache.cpp
  	scnew->id = scold->id;
  	free((char *)scnew->grf_name);
  	scnew->grf_name = strdup(scold->grf_name);
-@@ -306,17 +347,26 @@
+@@ -305,17 +346,26 @@
  static uint32 GetSpriteCacheUsage()
  {
  	uint32 tot_size = 0;
@@ -497,7 +326,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -325,7 +375,8 @@
+@@ -324,7 +374,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -507,7 +336,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -348,6 +399,7 @@
+@@ -347,6 +398,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -515,7 +344,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
  
-@@ -365,11 +417,16 @@
+@@ -364,11 +416,16 @@
  				break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -537,7 +366,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -391,37 +448,53 @@
+@@ -390,37 +447,53 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock* s;
@@ -610,7 +439,7 @@ Index: src/spritecache.cpp
  }
  
  void* AllocSprite(size_t mem_req)
-@@ -431,7 +504,7 @@
+@@ -430,7 +503,7 @@
  	/* Align this to an uint32 boundary. This also makes sure that the 2 least
  	 * bits are not used, so we could use those for other things. */
  	mem_req = Align(mem_req, sizeof(uint32));
@@ -619,7 +448,7 @@ Index: src/spritecache.cpp
  	for (;;) {
  		MemBlock* s;
  
-@@ -466,7 +539,8 @@
+@@ -465,7 +538,8 @@
  {
  	SpriteCache *sc;
  	void* p;
@@ -629,7 +458,7 @@ Index: src/spritecache.cpp
  	assert(sprite < _spritecache_items);
  
  	sc = GetSpriteCache(sprite);
-@@ -474,10 +548,16 @@
+@@ -473,10 +547,16 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
@@ -647,7 +476,7 @@ Index: src/spritecache.cpp
  	return p;
  }
  
-@@ -485,7 +565,7 @@
+@@ -484,7 +564,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -656,7 +485,7 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -493,10 +573,10 @@
+@@ -492,10 +572,10 @@
  	NextBlock(_spritecache_ptr)->size = 0;
  
  	/* Reset the spritecache 'pool' */
@@ -673,11 +502,13 @@ Index: src/spritecache.cpp
  }
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 11729)
+--- src/spritecache.h	(revision 11813)
 +++ src/spritecache.h	(working copy)
-@@ -8,7 +8,7 @@
+@@ -7,8 +7,9 @@
+ 
  #include "gfx_type.h"
  
++
  struct Sprite {
 -	byte height;
 +	uint16 height;
@@ -686,7 +517,7 @@ Index: src/spritecache.h
  	int16 y_offs;
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 11729)
+--- src/texteff.cpp	(revision 11813)
 +++ src/texteff.cpp	(working copy)
 @@ -383,6 +383,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
@@ -726,9 +557,9 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 11729)
+--- src/window.cpp	(revision 11813)
 +++ src/window.cpp	(working copy)
-@@ -219,7 +219,8 @@
+@@ -220,7 +220,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window* const *wz;
@@ -738,7 +569,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS(wz) {
-@@ -231,6 +232,7 @@
+@@ -232,6 +233,7 @@
  			DrawOverlappedWindow(wz, left, top, right, bottom);
  		}
  	}
@@ -746,66 +577,9 @@ Index: src/window.cpp
  }
  
  static void DrawOverlappedWindow(Window* const *wz, int left, int top, int right, int bottom)
-@@ -274,6 +276,8 @@
- 	}
- 
- 	{
-+//   DEBUG(grf, 0, "overlapped left %d  top %d right %d bottom %d",left, top,
-+// right,bottom);
- 		DrawPixelInfo *dp = _cur_dpi;
- 		dp->width = right - left;
- 		dp->height = bottom - top;
-Index: src/zoom_func.h
-===================================================================
---- src/zoom_func.h	(revision 11729)
-+++ src/zoom_func.h	(working copy)
-@@ -20,7 +20,9 @@
- {
- 	if (zoom == ZOOM_LVL_NORMAL) return value;
- 	int izoom = zoom - ZOOM_LVL_NORMAL;
--	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) >> -izoom;
-+//	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) >> -izoom;
-+// GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
-+   return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) / (1 << -izoom);
- }
- 
- /**
-@@ -34,7 +36,9 @@
- {
- 	if (zoom == ZOOM_LVL_NORMAL) return value;
- 	int izoom = zoom - ZOOM_LVL_NORMAL;
--	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) >> izoom : value << -izoom;
-+//	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) >> izoom : value << -izoom;
-+   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
-+  	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) / (1 << izoom) : value << -izoom;
- }
- 
- /**
-@@ -47,7 +51,9 @@
- {
- 	if (zoom == ZOOM_LVL_NORMAL) return value;
- 	int izoom = zoom - ZOOM_LVL_NORMAL;
--	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value >> -izoom;
-+//	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value >> -izoom;
-+   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
-+   return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value / (1 << -izoom);
- }
- 
- /**
-@@ -60,7 +66,9 @@
- {
- 	if (zoom == ZOOM_LVL_NORMAL) return value;
- 	int izoom = zoom - ZOOM_LVL_NORMAL;
--	return (zoom > ZOOM_LVL_NORMAL) ? value >> izoom : value << -izoom;
-+//	return (zoom > ZOOM_LVL_NORMAL) ? value >> izoom : value << -izoom;
-+   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
-+	return (zoom > ZOOM_LVL_NORMAL) ? value / (1 << izoom) : value << -izoom;
- }
- 
- #endif /* ZOOM_FUNC_H */
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 11729)
+--- src/zoom_type.h	(revision 11813)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -829,11 +603,26 @@ Index: src/zoom_type.h
  	ZOOM_LVL_MAX      = ZOOM_LVL_OUT_8X,
  };
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
+Index: src/vehicle.cpp
+===================================================================
+--- src/vehicle.cpp	(revision 11813)
++++ src/vehicle.cpp	(working copy)
+@@ -1416,8 +1416,8 @@
+ 			 (uint)(y -= vp->top) >= (uint)vp->height)
+ 				return NULL;
+ 
+-	x = ScaleByZoom(x, vp->zoom) + vp->virtual_left;
+-	y = ScaleByZoom(y, vp->zoom) + vp->virtual_top;
++	x = ScaleByZoom(x+ vp->virtual_left, vp->zoom) ;
++	y = ScaleByZoom(y+ vp->virtual_top, vp->zoom) ;
+ 
+ 	FOR_ALL_VEHICLES(v) {
+ 		if ((v->vehstatus & (VS_HIDDEN|VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 11729)
+--- src/viewport.cpp	(revision 11813)
 +++ src/viewport.cpp	(working copy)
-@@ -132,7 +132,7 @@
+@@ -135,7 +135,7 @@
  
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -842,7 +631,7 @@ Index: src/viewport.cpp
  	byte *spritelist_mem;
  	const byte *eof_spritelist_mem;
  
-@@ -305,14 +305,15 @@
+@@ -308,14 +308,15 @@
  	int i;
  	int left, top, width, height;
  
@@ -862,30 +651,7 @@ Index: src/viewport.cpp
  	x = UnScaleByZoomLower(x, vp->zoom);
  	y = UnScaleByZoomLower(y, vp->zoom);
  
-@@ -323,7 +324,11 @@
- 
- 	_vp_move_offs.x = old_left;
- 	_vp_move_offs.y = old_top;
--
-+//  	DEBUG(grf, 0, "set viewport pos move x %d move y %d ",_vp_move_offs.x, _vp_move_offs.y);
-+//   DEBUG(grf, 0, "set viewport pos x %d y %d ",x, y);
-+//   DEBUG(grf, 0, "set viewport pos virt l %d virt top %d ",vp->virtual_left,
-+//   vp->virtual_top);
-+   
- 	left = vp->left;
- 	top = vp->top;
- 	width = vp->width;
-@@ -345,7 +350,8 @@
- 
- 		i = top + height - _screen.height;
- 		if (i >= 0) height -= i;
--
-+//DEBUG(grf, 0, "set viewport pos doset: left %d top %d widt %d heigth%d",
-+//  left,top,width,height);
- 		if (height > 0) DoSetViewportPosition(FindWindowZPosition(w) + 1, left, top, width, height);
- 	}
- }
-@@ -375,12 +381,14 @@
+@@ -378,12 +379,14 @@
  				return pt;
  	}
  
@@ -904,15 +670,7 @@ Index: src/viewport.cpp
  	/* we need to move variables in to the valid range, as the
  	 * GetTileZoomCenterWindow() function can call here with invalid x and/or y,
  	 * when the user tries to zoom out along the sides of the map */
-@@ -474,6 +482,7 @@
-  */
- void DrawGroundSpriteAt(SpriteID image, SpriteID pal, int32 x, int32 y, byte z, const SubSprite *sub)
- {
-+//DEBUG(grf, 0, "viewport groundsprite at x %d  y %d z %d ",x, y, z);
- 	ViewportDrawer *vd = _cur_vd;
- 	TileSpriteToDraw *ts;
- 
-@@ -595,10 +604,13 @@
+@@ -598,10 +601,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite* spr = GetSprite(image & SPRITE_MASK);
  
@@ -930,7 +688,7 @@ Index: src/viewport.cpp
  		return;
  
  	AddChildSpriteScreen(image, pal, pt.x - vd->parent_list[-1]->left, pt.y - vd->parent_list[-1]->top, false, sub);
-@@ -679,10 +691,16 @@
+@@ -682,10 +688,16 @@
  		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
  	} else {
  		const Sprite *spr = GetSprite(image & SPRITE_MASK);
@@ -951,7 +709,7 @@ Index: src/viewport.cpp
  	}
  	if (_draw_bounding_boxes && (image != SPR_EMPTY_BOUNDING_BOX)) {
  		/* Compute maximal extents of sprite and it's bounding box */
-@@ -692,12 +710,16 @@
+@@ -695,10 +707,10 @@
  		bottom = max(bottom, RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1);
  	}
  	/* Do not add the sprite to the viewport, if it is outside */
@@ -965,14 +723,8 @@ Index: src/viewport.cpp
 +	    UnScaleByZoom(bottom, vd->vp->zoom) <= vd->vp->virtual_top) {
  		return;
  	}
-+//   ps->x = UnScaleByZoom(ps->x, vd->vp->zoom);
-+//   ps->y = UnScaleByZoom(ps->y, vd->vp->zoom);
-+//   ps->x -= vd->vp->virtual_left ;
-+//   ps->y -= vd->vp->virtual_top ;
  
- 	vd->spritelist_mem += sizeof(ParentSpriteToDraw);
- 
-@@ -776,8 +798,8 @@
+@@ -779,8 +791,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -983,15 +735,12 @@ Index: src/viewport.cpp
  	cs->next = NULL;
  }
  
-@@ -842,6 +864,7 @@
- static void DrawTileSelectionRect(const TileInfo *ti, SpriteID pal)
- {
- 	SpriteID sel;
-+//  	DEBUG(grf, 0, "DrawTileSel draw  ti x %d ti y %d ",ti->x,ti->y);
- 	if (IsHalftileSlope(ti->tileh)) {
- 		Corner halftile_corner = GetHalftileSlopeCorner(ti->tileh);
- 		SpriteID sel2 = SPR_HALFTILE_SELECTION_FLAT + halftile_corner;
-@@ -1001,25 +1024,34 @@
+@@ -999,29 +1011,40 @@
+ 		return;
+ 	}
+ }
+-
++//bool GTdebug = false;
  static void ViewportAddLandscape()
  {
  	ViewportDrawer *vd = _cur_vd;
@@ -1010,6 +759,7 @@ Index: src/viewport.cpp
 -	y = ((vd->dpi.top >> 1) + (vd->dpi.left >> 2) - 0x10) & ~0xF;
 +   x1 = ScaleByZoomLower(vd->vp->virtual_left + vd->dpi.left, vd->vp->zoom)  ;
 +   y1 = ScaleByZoomLower(vd->vp->virtual_top + vd->dpi.top, vd->vp->zoom)  ;
++//if (GTdebug)
 +//   DEBUG(grf, 1, "viewport add landscape x1 %d  y1 %d" ,x1 ,y1);      
 +   x1 = x1 / 4;
 +	y1 = y1 / 2;
@@ -1020,17 +770,19 @@ Index: src/viewport.cpp
 -		width = (vd->dpi.left + vd->dpi.width - pt.x + 95) >> 6;
 -		height = (vd->dpi.top + vd->dpi.height - pt.y) >> 5 << 1;
 -	}
+-
 +	x = ((y1-x1) / TILE_SIZE) * TILE_SIZE ;
 +	y = ((y1+x1) / TILE_SIZE) * TILE_SIZE - (TILE_SIZE << 1);
- 
++//if (GTdebug)
 +//DEBUG(grf, 1, "viewport add landscape vl  %d  vt %d" ,vd->vp->virtual_left ,vd->vp->virtual_top);      
++//if (GTdebug)
 +//DEBUG(grf, 1, "viewport add landscape x %d  y %d" ,x ,y);   
-+
++//if (GTdebug)
 +//DEBUG(grf, 1, "viewport add landscape dp width %d  dp height %d" ,vd->dpi.width,vd->dpi.height);   
-+   width  = ScaleByZoom((vd->dpi.width >> 6),vd->vp->zoom)+5;
-+
++   width  = (vd->dpi.width/UnScaleByZoom(64,vd->vp->zoom))+4;
++//if (GTdebug)
 +//DEBUG(grf, 1, "viewport add landscape width %d" ,width);
-+
++//GTdebug=false;
 +   bottom = ScaleByZoom(vd->vp->virtual_top + vd->dpi.top + vd->dpi.height, vd->vp->zoom) + 128;  
 +   top = ScaleByZoom(vd->vp->virtual_top + vd->dpi.top, vd->vp->zoom) ;  
  	assert(width > 0);
@@ -1038,7 +790,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -1027,7 +1059,7 @@
+@@ -1029,7 +1052,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -1047,7 +799,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt;
  
-@@ -1046,18 +1078,21 @@
+@@ -1048,18 +1071,21 @@
  				ti.z = 0;
  				tt = MP_VOID;
  			}
@@ -1078,7 +830,7 @@ Index: src/viewport.cpp
  		} while (--width_cur);
  
  		if ((direction ^= 1) != 0) {
-@@ -1065,7 +1100,7 @@
+@@ -1067,7 +1093,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1087,7 +839,7 @@ Index: src/viewport.cpp
  }
  
  
-@@ -1083,6 +1118,30 @@
+@@ -1085,6 +1111,30 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1118,7 +870,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_TOWNS(t) {
  				if (bottom > t->sign.top &&
-@@ -1159,6 +1218,27 @@
+@@ -1161,6 +1211,27 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1146,7 +898,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_STATIONS(st) {
  				if (bottom > st->sign.top &&
-@@ -1229,6 +1309,26 @@
+@@ -1231,6 +1302,26 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1173,7 +925,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_SIGNS(si) {
  				if (bottom > si->sign.top &&
-@@ -1299,6 +1399,26 @@
+@@ -1301,6 +1392,26 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1200,7 +952,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_WAYPOINTS(wp) {
  				if (bottom > wp->sign.top &&
-@@ -1366,8 +1486,25 @@
+@@ -1368,7 +1479,23 @@
  {
  	do {
  		Point pt = RemapCoords(ts->x, ts->y, ts->z);
@@ -1223,11 +975,9 @@ Index: src/viewport.cpp
 +//      }
 +//      }      
  		ts = ts->next;
-+
  	} while (ts != NULL);
  }
- 
-@@ -1433,14 +1570,18 @@
+@@ -1435,14 +1562,18 @@
  
  static void ViewportDrawParentSprites(ParentSpriteToDraw *psd[])
  {
@@ -1249,7 +999,7 @@ Index: src/viewport.cpp
  		}
  	}
  }
-@@ -1476,17 +1617,17 @@
+@@ -1478,17 +1609,17 @@
  	zoom = dp.zoom;
  	dp.zoom = ZOOM_LVL_NORMAL;
  
@@ -1273,7 +1023,7 @@ Index: src/viewport.cpp
  			int bottom = y + 11;
  			int w = ss->width;
  
-@@ -1519,7 +1660,7 @@
+@@ -1521,7 +1652,7 @@
  			colour = TC_BLACK;
  		}
  		DrawString(
@@ -1282,7 +1032,7 @@ Index: src/viewport.cpp
  			ss->string, colour
  		);
  
-@@ -1530,32 +1671,37 @@
+@@ -1532,32 +1663,39 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	ViewportDrawer vd;
@@ -1306,9 +1056,11 @@ Index: src/viewport.cpp
  	_cur_dpi = &vd.dpi;
 -
 +//DEBUG(grf, 1, "viewport do draw vp zoom %d", vp->zoom);
-+//if ((top <40 )&& (left < 100))
++//if ((top <25 )&& (left < 100)){
 +//DEBUG(grf, 0, "viewport do draw left %d  top %d right %d bottom %d",left, top,
 +//right, bottom);
++//   GTdebug=true;
++//}
 +   vd.vp = vp;
  	vd.dpi.zoom = vp->zoom;
 -	mask = ScaleByZoom(-1, vp->zoom);
@@ -1332,7 +1084,7 @@ Index: src/viewport.cpp
  
  	vd.dpi.dst_ptr = BlitterFactoryBase::GetCurrentBlitter()->MoveTo(old_dpi->dst_ptr, x - old_dpi->left, y - old_dpi->top);
  
-@@ -1569,18 +1715,24 @@
+@@ -1571,11 +1709,17 @@
  	vd.first_tile = NULL;
  
  	ViewportAddLandscape();
@@ -1354,28 +1106,20 @@ Index: src/viewport.cpp
  	ViewportAddSigns(&vd.dpi);
  	ViewportAddWaypoints(&vd.dpi);
  
- 	/* This assert should never happen (because the length of the parent_list
- 	 *  is checked) */
- 	assert(vd.parent_list <= endof(parent_list));
--
-+//DEBUG(grf, 1, "viewport do draw 2 cur zoom %d", _cur_dpi->zoom);
- 	if (vd.first_tile != NULL) ViewportDrawTileSprites(vd.first_tile);
- 
- 	/* null terminate parent sprite list */
-@@ -1599,7 +1751,11 @@
+@@ -1601,7 +1745,11 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
 -	if (ScaleByZoom(bottom - top, vp->zoom) * ScaleByZoom(right - left, vp->zoom) > 180000) {
 +//	DEBUG(grf, 1, "viewport draw chk left %d  vp left %d vp virt left %d",left, vp->left, vp->virtual_left);
-+DEBUG(grf, 1, "viewport draw chk area: %d", 
-+  (ScaleByZoom(bottom - top,vp->zoom) * ScaleByZoom(right - left, vp->zoom)));
++//DEBUG(grf, 1, "viewport draw chk area: %d", 
++//  (ScaleByZoom(bottom - top,vp->zoom) * ScaleByZoom(right - left, vp->zoom)));
 +	if (ScaleByZoom(bottom - top, vp->zoom) * ScaleByZoom(right - left, vp->zoom)
 +   > 50000) {
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1610,17 +1766,13 @@
+@@ -1612,17 +1760,13 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1395,7 +1139,7 @@ Index: src/viewport.cpp
  	if (right <= vp->left || bottom <= vp->top) return;
  
  	if (left >= vp->left + vp->width) return;
-@@ -1632,7 +1784,7 @@
+@@ -1634,7 +1778,7 @@
  
  	if (top < vp->top) top = vp->top;
  	if (bottom > vp->top + vp->height) bottom = vp->top + vp->height;
@@ -1404,16 +1148,16 @@ Index: src/viewport.cpp
  	ViewportDrawChk(vp, left, top, right, bottom);
  }
  
-@@ -1642,7 +1794,7 @@
+@@ -1644,7 +1788,7 @@
  
  	dpi->left += w->left;
  	dpi->top += w->top;
 -
-+	DEBUG(grf, 1, "viewport drawwindow view  dpi left %d top %d",dpi->left,dpi->left);
++//	DEBUG(grf, 1, "viewport drawwindow view  dpi left %d top %d",dpi->left,dpi->left);
  	ViewportDraw(w->viewport, dpi->left, dpi->top, dpi->left + dpi->width, dpi->top + dpi->height);
  
  	dpi->left -= w->left;
-@@ -1702,6 +1854,7 @@
+@@ -1704,6 +1848,7 @@
  		}
  
  		ClampViewportToMap(vp, WP(w, vp_d).scrollpos_x, WP(w, vp_d).scrollpos_y);
@@ -1421,7 +1165,7 @@ Index: src/viewport.cpp
  		SetViewportPosition(w, WP(w, vp_d).scrollpos_x, WP(w, vp_d).scrollpos_y);
  	}
  }
-@@ -1716,26 +1869,32 @@
+@@ -1718,26 +1863,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1468,7 +1212,7 @@ Index: src/viewport.cpp
  }
  
  void MarkAllViewportsDirty(int left, int top, int right, int bottom)
-@@ -1833,6 +1992,32 @@
+@@ -1835,6 +1986,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
  
  	switch (vp->zoom) {
@@ -1501,7 +1245,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1891,6 +2076,32 @@
+@@ -1893,6 +2070,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES)) return false;
  
  	switch (vp->zoom) {
@@ -1534,7 +1278,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1949,6 +2160,32 @@
+@@ -1951,6 +2154,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || _current_player == PLAYER_SPECTATOR) return false;
  
  	switch (vp->zoom) {
@@ -1567,7 +1311,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -2007,6 +2244,32 @@
+@@ -2009,6 +2238,32 @@
  	if (!HasBit(_display_opt, DO_WAYPOINTS)) return false;
  
  	switch (vp->zoom) {
@@ -1602,7 +1346,7 @@ Index: src/viewport.cpp
  			y = y - vp->top  + vp->virtual_top;
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 11729)
+--- src/blitter/32bpp_optimized.cpp	(revision 11813)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -1,6 +1,7 @@
  /* $Id$ */
@@ -1790,7 +1534,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +}
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 11729)
+--- src/blitter/32bpp_optimized.hpp	(revision 11813)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -12,6 +12,11 @@
  public:
@@ -1806,7 +1550,7 @@ Index: src/blitter/32bpp_optimized.hpp
  };
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 11729)
+--- src/blitter/32bpp_base.hpp	(revision 11813)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -95,12 +95,14 @@
  	*/
@@ -1827,7 +1571,7 @@ Index: src/blitter/32bpp_base.hpp
  	/**
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 11729)
+--- src/blitter/32bpp_anim.cpp	(revision 11813)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -78,8 +78,10 @@
  					 *  we produce a result the newgrf maker didn't expect ;) */
@@ -1844,13 +1588,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 11729)
+--- src/gfx.cpp	(revision 11813)
 +++ src/gfx.cpp	(working copy)
-@@ -654,10 +654,11 @@
- 	return DoDrawString(buffer, x, y, color);
- }
- 
-+
+@@ -657,7 +657,7 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -1859,7 +1599,7 @@ Index: src/gfx.cpp
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_TRANSPARENT, sub);
  	} else if (pal != PAL_NONE) {
  		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
-@@ -689,15 +690,17 @@
+@@ -689,15 +689,17 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -1883,7 +1623,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -711,37 +714,40 @@
+@@ -711,37 +713,40 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -1936,7 +1676,7 @@ Index: src/gfx.cpp
  		if (bp.width <= 0) return;
  	}
  
-@@ -1118,7 +1124,10 @@
+@@ -1118,7 +1123,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -1948,74 +1688,11 @@ Index: src/gfx.cpp
  	if (left < 0) left = 0;
  	if (top < 0) top = 0;
  	if (right > _screen.width) right = _screen.width;
-Index: src/gfxinit.cpp
-===================================================================
---- src/gfxinit.cpp	(revision 11729)
-+++ src/gfxinit.cpp	(working copy)
-@@ -334,7 +334,9 @@
- 	uint i = FIRST_GRF_SLOT;
- 
- 	LoadGrfIndexed(files->basic[0].filename, trg1idx, i++);
-+   	DEBUG(sprite, 2, "Loading sprite tables, dup sprite 2");
- 	DupSprite(  2, 130); // non-breaking space medium
-+      	DEBUG(sprite, 2, "Loading sprite tables, dup sprite 226");
- 	DupSprite(226, 354); // non-breaking space tiny
- 	DupSprite(450, 578); // non-breaking space large
- 
-@@ -344,6 +346,7 @@
- 	 * has a few sprites less. However, we do not care about those missing
- 	 * sprites as they are not shown anyway (logos in intro game).
- 	 */
-+   DEBUG(sprite, 2, "Loading grf file 4793"); 
- 	LoadGrfFile(files->basic[1].filename, 4793, i++);
- 
- 	/*
-@@ -358,7 +361,7 @@
- 			i++
- 		);
- 	}
--
-+   DEBUG(sprite, 2, "Loading grf indexed chars"); 
- 	LoadGrfIndexed(files->chars.filename, _chars_grf_indexes, i++);
- 
- 	/* Initialize the unicode to sprite mapping table */
-@@ -372,13 +375,14 @@
- 	GRFConfig *top = _grfconfig;
- 	GRFConfig *master = CallocT<GRFConfig>(1);
- 	master->filename = strdup(files->openttd.filename);
-+   DEBUG(sprite, 2, "FillGRFDetails"); 
- 	FillGRFDetails(master, false);
- 	ClrBit(master->flags, GCF_INIT_ONLY);
- 	master->next = top;
- 	_grfconfig = master;
--
-+   DEBUG(sprite, 2, "Spr_newgrf_base"); 
- 	LoadNewGRF(SPR_NEWGRFS_BASE, i);
--
-+   DEBUG(sprite, 2, "clear grf config"); 
- 	/* Free and remove the top element. */
- 	ClearGRFConfig(&master);
- 	_grfconfig = top;
-@@ -391,5 +395,6 @@
- 
- 	GfxInitSpriteMem();
- 	LoadSpriteTables();
-+  	DEBUG(sprite, 2, "Loading sprite set %d end", _opt.landscape);
- 	GfxInitPalettes();
- }
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 11729)
+--- src/openttd.cpp	(revision 11813)
 +++ src/openttd.cpp	(working copy)
-@@ -288,6 +288,7 @@
- 
- static void LoadIntroGame()
- {
-+	DEBUG(sprite, 1, "GT :Load intro game");
- 	_game_mode = GM_MENU;
- 
- 	_opt_ptr = &_opt_newgame;
-@@ -355,7 +356,9 @@
+@@ -356,7 +356,9 @@
  		"f"
  #endif
  	;
@@ -2026,220 +1703,13 @@ Index: src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -539,9 +542,9 @@
- 		NetworkStartDebugLog(debuglog_conn, rport);
- 	}
- #endif /* ENABLE_NETWORK */
--
-+	DEBUG(driver, 1, "GT:Scanning new grf...");
- 	ScanNewGRFFiles();
--
-+	DEBUG(driver, 1, "GT:ResetGRFConfig...");
- 	_opt_ptr = &_opt_newgame;
- 	ResetGRFConfig(false);
- 
-@@ -559,10 +562,11 @@
- 	_cursor.in_window = true;
- 	InitializeGUI();
- 	IConsoleCmdExec("exec scripts/autoexec.scr 0");
--
-+	DEBUG(driver, 1, "GT:Generate world...");
- 	GenerateWorld(GW_EMPTY, 64, 64); // Make the viewport initialization happy
-+   	DEBUG(driver, 1, "GT:Generate world..end.");
- 	WaitTillGeneratedWorld();
--
-+   	DEBUG(driver, 1, "GT:After wait till Generated world..");
- #ifdef ENABLE_NETWORK
- 	if (network && _network_available) {
- 		if (network_conn != NULL) {
-@@ -591,7 +595,10 @@
- 		}
- 	}
- #endif /* ENABLE_NETWORK */
--
-+      if (_cur_dpi)
-+      DEBUG(driver, 1, "Mainttd,before mainloop %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(driver, 1, "Mainttd,before mainloop cur dpi unknown");
- 	_video_driver->MainLoop();
- 
- 	WaitTillSaved();
-@@ -708,7 +715,11 @@
- static void MakeNewGame(bool from_heightmap)
- {
- 	_game_mode = GM_NORMAL;
--
-+	DEBUG(driver, 1, "GT:MakeNewGameGenerate world...");
-+      if (_cur_dpi)
-+      DEBUG(sprite, 2, "Makenewgame,zoom %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(sprite, 2, "Makenewgame,zoom cur dpi unknown");
- 	ResetGRFConfig(true);
- 	_house_mngr.ResetMapping();
- 	_industile_mngr.ResetMapping();
-@@ -808,7 +819,12 @@
- 			switch (ogm) {
- 				case GM_MENU:   LoadIntroGame();      break;
- 				case GM_EDITOR: MakeNewEditorWorld(); break;
--				default:        MakeNewGame(false);   break;
-+				default:        
-+               if (_cur_dpi)
-+                  DEBUG(sprite, 2, "Safesaveorload,zoom %d",_cur_dpi->zoom);
-+               else   
-+                  DEBUG(sprite, 2, "Safesaveorload,zoom cur dpi unknown");
-+               MakeNewGame(false);   break;
- 			}
- 			return false;
- 
-@@ -858,6 +874,10 @@
- 			snprintf(_network_game_info.map_name, lengthof(_network_game_info.map_name), "Random Map");
- 		}
- #endif /* ENABLE_NETWORK */
-+      if (_cur_dpi)
-+      DEBUG(sprite, 2, "Switchmode newgame ,zoom %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(sprite, 2, "SwitchMode newgame,zoom cur dpi unknown");
- 		MakeNewGame(false);
- 		break;
- 
-@@ -900,6 +920,10 @@
- 			snprintf(_network_game_info.map_name, lengthof(_network_game_info.map_name), "%s (Heightmap)", _file_to_saveload.title);
- 		}
- #endif /* ENABLE_NETWORK */
-+      if (_cur_dpi)
-+      DEBUG(sprite, 2, "Makenewgame switchmode heigth,zoom %d",_cur_dpi->zoom);
-+   else   
-+      DEBUG(sprite, 2, "Makenewgame switchmode height,zoom cur dpi unknown");
- 		MakeNewGame(true);
- 		break;
- 
-@@ -1069,7 +1093,10 @@
- void GameLoop()
- {
- 	ThreadMsg message;
--
-+//   if (_cur_dpi)
-+//      DEBUG(sprite, 2, "GameLoop,zoom %d",_cur_dpi->zoom);
-+//   else   
-+//      DEBUG(sprite, 2, "GameLoop,zoom cur dpi unknown");
- 	if ((message = OTTD_PollThreadEvent()) != 0) ProcessSentMessage(message);
- 
- 	/* autosave game? */
-@@ -1123,6 +1150,10 @@
- #else
- 	StateGameLoop();
- #endif /* ENABLE_NETWORK */
-+//   if (_cur_dpi)
-+//      DEBUG(sprite, 2, "GameLoop,after stategame loop zoom %d",_cur_dpi->zoom);
-+//   else   
-+//      DEBUG(sprite, 2, "GameLoop,after stategame loop zoom cur dpi unknown");
- 
- 	if (!_pause_game && HasBit(_display_opt, DO_FULL_ANIMATION)) DoPaletteAnimations();
- 
-@@ -1247,6 +1278,7 @@
-  */
- static bool InitializeWindowsAndCaches()
- {
-+  	DEBUG(sprite, 1, "GT :Init window and cache zoom ");
- 	/* Initialize windows */
- 	ResetWindowSystem();
- 	SetupColorsAndInitialWindow();
-@@ -1259,10 +1291,12 @@
+@@ -1265,7 +1267,8 @@
  	WP(w, vp_d).dest_scrollpos_y = _saved_scrollpos_y;
  
  	ViewPort *vp = w->viewport;
 -	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
-+//	vp->zoom = (ZoomLevel)min(_saved_scrollpos_zoom, ZOOM_LVL_NORMAL);
-+	vp->zoom = (ZoomLevel)ZOOM_LVL_NORMAL;
-+   	DEBUG(sprite, 1, "GT :Init window and cache zoom %d", vp->zoom);
++//	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
++   vp->zoom = ZOOM_LVL_NORMAL;
  	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
  	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
--
-+	DEBUG(sprite, 1, "GT :Init window and cache");
- 	DoZoomInOutWindow(ZOOM_NONE, w); // update button status
- 	MarkWholeScreenDirty();
- 
-Index: src/main_gui.cpp
-===================================================================
---- src/main_gui.cpp	(revision 11729)
-+++ src/main_gui.cpp	(working copy)
-@@ -51,6 +51,7 @@
- #include "transparency.h"
- #include "strings_func.h"
- #include "zoom_func.h"
-+#include "debug.h"
- 
- static int _rename_id = 1;
- static int _rename_what = -1;
-@@ -899,6 +900,8 @@
- 	if (vp != NULL) { // the vp can be null when how == ZOOM_NONE
- 		vp->virtual_left = WP(w, vp_d).scrollpos_x;
- 		vp->virtual_top = WP(w, vp_d).scrollpos_y;
-+      DEBUG(grf, 0, "zoomin virt left %d virt top %d v width %d v height %d zoom %d w %d", vp->virtual_left,
-+   vp->virtual_top, vp->virtual_width,vp->virtual_height,vp->zoom, w->window_number);
- 	}
- 	SetWindowDirty(w);
- 	/* Update the windows that have zoom-buttons to perhaps disable their buttons */
-@@ -908,6 +911,7 @@
- 
- static void ToolbarZoomInClick(Window *w)
- {
-+      	DEBUG(grf, 0, "main gui toolbar zoom in click");               
- 	if (DoZoomInOutWindow(ZOOM_IN, FindWindowById(WC_MAIN_WINDOW, 0))) {
- 		w->HandleButtonClick(17);
- 		SndPlayFx(SND_15_BEEP);
-@@ -916,6 +920,7 @@
- 
- static void ToolbarZoomOutClick(Window *w)
- {
-+      	DEBUG(grf, 0, "main gui toolbar zoom out click");               
- 	if (DoZoomInOutWindow(ZOOM_OUT,FindWindowById(WC_MAIN_WINDOW, 0))) {
- 		w->HandleButtonClick(18);
- 		SndPlayFx(SND_15_BEEP);
-@@ -1032,6 +1037,7 @@
- 
- static void ToolbarScenZoomOut(Window *w)
- {
-+      	DEBUG(grf, 0, "main gui toolbar scen zoom out");               
- 	if (DoZoomInOutWindow(ZOOM_OUT, FindWindowById(WC_MAIN_WINDOW, 0))) {
- 		w->HandleButtonClick(10);
- 		SndPlayFx(SND_15_BEEP);
-@@ -1054,7 +1060,7 @@
- 		pt = GetTileZoomCenterWindow(in,w);
- 		if (pt.x != -1) {
- 			ScrollWindowTo(pt.x, pt.y, w, true);
--
-+      	DEBUG(grf, 0, "main gui zoominor out to cursor ");               
- 			DoZoomInOutWindow(in ? ZOOM_IN : ZOOM_OUT, w);
- 		}
- 	}
-@@ -2232,6 +2238,7 @@
- 				Point pt = GetTileBelowCursor();
- 				if (pt.x != -1) {
- 					ScrollMainWindowTo(pt.x, pt.y);
-+      	DEBUG(grf, 0, "main gui keypress max zoom");               
- 					if (e->we.keypress.keycode == 'Z') MaxZoomInOut(ZOOM_IN, w);
- 				}
- 				break;
-@@ -2336,10 +2343,12 @@
- 		} break;
- 
- 		case WE_MOUSEWHEEL:
-+      	DEBUG(grf, 0, "main gui mousewheel zoominoroutto");               
- 			ZoomInOrOutToCursorWindow(e->we.wheel.wheel < 0, w);
- 			break;
- 
- 		case WE_MESSAGE:
-+            	DEBUG(grf, 0, "main gui message");               
- 			/* Forward the message to the appropiate toolbar (ingame or scenario editor) */
- 			SendWindowMessage(WC_MAIN_TOOLBAR, 0, e->we.message.msg, e->we.message.wparam, e->we.message.lparam);
- 			break;
-@@ -2396,7 +2405,7 @@
- 
- 	/* 'w' is for sure a WC_MAIN_TOOLBAR */
- 	PositionMainToolbar(w);
--
-+DEBUG(grf, 1, "main gui, show vital windows, after position toolbar");
- 	/* Status bad only for normal games */
- 	if (_game_mode == GM_EDITOR) return;
  
