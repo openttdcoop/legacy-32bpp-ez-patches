@@ -1,0 +1,2234 @@
+Index: src/video/sdl_v.cpp
+===================================================================
+--- src/video/sdl_v.cpp	(revision 11729)
++++ src/video/sdl_v.cpp	(working copy)
+@@ -460,6 +460,11 @@
+ 	int numkeys;
+ 	Uint8 *keys;
+ 
++//      if (_cur_dpi)
++//      DEBUG(driver, 1, "sdl_v,before mainloop %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,before mainloop cur dpi unknown");
++
+ 	for (;;) {
+ 		uint32 prev_cur_ticks = cur_ticks; // to check for wrapping
+ 		InteractiveRandom(); // randomness
+@@ -497,6 +502,10 @@
+ 				(keys[SDLK_UP]    ? 2 : 0) |
+ 				(keys[SDLK_RIGHT] ? 4 : 0) |
+ 				(keys[SDLK_DOWN]  ? 8 : 0);
++//               if (_cur_dpi)
++//      DEBUG(driver, 1, "sdl_v,before gameloop %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,before gameloop cur dpi unknown");   
+ 			GameLoop();
+ 
+ 			_screen.dst_ptr = _sdl_screen->pixels;
+@@ -507,11 +516,28 @@
+ 			}
+ 			DrawSurfaceToScreen();
+ 		} else {
++//                    if (_cur_dpi)
++//      DEBUG(driver, 1, "sdl_v,no next %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,no_next cur dpi unknown");   
++	
+ 			SDL_CALL SDL_Delay(1);
+ 			_screen.dst_ptr = _sdl_screen->pixels;
+ 			DrawChatMessage();
++//      DEBUG(driver, 1, "sdl_v,no next aft chat%d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,no_next cur dpi unknown");   
++         
+ 			DrawMouseCursor();
++//      DEBUG(driver, 1, "sdl_v,no next aft mouse %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,no_next cur dpi unknown");   
++         
+ 			DrawSurfaceToScreen();
++//      DEBUG(driver, 1, "sdl_v,no next after drw to scr%d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(driver, 1, "sdl_v,no_next cur dpi unknown");   
++         
+ 		}
+ 	}
+ }
+Index: src/sound.cpp
+===================================================================
+--- src/sound.cpp	(revision 11729)
++++ src/sound.cpp	(working copy)
+@@ -156,7 +156,7 @@
+ }
+ 
+ 
+-static const byte _vol_factor_by_zoom[] = {255, 190, 134, 87};
++static const byte _vol_factor_by_zoom[] = {255, 255, 255, 190, 134, 87};
+ assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_END - ZOOM_LVL_BEGIN);
+ 
+ static const byte _sound_base_vol[] = {
+Index: src/newgrf.cpp
+===================================================================
+--- src/newgrf.cpp	(revision 11729)
++++ src/newgrf.cpp	(working copy)
+@@ -5607,38 +5607,48 @@
+ 
+ static void AfterLoadGRFs()
+ {
++	DEBUG(sprite, 2, "AfterLoadGRFs");
++   if (_cur_dpi)
++      DEBUG(sprite, 2, "zoom %d",_cur_dpi->zoom);
++   else   
++      DEBUG(sprite, 2, "zoom cur dpi unknown");
+ 	/* Update the bitmasks for the vehicle lists */
+ 	Player *p;
+ 	FOR_ALL_PLAYERS(p) {
+ 		p->avail_railtypes = GetPlayerRailtypes(p->index);
+ 		p->avail_roadtypes = GetPlayerRoadtypes(p->index);
+ 	}
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 1");
+ 	/* Pre-calculate all refit masks after loading GRF files. */
+ 	CalculateRefitMasks();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 2");
+ 	/* Set the block size in the depot windows based on vehicle sprite sizes */
+ 	InitDepotWindowBlockSizes();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 3");
+ 	/* Add all new houses to the house array. */
+ 	FinaliseHouseArray();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 4");
+ 	/* Add all new industries to the industry array. */
+ 	FinaliseIndustriesArray();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 5");
+ 	/* Create dynamic list of industry legends for smallmap_gui.cpp */
+ 	BuildIndustriesLegend();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 6");
+ 	/* Map cargo strings. This is a separate step because cargos are
+ 	 * loaded before strings... */
+ 	MapNewCargoStrings();
+-
++	DEBUG(sprite, 2, "AfterLoadGRFs 7");
+ 	/* Update the townname generators list */
+ 	SortTownGeneratorNames();
++   	DEBUG(sprite, 2, "AfterLoadGRFs end ");
+ }
+ 
+ void LoadNewGRF(uint load_index, uint file_index)
+ {
++   if (_cur_dpi)
++      DEBUG(sprite, 2, "LoadNewGrf zoom %d",_cur_dpi->zoom);
++   else   
++      DEBUG(sprite, 2, "LoadNewGrf zoom cur dpi unknown");
+ 	InitializeGRFSpecial();
+ 
+ 	ResetNewGRFData();
+Index: src/spriteloader/grf.cpp
+===================================================================
+--- src/spriteloader/grf.cpp	(revision 11729)
++++ src/spriteloader/grf.cpp	(working copy)
+@@ -9,11 +9,11 @@
+ #include "../core/alloc_func.hpp"
+ #include "grf.hpp"
+ 
+-bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos)
++bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos, ZoomLevel zoom)
+ {
+ 	/* Open the right file and go to the correct position */
+ 	FioSeekToFile(file_slot, file_pos);
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb after seek %d %d", file_slot, file_pos);
+ 	/* Read the size and type */
+ 	int num = FioReadWord();
+ 	byte type = FioReadByte();
+@@ -25,15 +25,15 @@
+ 	sprite->width  = FioReadWord();
+ 	sprite->x_offs = FioReadWord();
+ 	sprite->y_offs = FioReadWord();
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb h %d w %d", sprite->height,sprite->width);
+ 	/* 0x02 indicates it is a compressed sprite, so we can't rely on 'num' to be valid.
+ 	 *  In case it is uncompressed, the size is 'num' - 8 (header-size). */
+ 	num = (type & 0x02) ? sprite->width * sprite->height : num - 8;
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb num %d type %d", num, type);
+ 	/* XXX -- We should use a pre-located memory segment for this, malloc/free is pretty expensive */
+ 	byte *dest_orig = MallocT<byte>(num);
+ 	byte *dest = dest_orig;
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb before while");
+ 	/* Read the file, which has some kind of compression */
+ 	while (num > 0) {
+ 		int8 code = FioReadByte();
+@@ -59,18 +59,19 @@
+ 	}
+ 
+ 	assert(num == 0);
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb before calloc");
+ 	sprite->data = CallocT<SpriteLoader::CommonPixel>(sprite->width * sprite->height);
+-
++//	DEBUG(sprite, 1, "GT:load sprite 8bb after calloc");
+ 	/* When there are transparency pixels, this format has an other trick.. decode it */
+ 	if (type & 0x08) {
++//      	DEBUG(sprite, 1, "GT:load sprite 8bb before for");
+ 		for (int y = 0; y < sprite->height; y++) {
+ 			bool last_item = false;
+ 			/* Look up in the header-table where the real data is stored for this row */
+ 			int offset = (dest_orig[y * 2 + 1] << 8) | dest_orig[y * 2];
+ 			/* Go to that row */
+ 			dest = &dest_orig[offset];
+-
++//      	DEBUG(sprite, 1, "GT:load sprite 8bb before do");
+ 			do {
+ 				SpriteLoader::CommonPixel *data;
+ 				/* Read the header:
+@@ -82,7 +83,7 @@
+ 				int skip   =   *dest++;
+ 
+ 				data = &sprite->data[y * sprite->width + skip];
+-
++//      	DEBUG(sprite, 1, "GT:load sprite 8bb before for 2");
+ 				for (int x = 0; x < length; x++) {
+ 					data->m = *dest;
+ 					dest++;
+@@ -91,15 +92,17 @@
+ 			} while (!last_item);
+ 		}
+ 	} else {
++//      DEBUG(sprite, 1, "GT:spriteloader else after calloc");
+ 		dest = dest_orig;
+ 		for (int i = 0; i < sprite->width * sprite->height; i++)
+ 			sprite->data[i].m = dest[i];
+ 	}
+-
++//	DEBUG(sprite, 1, "GT:spriteloader  before mark transparent");
+ 	/* Make sure to mark all transparent pixels transparent on the alpha channel too */
+ 	for (int i = 0; i < sprite->width * sprite->height; i++)
+ 		if (sprite->data[i].m != 0) sprite->data[i].a = 0xFF;
+ 
+ 	free(dest_orig);
++//  	DEBUG(sprite, 1, "GT:spriteloader 8bpp success ");
+ 	return true;
+ }
+Index: src/spriteloader/spriteloader.hpp
+===================================================================
+--- src/spriteloader/spriteloader.hpp	(revision 11729)
++++ src/spriteloader/spriteloader.hpp	(working copy)
+@@ -26,7 +26,7 @@
+ 	/**
+ 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
+ 	 */
+-	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos) = 0;
++	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos, ZoomLevel zoom) = 0;
+ 
+ 	virtual ~SpriteLoader() { }
+ };
+Index: src/spriteloader/grf.hpp
+===================================================================
+--- src/spriteloader/grf.hpp	(revision 11729)
++++ src/spriteloader/grf.hpp	(working copy)
+@@ -12,7 +12,7 @@
+ 	/**
+ 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
+ 	 */
+-	bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos);
++	bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos, ZoomLevel zoom);
+ };
+ 
+ #endif /* SPRITELOADER_GRF_HPP */
+Index: src/spriteloader/png.cpp
+===================================================================
+--- src/spriteloader/png.cpp	(revision 11729)
++++ src/spriteloader/png.cpp	(working copy)
+@@ -31,21 +31,32 @@
+ 	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
+ }
+ 
+-static bool OpenPNGFile(const char *filename, uint32 id, bool mask)
++static bool OpenPNGFile(const char *filename, uint32 id, bool mask, ZoomLevel zoom)
+ {
+ 	char png_file[MAX_PATH];
++//   DEBUG(sprite, 1, "GT: openpng file , filename  %s",
++//         filename==NULL?"NULL":filename);
++	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d_%s%d%s.png", filename, id, "z",zoom,mask ? "m" : "");
++//   DEBUG(sprite, 1, "GT: openpng file check file exist  %s", png_file);   
++	if (FioCheckFileExists(png_file)) {
++//      DEBUG( sprite, 1, "GT: openpng file , filename  %s", png_file==NULL?"NULL":png_file);
++		FioOpenFile(PNG_SLOT, png_file);
++		return true;
++	}
+ 
++//   DEBUG(sprite, 1, "GT: openpng file did not exist  %s", png_file);   
+ 	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d%s.png", filename, id, mask ? "m" : "");
++//   DEBUG(sprite, 1, "GT: openpng file check mask file exist  %s", png_file);   
+ 	if (FioCheckFileExists(png_file)) {
+ 		FioOpenFile(PNG_SLOT, png_file);
+ 		return true;
+ 	}
+-
++//   DEBUG(sprite, 1, "GT: openpng  maskfile did not exist  %s", png_file);   
+ 	/* TODO -- Add TAR support */
+ 	return false;
+ }
+ 
+-static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, bool mask)
++static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, bool mask, ZoomLevel zoom)
+ {
+ 	png_byte header[8];
+ 	png_structp png_ptr;
+@@ -54,9 +65,9 @@
+ 	uint i, pixelsize;
+ 	png_bytep row_pointer;
+ 	SpriteLoader::CommonPixel *dst;
+-
+-	if (!OpenPNGFile(filename, id, mask)) return mask; // If mask is true, and file not found, continue true anyway, as it isn't a show-stopper
+-
++//   DEBUG(sprite, 1, "GT: png: load png: openpng file ");
++	if (!OpenPNGFile(filename, id, mask, zoom)) return mask; // If mask is true, and file not found, continue true anyway, as it isn't a show-stopper
++//   DEBUG(sprite, 1, "GT: png: openpng file succeeded ");
+ 	/* Check the header */
+ 	FioReadBlock(header, 8);
+ 	if (png_sig_cmp(header, 0, 8) != 0) return false;
+@@ -181,10 +192,10 @@
+ 	return true;
+ }
+ 
+-bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos)
++bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos, ZoomLevel zoom)
+ {
+-	if (!LoadPNG(sprite, filename, file_pos, false)) return false;
+-	if (!LoadPNG(sprite, filename, file_pos, true)) return false;
++	if (!LoadPNG(sprite, filename, file_pos, false,zoom)) return false;
++	if (!LoadPNG(sprite, filename, file_pos, true,zoom)) return false;
+ 	return true;
+ }
+ 
+Index: src/spriteloader/png.hpp
+===================================================================
+--- src/spriteloader/png.hpp	(revision 11729)
++++ src/spriteloader/png.hpp	(working copy)
+@@ -12,7 +12,7 @@
+ 	/**
+ 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
+ 	 */
+-	bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos);
++	bool LoadSprite(SpriteLoader::Sprite *sprite, const char *filename, uint8 file_slot, uint32 file_pos, ZoomLevel zoom);
+ };
+ 
+ #endif /* SPRITELOADER_PNG_HPP */
+Index: src/spritecache.cpp
+===================================================================
+--- src/spritecache.cpp	(revision 11729)
++++ src/spritecache.cpp	(working copy)
+@@ -10,6 +10,7 @@
+ #include "spritecache.h"
+ #include "table/sprites.h"
+ #include "fileio.h"
++#include "gfx_func.h"
+ #include "spriteloader/grf.hpp"
+ #include "core/alloc_func.hpp"
+ #include "core/math_func.hpp"
+@@ -17,13 +18,13 @@
+ #include "spriteloader/png.hpp"
+ #endif /* WITH_PNG */
+ #include "blitter/factory.hpp"
+-
++#include "blitter/32bpp_optimized.hpp"  /* GT:todo add rescale funcs to blitter */
+ /* Default of 4MB spritecache */
+-uint _sprite_cache_size = 4;
++//uint _sprite_cache_size = 4;
++uint _sprite_cache_size = 16;
+ 
+-
+ struct SpriteCache {
+-	void *ptr;
++	void *ptr[ZOOM_LVL_END];
+ 	uint8 file_slot;
+ 	uint32 file_pos;
+ 	int16 lru;
+@@ -52,6 +53,10 @@
+ 
+ 		_spritecache = ReallocT(_spritecache, items);
+ 
++		if (_spritecache == NULL) {
++			error("Unable to allocate sprite cache of %d items (%d bytes)", items, items * sizeof(*_spritecache));
++		}
++
+ 		/* Reset the new items and update the count */
+ 		memset(_spritecache + _spritecache_items, 0, (items - _spritecache_items) * sizeof(*_spritecache));
+ 		_spritecache_items = items;
+@@ -125,8 +130,13 @@
+ {
+ 	uint8 file_slot = sc->file_slot;
+ 	uint32 file_pos = sc->file_pos;
++   ZoomLevel zoom = ZOOM_LVL_NORMAL;
+ 
+-	DEBUG(sprite, 9, "Load sprite %d", id);
++   if (_cur_dpi)
++   {
++      zoom = ZoomLevel(_cur_dpi->zoom);
++   }   
++	DEBUG(sprite, 9, "GT: ReadSprite  %d curdpi zoom %d", id, zoom);
+ 
+ 	if (!SpriteExists(id)) {
+ 		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", id);
+@@ -143,11 +153,11 @@
+ 		SpriteLoaderPNG sprite_loader;
+ 		SpriteLoader::Sprite sprite;
+ 
+-		if (sprite_loader.LoadSprite(&sprite, sc->grf_name, 0, sc->id)) {
+-			sc->ptr = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
++		if (sprite_loader.LoadSprite(&sprite, sc->grf_name, 0, sc->id,zoom)) {
++			sc->ptr[zoom] = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
+ 			free(sprite.data);
+ 
+-			return sc->ptr;
++			return sc->ptr[zoom];
+ 		}
+ 		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
+ #else
+@@ -158,7 +168,7 @@
+ 		}
+ #endif /* WITH_PNG */
+ 	}
+-
++//	DEBUG(sprite, 1, "GT:read sprite 32bpp did not exist, now trying 8bpp");
+ 	FioSeekToFile(file_slot, file_pos);
+ 
+ 	/* Read the size and type */
+@@ -176,10 +186,10 @@
+ 
+ 		byte *dest = (byte *)AllocSprite(num);
+ 
+-		sc->ptr = dest;
++		sc->ptr[zoom] = dest;
+ 		FioReadBlock(dest, num);
+ 
+-		return sc->ptr;
++		return sc->ptr[zoom];
+ 	}
+ 	/* Ugly hack to work around the problem that the old landscape
+ 	 *  generator assumes that those sprites are stored uncompressed in
+@@ -198,7 +208,7 @@
+ 
+ 		num = width * height;
+ 		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
+-		sc->ptr = sprite;
++		sc->ptr[zoom] = sprite;
+ 		sprite->height = height;
+ 		sprite->width  = width;
+ 		sprite->x_offs = FioReadWord();
+@@ -218,7 +228,7 @@
+ 			}
+ 		}
+ 
+-		return sc->ptr;
++		return sc->ptr[zoom];
+ 	}
+ 
+ 	if (!real_sprite) {
+@@ -228,14 +238,38 @@
+ 	}
+ 
+ 	SpriteLoaderGrf sprite_loader;
+-	SpriteLoader::Sprite sprite;
++	SpriteLoader::Sprite sprite, dst_sprite;
+ 
+-	if (!sprite_loader.LoadSprite(&sprite, sc->grf_name, file_slot, file_pos)) return NULL;
++	if (!sprite_loader.LoadSprite(&sprite, sc->grf_name, file_slot, file_pos,ZOOM_LVL_NORMAL)){ 
++      return NULL;
++   }
++   if (zoom < ZOOM_LVL_NORMAL)
++   {
++      Blitter_32bppOptimized *blitter = (Blitter_32bppOptimized *)BlitterFactoryBase::GetCurrentBlitter();
++      ZoomLevel zoom_idx = zoom;
++      do{
++         blitter->RescaleSpriteDoubleSize(&sprite, &dst_sprite);
++         free(sprite.data);
++         sprite = dst_sprite;
++         zoom_idx++;
++      }while (zoom_idx < ZOOM_LVL_NORMAL);
++   }
++   if (zoom > ZOOM_LVL_NORMAL)
++   {
++      Blitter_32bppOptimized *blitter = (Blitter_32bppOptimized *)BlitterFactoryBase::GetCurrentBlitter();
++      ZoomLevel zoom_idx = zoom;
++      do{
++         blitter->RescaleSpriteHalfSize(&sprite, &dst_sprite, true);
++         free(sprite.data);
++         sprite = dst_sprite;
++         zoom_idx++;
++      }while (zoom_idx < zoom);
++   }
+ 	if (id == 142) sprite.height = 10; // Compensate for a TTD bug
+-	sc->ptr = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
++	sc->ptr[zoom] = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
+ 	free(sprite.data);
+ 
+-	return sc->ptr;
++	return sc->ptr[zoom];
+ }
+ 
+ 
+@@ -253,7 +287,12 @@
+ 	sc = AllocateSpriteCache(load_index);
+ 	sc->file_slot = file_slot;
+ 	sc->file_pos = file_pos;
+-	sc->ptr = NULL;
++	sc->ptr[ZOOM_LVL_IN_4X] = NULL;
++	sc->ptr[ZOOM_LVL_IN_2X] = NULL;
++  	sc->ptr[ZOOM_LVL_NORMAL] = NULL;
++  	sc->ptr[ZOOM_LVL_OUT_2X] = NULL;
++   sc->ptr[ZOOM_LVL_OUT_4X] = NULL;
++   sc->ptr[ZOOM_LVL_OUT_8X] = NULL;
+ 	sc->lru = 0;
+ 	sc->id = file_sprite_id;
+ 
+@@ -278,10 +317,12 @@
+ {
+ 	SpriteCache *scold = GetSpriteCache(old_spr);
+ 	SpriteCache *scnew = AllocateSpriteCache(new_spr);
++   ZoomLevel zoom;
+ 
+ 	scnew->file_slot = scold->file_slot;
+ 	scnew->file_pos = scold->file_pos;
+-	scnew->ptr = NULL;
++   zoom = ZoomLevel(_cur_dpi->zoom);
++	scnew->ptr[zoom] = NULL;
+ 	scnew->id = scold->id;
+ 	free((char *)scnew->grf_name);
+ 	scnew->grf_name = strdup(scold->grf_name);
+@@ -306,17 +347,26 @@
+ static uint32 GetSpriteCacheUsage()
+ {
+ 	uint32 tot_size = 0;
++  	uint32 nof_blocks = 0;
++  	uint32 nof_used_blocks = 0;
+ 	MemBlock* s;
+ 
+-	for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s))
+-		if (!(s->size & S_FREE_MASK)) tot_size += s->size;
+-
++	for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s)){
++		if (!(s->size & S_FREE_MASK)){
++         tot_size += s->size;
++         nof_used_blocks++;
++      }
++      nof_blocks++;
++   }
++   DEBUG(sprite, 3, "Sprite usage nof blocks %d used %d",
++         nof_blocks, nof_used_blocks);
+ 	return tot_size;
+ }
+ 
+ 
+ void IncreaseSpriteLRU()
+ {
++   ZoomLevel zoom;
+ 	/* Increase all LRU values */
+ 	if (_sprite_lru_counter > 16384) {
+ 		SpriteID i;
+@@ -325,7 +375,8 @@
+ 
+ 		for (i = 0; i != _spritecache_items; i++) {
+ 			SpriteCache *sc = GetSpriteCache(i);
+-			if (sc->ptr != NULL) {
++         zoom = ZoomLevel(_cur_dpi->zoom);
++			if (sc->ptr[zoom] != NULL) {
+ 				if (sc->lru >= 0) {
+ 					sc->lru = -1;
+ 				} else if (sc->lru != -32768) {
+@@ -348,6 +399,7 @@
+ static void CompactSpriteCache()
+ {
+ 	MemBlock *s;
++   ZoomLevel   zoom;
+ 
+ 	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
+ 
+@@ -365,11 +417,16 @@
+ 				break;
+ 
+ 			/* Locate the sprite belonging to the next pointer. */
+-			for (i = 0; GetSpriteCache(i)->ptr != next->data; i++) {
+-				assert(i != _spritecache_items);
+-			}
+-
+-			GetSpriteCache(i)->ptr = s->data; // Adjust sprite array entry
++         bool found = false;
++         for (zoom = ZOOM_LVL_MIN; 
++              zoom < ZOOM_LVL_END && !found; 
++              zoom= ZoomLevel(zoom+1)){
++			   for (i = 0; i < _spritecache_items && !found; i++) {
++               found = (GetSpriteCache(i)->ptr[zoom] == next->data);
++			   }
++         }
++		   assert(found);
++			GetSpriteCache(i-1)->ptr[zoom-1] = s->data; // Adjust sprite array entry
+ 			/* Swap this and the next block */
+ 			temp = *s;
+ 			memmove(s, next, next->size);
+@@ -391,37 +448,53 @@
+ 	SpriteID i;
+ 	uint best = UINT_MAX;
+ 	MemBlock* s;
+-	int cur_lru;
++	int16 cur_lru;
++   ZoomLevel zoom;
+ 
+ 	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache, inuse=%d", GetSpriteCacheUsage());
+ 
+-	cur_lru = 0xffff;
++	cur_lru = -1;
+ 	for (i = 0; i != _spritecache_items; i++) {
+ 		SpriteCache *sc = GetSpriteCache(i);
+-		if (sc->ptr != NULL && sc->lru < cur_lru) {
+-			cur_lru = sc->lru;
+-			best = i;
+-		}
++      if (sc->lru < cur_lru) {
++		   for (zoom = ZOOM_LVL_MIN; zoom < ZOOM_LVL_END; zoom ++){
++            if (sc->ptr[zoom]){
++	      		cur_lru = sc->lru;
++			      best = i;
++		      }
++         }
++      }
+ 	}
+ 
+ 	/* Display an error message and die, in case we found no sprite at all.
+ 	 * This shouldn't really happen, unless all sprites are locked. */
+-	if (best == (uint)-1) error("Out of sprite memory");
+-
++	if (best == (uint)-1)
++		error("Out of sprite memory");
++  	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache best=%d", best);
++  	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache cur_lru=%d", cur_lru);
++	SpriteCache *sc = GetSpriteCache(best);
+ 	/* Mark the block as free (the block must be in use) */
+-	s = (MemBlock*)GetSpriteCache(best)->ptr - 1;
+-	assert(!(s->size & S_FREE_MASK));
+-	s->size |= S_FREE_MASK;
+-	GetSpriteCache(best)->ptr = NULL;
++   for (zoom = ZOOM_LVL_MIN ; zoom < ZOOM_LVL_END ; zoom = ZoomLevel(zoom+1)){
++      if (sc->ptr[zoom]){
++         s = (MemBlock*)sc->ptr[zoom] - 1;
++  	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache zoom %d removed", zoom);      
++	      assert(!(s->size & S_FREE_MASK));
++	      s->size |= S_FREE_MASK;
++	      sc->ptr[zoom] = NULL;
+ 
+-	/* And coalesce adjacent free blocks */
+-	for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s)) {
+-		if (s->size & S_FREE_MASK) {
+-			while (NextBlock(s)->size & S_FREE_MASK) {
+-				s->size += NextBlock(s)->size & ~S_FREE_MASK;
+-			}
+-		}
++	      /* And coalesce adjacent free blocks */
++	      for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s)) {
++		      if (s->size & S_FREE_MASK) {
++			      while (NextBlock(s)->size & S_FREE_MASK) {
++				      s->size += NextBlock(s)->size & ~S_FREE_MASK;
++			      }
++		      }
++         }
++      }   
+ 	}
++
++  	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache end, inuse=%d spr lru ctr%d ",
++   GetSpriteCacheUsage(),_sprite_lru_counter);
+ }
+ 
+ void* AllocSprite(size_t mem_req)
+@@ -431,7 +504,7 @@
+ 	/* Align this to an uint32 boundary. This also makes sure that the 2 least
+ 	 * bits are not used, so we could use those for other things. */
+ 	mem_req = Align(mem_req, sizeof(uint32));
+-
++	DEBUG(sprite, 3, "AllocSprite, memreq=%d", mem_req);
+ 	for (;;) {
+ 		MemBlock* s;
+ 
+@@ -466,7 +539,8 @@
+ {
+ 	SpriteCache *sc;
+ 	void* p;
+-
++   ZoomLevel zoom;
++//  	DEBUG(sprite, 9, "GT: GetRawSprite %d", sprite);   
+ 	assert(sprite < _spritecache_items);
+ 
+ 	sc = GetSpriteCache(sprite);
+@@ -474,10 +548,16 @@
+ 	/* Update LRU */
+ 	sc->lru = ++_sprite_lru_counter;
+ 
+-	p = sc->ptr;
+ 
++
++   zoom = ZoomLevel(_cur_dpi->zoom);
++	p = sc->ptr[zoom];
++
+ 	/* Load the sprite, if it is not loaded, yet */
+ 	if (p == NULL) p = ReadSprite(sc, sprite, real_sprite);
++   
++//   const Sprite *spr=(const Sprite*)sc->ptr[zoom];
++//  	DEBUG(sprite, 1, "GT: GetRawSprite height %d",  spr->height);   
+ 	return p;
+ }
+ 
+@@ -485,7 +565,7 @@
+ void GfxInitSpriteMem()
+ {
+ 	/* initialize sprite cache heap */
+-	if (_spritecache_ptr == NULL) _spritecache_ptr = (MemBlock*)MallocT<byte>(_sprite_cache_size * 1024 * 1024);
++	if (_spritecache_ptr == NULL) _spritecache_ptr = (MemBlock*)malloc(_sprite_cache_size * 1024 * 1024);
+ 
+ 	/* A big free block */
+ 	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
+@@ -493,10 +573,10 @@
+ 	NextBlock(_spritecache_ptr)->size = 0;
+ 
+ 	/* Reset the spritecache 'pool' */
+-	for (uint i = 0; i < _spritecache_items; i++) free((char *)_spritecache[i].grf_name);
+-	free(_spritecache);
+-	_spritecache_items = 0;
+-	_spritecache = NULL;
+ 
++   for (uint i = 0; i < _spritecache_items; i++) free((char *)_spritecache[i].grf_name);
++   free(_spritecache);
++   _spritecache_items = 0;
++   _spritecache = NULL;
+ 	_compact_cache_counter = 0;
+ }
+Index: src/texteff.cpp
+===================================================================
+--- src/texteff.cpp	(revision 11729)
++++ src/texteff.cpp	(working copy)
+@@ -383,6 +383,35 @@
+ void DrawTextEffects(DrawPixelInfo *dpi)
+ {
+ 	switch (dpi->zoom) {
++		case ZOOM_LVL_IN_4X:
++			for (TextEffectID i = 0; i < _num_text_effects; i++) {
++				TextEffect *te = &_text_effect_list[i];
++				if (te->string_id != INVALID_STRING_ID &&
++						dpi->left <= te->right &&
++						dpi->top  <= te->bottom &&
++						dpi->left + dpi->width  > te->x &&
++						dpi->top  + dpi->height > te->y) {
++					if (te->mode == TE_RISING || (_patches.loading_indicators && !IsTransparencySet(TO_LOADING))) {
++						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
++					}
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			for (TextEffectID i = 0; i < _num_text_effects; i++) {
++				TextEffect *te = &_text_effect_list[i];
++				if (te->string_id != INVALID_STRING_ID &&
++						dpi->left <= te->right &&
++						dpi->top  <= te->bottom &&
++						dpi->left + dpi->width  > te->x &&
++						dpi->top  + dpi->height > te->y) {
++					if (te->mode == TE_RISING || (_patches.loading_indicators && !IsTransparencySet(TO_LOADING))) {
++						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
++					}
++				}
++			}
++			break;
++
+ 		case ZOOM_LVL_NORMAL:
+ 			for (TextEffectID i = 0; i < _num_text_effects; i++) {
+ 				TextEffect *te = &_text_effect_list[i];
+Index: src/window.cpp
+===================================================================
+--- src/window.cpp	(revision 11729)
++++ src/window.cpp	(working copy)
+@@ -219,7 +219,8 @@
+ void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
+ {
+ 	Window* const *wz;
+-	DrawPixelInfo bk;
++	DrawPixelInfo bk, *old_dpi;
++   old_dpi = _cur_dpi;
+ 	_cur_dpi = &bk;
+ 
+ 	FOR_ALL_WINDOWS(wz) {
+@@ -231,6 +232,7 @@
+ 			DrawOverlappedWindow(wz, left, top, right, bottom);
+ 		}
+ 	}
++   _cur_dpi = old_dpi;
+ }
+ 
+ static void DrawOverlappedWindow(Window* const *wz, int left, int top, int right, int bottom)
+@@ -274,6 +276,8 @@
+ 	}
+ 
+ 	{
++//   DEBUG(grf, 0, "overlapped left %d  top %d right %d bottom %d",left, top,
++// right,bottom);
+ 		DrawPixelInfo *dp = _cur_dpi;
+ 		dp->width = right - left;
+ 		dp->height = bottom - top;
+Index: src/zoom_func.h
+===================================================================
+--- src/zoom_func.h	(revision 11729)
++++ src/zoom_func.h	(working copy)
+@@ -20,7 +20,9 @@
+ {
+ 	if (zoom == ZOOM_LVL_NORMAL) return value;
+ 	int izoom = zoom - ZOOM_LVL_NORMAL;
+-	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) >> -izoom;
++//	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) >> -izoom;
++// GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
++   return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : (value + (1 << -izoom) - 1) / (1 << -izoom);
+ }
+ 
+ /**
+@@ -34,7 +36,9 @@
+ {
+ 	if (zoom == ZOOM_LVL_NORMAL) return value;
+ 	int izoom = zoom - ZOOM_LVL_NORMAL;
+-	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) >> izoom : value << -izoom;
++//	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) >> izoom : value << -izoom;
++   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
++  	return (zoom > ZOOM_LVL_NORMAL) ? (value + (1 << izoom) - 1) / (1 << izoom) : value << -izoom;
+ }
+ 
+ /**
+@@ -47,7 +51,9 @@
+ {
+ 	if (zoom == ZOOM_LVL_NORMAL) return value;
+ 	int izoom = zoom - ZOOM_LVL_NORMAL;
+-	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value >> -izoom;
++//	return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value >> -izoom;
++   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
++   return (zoom > ZOOM_LVL_NORMAL) ? value << izoom : value / (1 << -izoom);
+ }
+ 
+ /**
+@@ -60,7 +66,9 @@
+ {
+ 	if (zoom == ZOOM_LVL_NORMAL) return value;
+ 	int izoom = zoom - ZOOM_LVL_NORMAL;
+-	return (zoom > ZOOM_LVL_NORMAL) ? value >> izoom : value << -izoom;
++//	return (zoom > ZOOM_LVL_NORMAL) ? value >> izoom : value << -izoom;
++   // GT: changed: never shift right signed values!: -3 >> 1 is NOT -1, but -2!, so divide instead   
++	return (zoom > ZOOM_LVL_NORMAL) ? value / (1 << izoom) : value << -izoom;
+ }
+ 
+ #endif /* ZOOM_FUNC_H */
+Index: src/zoom_type.h
+===================================================================
+--- src/zoom_type.h	(revision 11729)
++++ src/zoom_type.h	(working copy)
+@@ -9,8 +9,10 @@
+ 
+ enum ZoomLevel {
+ 	/* Our possible zoom-levels */
+-	ZOOM_LVL_BEGIN  = 0,
+-	ZOOM_LVL_NORMAL = 0,
++   ZOOM_LVL_BEGIN = 0,
++   ZOOM_LVL_IN_4X = 0,
++   ZOOM_LVL_IN_2X,  
++	ZOOM_LVL_NORMAL,
+ 	ZOOM_LVL_OUT_2X,
+ 	ZOOM_LVL_OUT_4X,
+ 	ZOOM_LVL_OUT_8X,
+@@ -29,7 +31,7 @@
+ 
+ 	ZOOM_LVL_DETAIL   = ZOOM_LVL_OUT_2X, ///< All zoomlevels below or equal to this, will result in details on the screen, like road-work, ...
+ 
+-	ZOOM_LVL_MIN      = ZOOM_LVL_NORMAL,
++	ZOOM_LVL_MIN      = ZOOM_LVL_BEGIN,
+ 	ZOOM_LVL_MAX      = ZOOM_LVL_OUT_8X,
+ };
+ DECLARE_POSTFIX_INCREMENT(ZoomLevel)
+Index: src/viewport.cpp
+===================================================================
+--- src/viewport.cpp	(revision 11729)
++++ src/viewport.cpp	(working copy)
+@@ -132,7 +132,7 @@
+ 
+ struct ViewportDrawer {
+ 	DrawPixelInfo dpi;
+-
++   const ViewPort *vp;
+ 	byte *spritelist_mem;
+ 	const byte *eof_spritelist_mem;
+ 
+@@ -305,14 +305,15 @@
+ 	int i;
+ 	int left, top, width, height;
+ 
+-	vp->virtual_left = x;
+-	vp->virtual_top = y;
++//  	DEBUG(grf, 0, "set viewport pos x %d y %d ",x, y);
++	vp->virtual_left = UnScaleByZoomLower(x, vp->zoom);
++	vp->virtual_top = UnScaleByZoomLower(y, vp->zoom);
+ 
+ 	/* viewport is bound to its left top corner, so it must be rounded down (UnScaleByZoomLower)
+ 	 * else glitch described in FS#1412 will happen (offset by 1 pixel with zoom level > NORMAL)
+ 	 */
+-	old_left = UnScaleByZoomLower(old_left, vp->zoom);
+-	old_top = UnScaleByZoomLower(old_top, vp->zoom);
++//	old_left = UnScaleByZoomLower(old_left, vp->zoom);
++//	old_top = UnScaleByZoomLower(old_top, vp->zoom);
+ 	x = UnScaleByZoomLower(x, vp->zoom);
+ 	y = UnScaleByZoomLower(y, vp->zoom);
+ 
+@@ -323,7 +324,11 @@
+ 
+ 	_vp_move_offs.x = old_left;
+ 	_vp_move_offs.y = old_top;
+-
++//  	DEBUG(grf, 0, "set viewport pos move x %d move y %d ",_vp_move_offs.x, _vp_move_offs.y);
++//   DEBUG(grf, 0, "set viewport pos x %d y %d ",x, y);
++//   DEBUG(grf, 0, "set viewport pos virt l %d virt top %d ",vp->virtual_left,
++//   vp->virtual_top);
++   
+ 	left = vp->left;
+ 	top = vp->top;
+ 	width = vp->width;
+@@ -345,7 +350,8 @@
+ 
+ 		i = top + height - _screen.height;
+ 		if (i >= 0) height -= i;
+-
++//DEBUG(grf, 0, "set viewport pos doset: left %d top %d widt %d heigth%d",
++//  left,top,width,height);
+ 		if (height > 0) DoSetViewportPosition(FindWindowZPosition(w) + 1, left, top, width, height);
+ 	}
+ }
+@@ -375,12 +381,14 @@
+ 				return pt;
+ 	}
+ 
+-	x = (ScaleByZoom(x, vp->zoom) + vp->virtual_left) >> 2;
+-	y = (ScaleByZoom(y, vp->zoom) + vp->virtual_top) >> 1;
+-
++//	x = (ScaleByZoom(x, vp->zoom) + vp->virtual_left) >> 2;
++//	y = (ScaleByZoom(y, vp->zoom) + vp->virtual_top) >> 1;
++// DEBUG(grf, 0, "viewport trans xy : x %d y %d vl %d vt %d",x,y,vp->virtual_left,vp->virtual_top);
++	x = (ScaleByZoom(x + vp->virtual_left, vp->zoom) ) >> 2;
++	y = (ScaleByZoom(y + vp->virtual_top, vp->zoom) ) >> 1;
+ 	a = y-x;
+ 	b = y+x;
+-
++// DEBUG(grf, 0, "viewport trans xy : a %d b %d vl %d vt %d", a, b);
+ 	/* we need to move variables in to the valid range, as the
+ 	 * GetTileZoomCenterWindow() function can call here with invalid x and/or y,
+ 	 * when the user tries to zoom out along the sides of the map */
+@@ -474,6 +482,7 @@
+  */
+ void DrawGroundSpriteAt(SpriteID image, SpriteID pal, int32 x, int32 y, byte z, const SubSprite *sub)
+ {
++//DEBUG(grf, 0, "viewport groundsprite at x %d  y %d z %d ",x, y, z);
+ 	ViewportDrawer *vd = _cur_vd;
+ 	TileSpriteToDraw *ts;
+ 
+@@ -595,10 +604,13 @@
+ 	Point pt = RemapCoords(x, y, z);
+ 	const Sprite* spr = GetSprite(image & SPRITE_MASK);
+ 
+-	if (pt.x + spr->x_offs >= vd->dpi.left + vd->dpi.width ||
+-			pt.x + spr->x_offs + spr->width <= vd->dpi.left ||
+-			pt.y + spr->y_offs >= vd->dpi.top + vd->dpi.height ||
+-			pt.y + spr->y_offs + spr->height <= vd->dpi.top)
++   int xu = UnScaleByZoom(pt.x, vd->dpi.zoom);
++   int yu = UnScaleByZoom(pt.y, vd->dpi.zoom);
++   
++	if (xu + spr->x_offs >= vd->vp->virtual_left + vd->vp->width ||
++       xu + spr->x_offs + spr->width <= vd->vp->virtual_left ||
++		 yu + spr->y_offs >= vd->vp->virtual_top + vd->vp->height ||
++		 yu + spr->y_offs + spr->height <= vd->vp->virtual_top)
+ 		return;
+ 
+ 	AddChildSpriteScreen(image, pal, pt.x - vd->parent_list[-1]->left, pt.y - vd->parent_list[-1]->top, false, sub);
+@@ -679,10 +691,16 @@
+ 		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
+ 	} else {
+ 		const Sprite *spr = GetSprite(image & SPRITE_MASK);
+-		left = ps->left = (pt.x += spr->x_offs);
+-		right           = (pt.x +  spr->width );
+-		top  = ps->top  = (pt.y += spr->y_offs);
+-		bottom          = (pt.y +  spr->height);
++      int x_offs, y_offs,swidth, sheight;
++      
++      x_offs = ScaleByZoom(spr->x_offs, vd->vp->zoom);
++      y_offs = ScaleByZoom(spr->y_offs, vd->vp->zoom);
++      swidth = ScaleByZoom(spr->width, vd->vp->zoom);
++      sheight = ScaleByZoom(spr->height, vd->vp->zoom);
++		left = ps->left = (pt.x += x_offs);
++		right           = (pt.x +  swidth );
++		top  = ps->top  = (pt.y += y_offs);
++		bottom          = (pt.y +  sheight);
+ 	}
+ 	if (_draw_bounding_boxes && (image != SPR_EMPTY_BOUNDING_BOX)) {
+ 		/* Compute maximal extents of sprite and it's bounding box */
+@@ -692,12 +710,16 @@
+ 		bottom = max(bottom, RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1);
+ 	}
+ 	/* Do not add the sprite to the viewport, if it is outside */
+-	if (left   >= vd->dpi.left + vd->dpi.width ||
+-	    right  <= vd->dpi.left ||
+-	    top    >= vd->dpi.top + vd->dpi.height ||
+-	    bottom <= vd->dpi.top) {
++	if (UnScaleByZoom(left, vd->vp->zoom)   >= vd->vp->virtual_left + vd->vp->width ||
++	    UnScaleByZoom(right, vd->vp->zoom)  <= vd->vp->virtual_left ||
++	    UnScaleByZoom(top, vd->vp->zoom)    >= vd->vp->virtual_top + vd->vp->height  ||
++	    UnScaleByZoom(bottom, vd->vp->zoom) <= vd->vp->virtual_top) {
+ 		return;
+ 	}
++//   ps->x = UnScaleByZoom(ps->x, vd->vp->zoom);
++//   ps->y = UnScaleByZoom(ps->y, vd->vp->zoom);
++//   ps->x -= vd->vp->virtual_left ;
++//   ps->y -= vd->vp->virtual_top ;
+ 
+ 	vd->spritelist_mem += sizeof(ParentSpriteToDraw);
+ 
+@@ -776,8 +798,8 @@
+ 	cs->image = image;
+ 	cs->pal = pal;
+ 	cs->sub = sub;
+-	cs->x = x;
+-	cs->y = y;
++	cs->x = UnScaleByZoom(x, vd->dpi.zoom);
++	cs->y = UnScaleByZoom(y, vd->dpi.zoom);
+ 	cs->next = NULL;
+ }
+ 
+@@ -842,6 +864,7 @@
+ static void DrawTileSelectionRect(const TileInfo *ti, SpriteID pal)
+ {
+ 	SpriteID sel;
++//  	DEBUG(grf, 0, "DrawTileSel draw  ti x %d ti y %d ",ti->x,ti->y);
+ 	if (IsHalftileSlope(ti->tileh)) {
+ 		Corner halftile_corner = GetHalftileSlopeCorner(ti->tileh);
+ 		SpriteID sel2 = SPR_HALFTILE_SELECTION_FLAT + halftile_corner;
+@@ -1001,23 +1024,31 @@
+ static void ViewportAddLandscape()
+ {
+ 	ViewportDrawer *vd = _cur_vd;
+-	int x, y, width, height;
++	int x, y, x1, y1, width, height;
+ 	TileInfo ti;
+ 	bool direction;
+ 
+ 	_cur_ti = &ti;
+ 
+-	/* Transform into tile coordinates and round to closest full tile */
+-	x = ((vd->dpi.top >> 1) - (vd->dpi.left >> 2)) & ~0xF;
+-	y = ((vd->dpi.top >> 1) + (vd->dpi.left >> 2) - 0x10) & ~0xF;
++   x1 = ScaleByZoomLower(vd->vp->virtual_left + vd->dpi.left, vd->vp->zoom) ;
++   y1 = ScaleByZoomLower(vd->vp->virtual_top + vd->dpi.top, vd->vp->zoom) ;
++//   DEBUG(grf, 1, "viewport add landscape x1 %d  y1 %d" ,x1 ,y1);      
++   x1 = x1 / 4;
++	y1 = y1 / 2;
+ 
+-	/* determine size of area */
+-	{
+-		Point pt = RemapCoords(x, y, 241);
+-		width = (vd->dpi.left + vd->dpi.width - pt.x + 95) >> 6;
+-		height = (vd->dpi.top + vd->dpi.height - pt.y) >> 5 << 1;
+-	}
++	x = ((y1-x1) / TILE_SIZE) * TILE_SIZE ;
++	y = ((y1+x1) / TILE_SIZE) * TILE_SIZE - (TILE_SIZE << 1);
++   Point pt=RemapCoords(x,y,0);
++//   DEBUG(grf, 1, "viewport add landscape aft remap x %d  y %d" ,pt.x ,pt.y);  
++//DEBUG(grf, 1, "viewport add landscape vl  %d  vt %d" ,vd->vp->virtual_left ,vd->vp->virtual_top);      
++DEBUG(grf, 1, "viewport add landscape x %d  y %d" ,x ,y);   
+ 
++//DEBUG(grf, 1, "viewport add landscape dp width %d  dp height %d" ,vd->dpi.width,vd->dpi.height);   
++   width  = ScaleByZoom((vd->dpi.width >> 6),vd->vp->zoom)+5;
++   height = (vd->vp->virtual_height >> 4) + 5;
++DEBUG(grf, 1, "viewport add landscape width %d  height %d" ,width,height);
++   
++
+ 	assert(width > 0);
+ 	assert(height > 0);
+ 
+@@ -1055,9 +1086,8 @@
+ 			vd->foundation[1] = NULL;
+ 			vd->last_foundation_child[0] = NULL;
+ 			vd->last_foundation_child[1] = NULL;
+-
+ 			_tile_type_procs[tt]->draw_tile_proc(&ti);
+-			DrawTileSelection(&ti);
++   		DrawTileSelection(&ti);
+ 		} while (--width_cur);
+ 
+ 		if ((direction ^= 1) != 0) {
+@@ -1083,6 +1113,30 @@
+ 	bottom = top + dpi->height;
+ 
+ 	switch (dpi->zoom) {
++		case ZOOM_LVL_IN_4X:
++			FOR_ALL_TOWNS(t) {
++				if (bottom > t->sign.top &&
++						top    < t->sign.top + 12 &&
++						right  > t->sign.left &&
++						left   < t->sign.left + t->sign.width_1) {
++					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
++						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						t->index, t->population);
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			FOR_ALL_TOWNS(t) {
++				if (bottom > t->sign.top &&
++						top    < t->sign.top + 12 &&
++						right  > t->sign.left &&
++						left   < t->sign.left + t->sign.width_1) {
++					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
++						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						t->index, t->population);
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			FOR_ALL_TOWNS(t) {
+ 				if (bottom > t->sign.top &&
+@@ -1159,6 +1213,27 @@
+ 	bottom = top + dpi->height;
+ 
+ 	switch (dpi->zoom) {
++		case ZOOM_LVL_IN_4X:
++			FOR_ALL_STATIONS(st) {
++				if (bottom > st->sign.top &&
++						top    < st->sign.top + 12 &&
++						right  > st->sign.left &&
++						left   < st->sign.left + st->sign.width_1) {
++					AddStation(st, STR_305C_0, st->sign.width_1);
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			FOR_ALL_STATIONS(st) {
++				if (bottom > st->sign.top &&
++						top    < st->sign.top + 12 &&
++						right  > st->sign.left &&
++						left   < st->sign.left + st->sign.width_1) {
++					AddStation(st, STR_305C_0, st->sign.width_1);
++				}
++			}
++			break;
++
+ 		case ZOOM_LVL_NORMAL:
+ 			FOR_ALL_STATIONS(st) {
+ 				if (bottom > st->sign.top &&
+@@ -1229,6 +1304,26 @@
+ 	bottom = top + dpi->height;
+ 
+ 	switch (dpi->zoom) {
++		case ZOOM_LVL_IN_4X:
++			FOR_ALL_SIGNS(si) {
++				if (bottom > si->sign.top &&
++						top    < si->sign.top + 12 &&
++						right  > si->sign.left &&
++						left   < si->sign.left + si->sign.width_1) {
++					AddSign(si, STR_2806, si->sign.width_1);
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			FOR_ALL_SIGNS(si) {
++				if (bottom > si->sign.top &&
++						top    < si->sign.top + 12 &&
++						right  > si->sign.left &&
++						left   < si->sign.left + si->sign.width_1) {
++					AddSign(si, STR_2806, si->sign.width_1);
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			FOR_ALL_SIGNS(si) {
+ 				if (bottom > si->sign.top &&
+@@ -1299,6 +1394,26 @@
+ 	bottom = top + dpi->height;
+ 
+ 	switch (dpi->zoom) {
++		case ZOOM_LVL_IN_4X:
++			FOR_ALL_WAYPOINTS(wp) {
++				if (bottom > wp->sign.top &&
++						top    < wp->sign.top + 12 &&
++						right  > wp->sign.left &&
++						left   < wp->sign.left + wp->sign.width_1) {
++					AddWaypoint(wp, STR_WAYPOINT_VIEWPORT, wp->sign.width_1);
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			FOR_ALL_WAYPOINTS(wp) {
++				if (bottom > wp->sign.top &&
++						top    < wp->sign.top + 12 &&
++						right  > wp->sign.left &&
++						left   < wp->sign.left + wp->sign.width_1) {
++					AddWaypoint(wp, STR_WAYPOINT_VIEWPORT, wp->sign.width_1);
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			FOR_ALL_WAYPOINTS(wp) {
+ 				if (bottom > wp->sign.top &&
+@@ -1366,8 +1481,25 @@
+ {
+ 	do {
+ 		Point pt = RemapCoords(ts->x, ts->y, ts->z);
+-		DrawSprite(ts->image, ts->pal, pt.x, pt.y, ts->sub);
++      int left = UnScaleByZoom(pt.x,_cur_vd->vp->zoom);
++      int top =  UnScaleByZoom(pt.y,_cur_vd->vp->zoom);
++
++      
++      left -= _cur_vd->vp->virtual_left;
++      top  -= _cur_vd->vp->virtual_top;
++
++		DrawSprite(ts->image, ts->pal, left, top, ts->sub);
++//      if (ts){
++//      if ((ts->image == 3981)&&(_cur_vd->vp->zoom==0))
++//      {
++//      DEBUG(grf, 1, "viewport draw tile sprites tsx %d tsy %d tsz %d left %d top %d",
++//      ts->x, ts->y, ts->z, left, top);
++//      DEBUG(grf, 1, "viewport draw tile sprites virt left %d virt top %d",
++//      _cur_vd->vp->virtual_left, _cur_vd->vp->virtual_top);
++//      }
++//      }      
+ 		ts = ts->next;
++
+ 	} while (ts != NULL);
+ }
+ 
+@@ -1433,14 +1565,18 @@
+ 
+ static void ViewportDrawParentSprites(ParentSpriteToDraw *psd[])
+ {
++   int  x,y, left, top;
+ 	for (; *psd != NULL; psd++) {
+ 		const ParentSpriteToDraw* ps = *psd;
+ 		const ChildScreenSpriteToDraw* cs;
++      x = UnScaleByZoom(ps->x, _cur_dpi->zoom) - _cur_vd->vp->virtual_left;      
++      y = UnScaleByZoom(ps->y, _cur_dpi->zoom) - _cur_vd->vp->virtual_top;      
++      left = UnScaleByZoom(ps->left, _cur_dpi->zoom) - _cur_vd->vp->virtual_left;
++      top = UnScaleByZoom(ps->top, _cur_dpi->zoom) - _cur_vd->vp->virtual_top;      
++		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSprite(ps->image, ps->pal, x, y, ps->sub);
+ 
+-		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSprite(ps->image, ps->pal, ps->x, ps->y, ps->sub);
+-
+ 		for (cs = ps->child; cs != NULL; cs = cs->next) {
+-			DrawSprite(cs->image, cs->pal, ps->left + cs->x, ps->top + cs->y, cs->sub);
++			DrawSprite(cs->image, cs->pal, left + cs->x, top + cs->y, cs->sub);
+ 		}
+ 	}
+ }
+@@ -1476,17 +1612,17 @@
+ 	zoom = dp.zoom;
+ 	dp.zoom = ZOOM_LVL_NORMAL;
+ 
+-	dp.left   = UnScaleByZoom(dp.left,   zoom);
+-	dp.top    = UnScaleByZoom(dp.top,    zoom);
+-	dp.width  = UnScaleByZoom(dp.width,  zoom);
+-	dp.height = UnScaleByZoom(dp.height, zoom);
++//	dp.left   = UnScaleByZoom(dp.left,   zoom);
++//	dp.top    = UnScaleByZoom(dp.top,    zoom);
++//	dp.width  = UnScaleByZoom(dp.width,  zoom);
++//	dp.height = UnScaleByZoom(dp.height, zoom);
+ 
+ 	do {
+ 		uint16 colour;
+ 
+ 		if (ss->width != 0) {
+-			int x = UnScaleByZoom(ss->x, zoom) - 1;
+-			int y = UnScaleByZoom(ss->y, zoom) - 1;
++			int x = UnScaleByZoom(ss->x, zoom) - 1 - _cur_vd->vp->virtual_left;
++			int y = UnScaleByZoom(ss->y, zoom) - 1 - _cur_vd->vp->virtual_top;
+ 			int bottom = y + 11;
+ 			int w = ss->width;
+ 
+@@ -1519,7 +1655,7 @@
+ 			colour = TC_BLACK;
+ 		}
+ 		DrawString(
+-			UnScaleByZoom(ss->x, zoom), UnScaleByZoom(ss->y, zoom) - (ss->width & 0x8000 ? 2 : 0),
++			UnScaleByZoom(ss->x, zoom) - _cur_vd->vp->virtual_left, UnScaleByZoom(ss->y, zoom) - (ss->width & 0x8000 ? 2 : 0)- _cur_vd->vp->virtual_top,
+ 			ss->string, colour
+ 		);
+ 
+@@ -1534,28 +1670,34 @@
+ 	int x;
+ 	int y;
+ 	DrawPixelInfo *old_dpi;
+-
++	DrawPixelInfo tmp_dpi;
++   
+ 	byte mem[VIEWPORT_DRAW_MEM];
+ 	ParentSpriteToDraw *parent_list[6144];
++	left = left - vp->left;
++	top  = top - vp->top; 
++	right= right - vp->left;
++	bottom = bottom - vp->top; 
+ 
+ 	_cur_vd = &vd;
+ 
+ 	old_dpi = _cur_dpi;
+ 	_cur_dpi = &vd.dpi;
+-
++//DEBUG(grf, 1, "viewport do draw vp zoom %d", vp->zoom);
++//if ((top <40 )&& (left < 100))
++//DEBUG(grf, 0, "viewport do draw left %d  top %d right %d bottom %d",left, top,
++//right, bottom);
++   vd.vp = vp;
+ 	vd.dpi.zoom = vp->zoom;
+-	mask = ScaleByZoom(-1, vp->zoom);
+-
+ 	vd.combine_sprites = 0;
+-
+-	vd.dpi.width = (right - left) & mask;
+-	vd.dpi.height = (bottom - top) & mask;
+-	vd.dpi.left = left & mask;
+-	vd.dpi.top = top & mask;
++	vd.dpi.width = right - left;
++	vd.dpi.height = bottom - top;
++	vd.dpi.left = left;
++	vd.dpi.top = top;
+ 	vd.dpi.pitch = old_dpi->pitch;
+ 
+-	x = UnScaleByZoom(vd.dpi.left - (vp->virtual_left & mask), vp->zoom) + vp->left;
+-	y = UnScaleByZoom(vd.dpi.top - (vp->virtual_top & mask), vp->zoom) + vp->top;
++	x = left + vp->left;
++	y = top  + vp->top;
+ 
+ 	vd.dpi.dst_ptr = BlitterFactoryBase::GetCurrentBlitter()->MoveTo(old_dpi->dst_ptr, x - old_dpi->left, y - old_dpi->top);
+ 
+@@ -1569,18 +1711,24 @@
+ 	vd.first_tile = NULL;
+ 
+ 	ViewportAddLandscape();
+-	ViewportAddVehicles(&vd.dpi);
+-	DrawTextEffects(&vd.dpi);
++   tmp_dpi = vd.dpi;
++   tmp_dpi.left = ScaleByZoom(vd.vp->virtual_left, vd.vp->zoom);
++   tmp_dpi.top = ScaleByZoom(vd.vp->virtual_top, vd.vp->zoom);
++	tmp_dpi.width = vd.vp->width;
++	tmp_dpi.height = vd.vp->height;
+ 
+-	ViewportAddTownNames(&vd.dpi);
+-	ViewportAddStationNames(&vd.dpi);
++	ViewportAddVehicles(&tmp_dpi);
++	DrawTextEffects(&tmp_dpi);
++
++	ViewportAddTownNames(&tmp_dpi);
++	ViewportAddStationNames(&tmp_dpi);
+ 	ViewportAddSigns(&vd.dpi);
+ 	ViewportAddWaypoints(&vd.dpi);
+ 
+ 	/* This assert should never happen (because the length of the parent_list
+ 	 *  is checked) */
+ 	assert(vd.parent_list <= endof(parent_list));
+-
++//DEBUG(grf, 1, "viewport do draw 2 cur zoom %d", _cur_dpi->zoom);
+ 	if (vd.first_tile != NULL) ViewportDrawTileSprites(vd.first_tile);
+ 
+ 	/* null terminate parent sprite list */
+@@ -1599,7 +1747,11 @@
+  * If we do, the sprite memory will overflow. */
+ static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
+ {
+-	if (ScaleByZoom(bottom - top, vp->zoom) * ScaleByZoom(right - left, vp->zoom) > 180000) {
++//	DEBUG(grf, 1, "viewport draw chk left %d  vp left %d vp virt left %d",left, vp->left, vp->virtual_left);
++DEBUG(grf, 1, "viewport draw chk area: %d", 
++  (ScaleByZoom(bottom - top,vp->zoom) * ScaleByZoom(right - left, vp->zoom)));
++	if (ScaleByZoom(bottom - top, vp->zoom) * ScaleByZoom(right - left, vp->zoom)
++   > 50000) {
+ 		if ((bottom - top) > (right - left)) {
+ 			int t = (top + bottom) >> 1;
+ 			ViewportDrawChk(vp, left, top, right, t);
+@@ -1610,17 +1762,13 @@
+ 			ViewportDrawChk(vp, t, top, right, bottom);
+ 		}
+ 	} else {
+-		ViewportDoDraw(vp,
+-			ScaleByZoom(left - vp->left, vp->zoom) + vp->virtual_left,
+-			ScaleByZoom(top - vp->top, vp->zoom) + vp->virtual_top,
+-			ScaleByZoom(right - vp->left, vp->zoom) + vp->virtual_left,
+-			ScaleByZoom(bottom - vp->top, vp->zoom) + vp->virtual_top
+-		);
++		ViewportDoDraw(vp, left, top,	right, bottom);
+ 	}
+ }
+ 
+ static inline void ViewportDraw(const ViewPort *vp, int left, int top, int right, int bottom)
+ {
++//	DEBUG(grf, 0, "viewport draw  left %d vp left %d ",left,vp->left);
+ 	if (right <= vp->left || bottom <= vp->top) return;
+ 
+ 	if (left >= vp->left + vp->width) return;
+@@ -1632,7 +1780,7 @@
+ 
+ 	if (top < vp->top) top = vp->top;
+ 	if (bottom > vp->top + vp->height) bottom = vp->top + vp->height;
+-
++//	DEBUG(grf, 0, "viewport draw 2 left %d right %d top %d bottom %d",left,right,top,bottom);
+ 	ViewportDrawChk(vp, left, top, right, bottom);
+ }
+ 
+@@ -1642,7 +1790,7 @@
+ 
+ 	dpi->left += w->left;
+ 	dpi->top += w->top;
+-
++	DEBUG(grf, 1, "viewport drawwindow view  dpi left %d top %d",dpi->left,dpi->left);
+ 	ViewportDraw(w->viewport, dpi->left, dpi->top, dpi->left + dpi->width, dpi->top + dpi->height);
+ 
+ 	dpi->left -= w->left;
+@@ -1702,6 +1850,7 @@
+ 		}
+ 
+ 		ClampViewportToMap(vp, WP(w, vp_d).scrollpos_x, WP(w, vp_d).scrollpos_y);
++//     	DEBUG(grf, 0, "update viewport pos pt.x %d pt.y %d ",WP(w, vp_d).scrollpos_x, WP(w, vp_d).scrollpos_y);
+ 		SetViewportPosition(w, WP(w, vp_d).scrollpos_x, WP(w, vp_d).scrollpos_y);
+ 	}
+ }
+@@ -1716,26 +1865,32 @@
+  */
+ static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
+ {
+-	right -= vp->virtual_left;
+-	if (right <= 0) return;
++   int vt, vl, w, h;
+ 
+-	bottom -= vp->virtual_top;
+-	if (bottom <= 0) return;
++ 
++   left = UnScaleByZoom(left, vp->zoom);
++   top  = UnScaleByZoom(top, vp->zoom);
++   right = UnScaleByZoom(right, vp->zoom);
++   bottom = UnScaleByZoom(bottom, vp->zoom);
+ 
+-	left = max(0, left - vp->virtual_left);
++   vl = vp->virtual_left;
++   vt = vp->virtual_top;
++   w = vp->width;
++   h = vp->height;
+ 
+-	if (left >= vp->virtual_width) return;
++   left = max(0, left - vl);
++	if (left >= w) return;
+ 
+-	top = max(0, top - vp->virtual_top);
++	top = max(0, top - vt);
++	if (top >= h ) return;
+ 
+-	if (top >= vp->virtual_height) return;
++	right -= vl;
++	if (right <= 0) return;
+ 
+-	SetDirtyBlocks(
+-		UnScaleByZoom(left, vp->zoom) + vp->left,
+-		UnScaleByZoom(top, vp->zoom) + vp->top,
+-		UnScaleByZoom(right, vp->zoom) + vp->left,
+-		UnScaleByZoom(bottom, vp->zoom) + vp->top
+-	);
++	bottom -= vt;
++	if (bottom <= 0) return;
++	
++	SetDirtyBlocks(left + vp->left, top + vp->top, right + vp->left, bottom + vp->top);
+ }
+ 
+ void MarkAllViewportsDirty(int left, int top, int right, int bottom)
+@@ -1833,6 +1988,32 @@
+ 	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
+ 
+ 	switch (vp->zoom) {
++   	case ZOOM_LVL_IN_4X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_TOWNS(t) {
++				if (y >= t->sign.top &&
++						y < t->sign.top + 12 &&
++						x >= t->sign.left &&
++						x < t->sign.left + t->sign.width_1) {
++					ShowTownViewWindow(t->index);
++					return true;
++				}
++			}
++			break;
++   	case ZOOM_LVL_IN_2X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_TOWNS(t) {
++				if (y >= t->sign.top &&
++						y < t->sign.top + 12 &&
++						x >= t->sign.left &&
++						x < t->sign.left + t->sign.width_1) {
++					ShowTownViewWindow(t->index);
++					return true;
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			x = x - vp->left + vp->virtual_left;
+ 			y = y - vp->top  + vp->virtual_top;
+@@ -1891,6 +2072,32 @@
+ 	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES)) return false;
+ 
+ 	switch (vp->zoom) {
++		case ZOOM_LVL_IN_4X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_STATIONS(st) {
++				if (y >= st->sign.top &&
++						y < st->sign.top + 12 &&
++						x >= st->sign.left &&
++						x < st->sign.left + st->sign.width_1) {
++					ShowStationViewWindow(st->index);
++					return true;
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_STATIONS(st) {
++				if (y >= st->sign.top &&
++						y < st->sign.top + 12 &&
++						x >= st->sign.left &&
++						x < st->sign.left + st->sign.width_1) {
++					ShowStationViewWindow(st->index);
++					return true;
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			x = x - vp->left + vp->virtual_left;
+ 			y = y - vp->top  + vp->virtual_top;
+@@ -1949,6 +2156,32 @@
+ 	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || _current_player == PLAYER_SPECTATOR) return false;
+ 
+ 	switch (vp->zoom) {
++		case ZOOM_LVL_IN_4X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_SIGNS(si) {
++				if (y >= si->sign.top &&
++						y <  si->sign.top + 12 &&
++						x >= si->sign.left &&
++						x <  si->sign.left + si->sign.width_1) {
++					ShowRenameSignWindow(si);
++					return true;
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_SIGNS(si) {
++				if (y >= si->sign.top &&
++						y <  si->sign.top + 12 &&
++						x >= si->sign.left &&
++						x <  si->sign.left + si->sign.width_1) {
++					ShowRenameSignWindow(si);
++					return true;
++				}
++			}
++			break;            
+ 		case ZOOM_LVL_NORMAL:
+ 			x = x - vp->left + vp->virtual_left;
+ 			y = y - vp->top  + vp->virtual_top;
+@@ -2007,6 +2240,32 @@
+ 	if (!HasBit(_display_opt, DO_WAYPOINTS)) return false;
+ 
+ 	switch (vp->zoom) {
++		case ZOOM_LVL_IN_4X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_WAYPOINTS(wp) {
++				if (y >= wp->sign.top &&
++						y < wp->sign.top + 12 &&
++						x >= wp->sign.left &&
++						x < wp->sign.left + wp->sign.width_1) {
++					ShowRenameWaypointWindow(wp);
++					return true;
++				}
++			}
++			break;
++		case ZOOM_LVL_IN_2X:
++			x = x - vp->left + vp->virtual_left;
++			y = y - vp->top  + vp->virtual_top;
++			FOR_ALL_WAYPOINTS(wp) {
++				if (y >= wp->sign.top &&
++						y < wp->sign.top + 12 &&
++						x >= wp->sign.left &&
++						x < wp->sign.left + wp->sign.width_1) {
++					ShowRenameWaypointWindow(wp);
++					return true;
++				}
++			}
++			break;
+ 		case ZOOM_LVL_NORMAL:
+ 			x = x - vp->left + vp->virtual_left;
+ 			y = y - vp->top  + vp->virtual_top;
+Index: src/blitter/32bpp_optimized.cpp
+===================================================================
+--- src/blitter/32bpp_optimized.cpp	(revision 11729)
++++ src/blitter/32bpp_optimized.cpp	(working copy)
+@@ -1,6 +1,7 @@
+ /* $Id$ */
+ 
+ #include "../stdafx.h"
++#include "../core/alloc_func.hpp"
+ #include "../zoom_func.h"
+ #include "../gfx_func.h"
+ #include "../debug.h"
+@@ -15,7 +16,8 @@
+ 	uint32 *dst, *dst_line;
+ 
+ 	/* Find where to start reading in the source sprite */
+-	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top * bp->sprite_width + bp->skip_left) * ScaleByZoom(1, zoom);
++
++	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top *  bp->sprite_width + bp->skip_left); // * ScaleByZoom(1, zoom);
+ 	dst_line = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
+ 
+ 	for (int y = 0; y < bp->height; y++) {
+@@ -23,16 +25,19 @@
+ 		dst_line += bp->pitch;
+ 
+ 		src = src_line;
+-		src_line += bp->sprite_width * ScaleByZoom(1, zoom);
++		src_line += bp->sprite_width ; 
+ 
+ 		for (int x = 0; x < bp->width; x++) {
+ 			if (src->a == 0) {
+ 				/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
+-				int skip = UnScaleByZoom(src->r, zoom);
+-
++        	  
++				int skip = src->r; 
++//            DEBUG(driver, 1, "Draw blitter r %d skip %d",src->r,skip);  
++            if (skip==0)
++               continue;
+ 				dst += skip;
+ 				x   += skip - 1;
+-				src += ScaleByZoom(1, zoom) * skip;
++				src += 1*skip; 
+ 				continue;
+ 			}
+ 
+@@ -52,7 +57,8 @@
+ 					 *  we produce a result the newgrf maker didn't expect ;) */
+ 
+ 					/* Make the current color a bit more black, so it looks like this image is transparent */
+-					*dst = MakeTransparent(*dst, 192);
++//					*dst = MakeTransparent(*dst, 192);
++   				*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
+ 					break;
+ 
+ 				default:
+@@ -60,7 +66,7 @@
+ 					break;
+ 			}
+ 			dst++;
+-			src += ScaleByZoom(1, zoom);
++			src += 1; 
+ 		}
+ 	}
+ }
+@@ -108,3 +114,122 @@
+ 	}
+ 	return dest_sprite;
+ }
++
++void Blitter_32bppOptimized::RescaleSpriteHalfSize(const SpriteLoader::Sprite *src_sprite,
++                                                         SpriteLoader::Sprite *dest_sprite, 
++                                                         bool                 prevent_alpha_bleeding)
++{
++   SpriteLoader::CommonPixel *dst;
++   SpriteLoader::CommonPixel *src;
++	int width, height;
++	int x, y;
++
++	width = (src_sprite->width + 1) / 2;
++	height = (src_sprite->height + 1) / 2;
++	dest_sprite->data = CallocT<SpriteLoader::CommonPixel>(height * width);   
++   dst = (SpriteLoader::CommonPixel *)dest_sprite->data;
++   src = (SpriteLoader::CommonPixel *)src_sprite->data;
++	
++	dest_sprite->width = width;
++	dest_sprite->height = height;
++
++	dest_sprite->x_offs = src_sprite->x_offs / 2;
++	dest_sprite->y_offs = src_sprite->y_offs / 2;
++
++//	dest_sprite->mask = (uint8*) (data + sizeof(Sprite) + imgsz);
++
++	for (y = 0; y < height; y++) {
++		for (x = 0; x < width; x++) {
++//			byte mask   = src->mask[ 2 * y      * src->wpitch +  2 * x     ];
++//			byte mask01 = src->mask[(2 * y + 1) * src->wpitch +  2 * x     ];
++//			byte mask10 = src->mask[ 2 * y      * src->wpitch + (2 * x + 1)];
++//			byte mask11 = src->mask[(2 * y + 1) * src->wpitch + (2 * x + 1)];
++
++//			dest_sprite->mask[y * wpitch + x] = mask;
++//			if (mask == mask01 && mask == mask10 && mask == mask11) {
++				uint ma = 0;
++				uint a = 0;
++				uint r = 0;
++				uint g = 0;
++				uint b = 0;
++				uint i;
++				uint j;
++            SpriteLoader::CommonPixel clr;
++				for (i = 0; i < 2; i++) {
++					for (j = 0; j < 2; j++) {
++						clr = src[((2 * y ) * src_sprite->width) + (2 * x + i )];
++                  
++						uint ca = clr.a;
++						uint cr = clr.r;
++						uint cg = clr.g;
++						uint cb = clr.b;
++                  
++						a += ca;
++						r += ca * cr;
++						g += ca * cg;
++						b += ca * cb;
++						if (prevent_alpha_bleeding) {
++							if (ca > ma) ma = ca;
++						} else {
++							ma += ca;
++						}
++					}
++				}
++
++				if (a == 0) {
++
++  					dst[y * width + x].r = 0;
++  					dst[y * width + x].g = 0;
++  					dst[y * width + x].b = 0;
++  					dst[y * width + x].a = 0;
++  					dst[y * width + x].m = 0;  /* to do: color remap */
++				} else {
++					r /= a;
++					g /= a;
++					b /= a;
++					if (prevent_alpha_bleeding) {
++						a = ma;
++					} else {
++						a /= 4;
++					}
++  					dst[y * width + x].r = r;
++  					dst[y * width + x].g = g;
++  					dst[y * width + x].b = b;
++  					dst[y * width + x].a = a;
++  					dst[y * width + x].m = clr.m;  /* to do: color remap */
++
++				}
++//			} else {
++//				dst[y * width + x] = src->image[2 * y * src->wpitch + 2 * x];
++//			}
++		}
++	}
++}
++
++void Blitter_32bppOptimized::RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
++                                                           SpriteLoader::Sprite *dest_sprite)
++{
++	int width, height;
++	int x, y;
++   SpriteLoader::CommonPixel *dst;
++   SpriteLoader::CommonPixel *src;
++
++	width = src_sprite->width * 2;
++	height = src_sprite->height * 2;
++
++	dest_sprite->data = CallocT<SpriteLoader::CommonPixel>(height * width);   
++	dst = (SpriteLoader::CommonPixel *)dest_sprite->data;
++   src = (SpriteLoader::CommonPixel *)src_sprite->data;
++
++	dest_sprite->width = width;
++	dest_sprite->height = height;
++	dest_sprite->x_offs = src_sprite->x_offs * 2;
++	dest_sprite->y_offs = src_sprite->y_offs * 2;
++
++	for (y = 0; y < height; y++) {
++		for (x = 0; x < width; x++) {
++			dst[y * width + x] = src[(y / 2) * src_sprite->width + (x / 2)];
++//			dst_sprite->mask[y * dest_sprite->wpitch + x] = src->mask[(y / 2) * src->wpitch + (x / 2)];
++		}
++	}
++}
+Index: src/blitter/32bpp_optimized.hpp
+===================================================================
+--- src/blitter/32bpp_optimized.hpp	(revision 11729)
++++ src/blitter/32bpp_optimized.hpp	(working copy)
+@@ -12,6 +12,11 @@
+ public:
+ 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+ 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
++                 void RescaleSpriteHalfSize(const SpriteLoader::Sprite *src_sprite, 
++                                                  SpriteLoader::Sprite *dest_sprite,
++                                                  bool                 prevent_alpha_bleeding);
++                 void RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
++                                                    SpriteLoader::Sprite *dest_sprite);                                               
+ 
+ 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+ };
+Index: src/blitter/32bpp_base.hpp
+===================================================================
+--- src/blitter/32bpp_base.hpp	(revision 11729)
++++ src/blitter/32bpp_base.hpp	(working copy)
+@@ -95,12 +95,14 @@
+ 	*/
+ 	static inline uint MakeTransparent(uint colour, uint amount)
+ 	{
+-		uint r, g, b;
++		uint r, g, b, a;
++ 		a = GB(colour, 24, 8);
+ 		r = GB(colour, 16, 8);
+ 		g = GB(colour, 8,  8);
+ 		b = GB(colour, 0,  8);
+ 
+-		return ComposeColour(0xFF, r * amount / 256, g * amount / 256, b * amount / 256);
++//		return ComposeColour(0xFF, r * amount / 256, g * amount / 256, b * amount / 256);
++		return ComposeColour(a * amount / 256, r , g , b );
+ 	}
+ 
+ 	/**
+Index: src/blitter/32bpp_anim.cpp
+===================================================================
+--- src/blitter/32bpp_anim.cpp	(revision 11729)
++++ src/blitter/32bpp_anim.cpp	(working copy)
+@@ -78,8 +78,10 @@
+ 					 *  we produce a result the newgrf maker didn't expect ;) */
+ 
+ 					/* Make the current color a bit more black, so it looks like this image is transparent */
+-					*dst = MakeTransparent(*dst, 192);
+-					*anim = bp->remap[*anim];
++//					*dst = MakeTransparent(*dst, 192);
++     				*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a * 100/256, *dst);
++//					*anim = bp->remap[*anim];
++					*anim = src->m;
+ 					break;
+ 
+ 				default:
+Index: src/gfx.cpp
+===================================================================
+--- src/gfx.cpp	(revision 11729)
++++ src/gfx.cpp	(working copy)
+@@ -657,7 +657,7 @@
+ void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
+ {
+ 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
+-		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
++//		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
+ 		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_TRANSPARENT, sub);
+ 	} else if (pal != PAL_NONE) {
+ 		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
+@@ -678,6 +678,10 @@
+ 	int clip_right  = (sub != NULL ? max(0, sprite->width  - (-sprite->x_offs + sub->right  + 1)) : 0);
+ 	int clip_bottom = (sub != NULL ? max(0, sprite->height - (-sprite->y_offs + sub->bottom + 1)) : 0);
+ 
++   if (dpi->zoom==0)   
++DEBUG(grf, 1, "blitter 0  x %d y %d  dpi height %d, dpi width %d y  %d"
++       ,x,y,dpi->height, dpi->width ); 
++
+ 	if (clip_left + clip_right >= sprite->width) return;
+ 	if (clip_top + clip_bottom >= sprite->height) return;
+ 
+@@ -689,15 +693,17 @@
+ 	bp.sprite = sprite->data;
+ 	bp.sprite_width = sprite->width;
+ 	bp.sprite_height = sprite->height;
+-	bp.width = UnScaleByZoom(sprite->width - clip_left - clip_right, dpi->zoom);
+-	bp.height = UnScaleByZoom(sprite->height - clip_top - clip_bottom, dpi->zoom);
++
++
++	bp.width = /* UnScaleByZoom*/(sprite->width - clip_left - clip_right) /*, dpi->zoom)*/;
++	bp.height = /* UnScaleByZoom */(sprite->height - clip_top - clip_bottom) /*, dpi->zoom)*/;
+ 	bp.top = 0;
+ 	bp.left = 0;
+-	bp.skip_left = UnScaleByZoom(clip_left, dpi->zoom);
+-	bp.skip_top = UnScaleByZoom(clip_top, dpi->zoom);
++	bp.skip_left = clip_left ; // UnScaleByZoom(clip_left, dpi->zoom);
++	bp.skip_top = clip_top ; //UnScaleByZoom(clip_top, dpi->zoom);
+ 
+-	x += ScaleByZoom(bp.skip_left, dpi->zoom);
+-	y += ScaleByZoom(bp.skip_top, dpi->zoom);
++	x += bp.skip_left; //ScaleByZoom(bp.skip_left, dpi->zoom);
++	y += bp.skip_top; //ScaleByZoom(bp.skip_top, dpi->zoom);
+ 
+ 	bp.dst = dpi->dst_ptr;
+ 	bp.pitch = dpi->pitch;
+@@ -711,37 +717,45 @@
+ 
+ 	y -= dpi->top;
+ 	/* Check for top overflow */
+-	if (y < 0) {
+-		bp.height -= -UnScaleByZoom(y, dpi->zoom);
++	if (y < 0) { 
++		bp.height -= -y; //-UnScaleByZoom(y, dpi->zoom);
+ 		if (bp.height <= 0) return;
+-		bp.skip_top += -UnScaleByZoom(y, dpi->zoom);
++		bp.skip_top += -y; //UnScaleByZoom(y, dpi->zoom);
+ 		y = 0;
+ 	} else {
+-		bp.top = UnScaleByZoom(y, dpi->zoom);
++		bp.top = y; //UnScaleByZoom(y, dpi->zoom);
+ 	}
+ 
+ 	/* Check for bottom overflow */
+-	y += ScaleByZoom(bp.height, dpi->zoom) - dpi->height;
+-	if (y > 0) {
+-		bp.height -= UnScaleByZoom(y, dpi->zoom);
++   
++	y += bp.height - dpi->height; //ScaleByZoom(bp.height, dpi->zoom) - dpi->height;
++//   if (dpi->zoom==0)   
++//DEBUG(grf, 0, "blitter 41  y %d bp height %d  dpi height %d, dpi width %d y  %d"
++ //      ,y,bp.height,dpi->height, dpi->width,y );   
++	if (y > 0) {    
++		bp.height -= y; //UnScaleByZoom(y, dpi->zoom);
+ 		if (bp.height <= 0) return;
+ 	}
++//if (dpi->zoom==0)   
++//DEBUG(grf, 0, "blitter 5 y %d, bp height %d  bp skip_top %d bp top %d"
++//       ,y,bp.height,bp.skip_top, bp.top );      
+ 
+ 	x -= dpi->left;
+ 	/* Check for left overflow */
+ 	if (x < 0) {
+-		bp.width -= -UnScaleByZoom(x, dpi->zoom);
++		bp.width -= -x; /*UnScaleByZoom(x, dpi->zoom)*/;
+ 		if (bp.width <= 0) return;
+-		bp.skip_left += -UnScaleByZoom(x, dpi->zoom);
++		bp.skip_left += -x /*UnScaleByZoom(x, dpi->zoom)*/;
+ 		x = 0;
+ 	} else {
+-		bp.left = UnScaleByZoom(x, dpi->zoom);
++		bp.left = x; //UnScaleByZoom(x, dpi->zoom);
+ 	}
+-
++if (dpi->zoom==0)   
++DEBUG(grf, 1, "blitter 6  width %d ",bp.width);   
+ 	/* Check for right overflow */
+-	x += ScaleByZoom(bp.width, dpi->zoom) - dpi->width;
++	x += bp.width - dpi->width; //ScaleByZoom(bp.width, dpi->zoom) - dpi->width;
+ 	if (x > 0) {
+-		bp.width -= UnScaleByZoom(x, dpi->zoom);
++		bp.width -= x; //UnScaleByZoom(x, dpi->zoom);
+ 		if (bp.width <= 0) return;
+ 	}
+ 
+@@ -1118,7 +1132,10 @@
+ 	byte *b;
+ 	int width;
+ 	int height;
+-
++   left -=7;
++   right += 7;
++   top -= 7;
++   bottom += 7;
+ 	if (left < 0) left = 0;
+ 	if (top < 0) top = 0;
+ 	if (right > _screen.width) right = _screen.width;
+Index: src/gfxinit.cpp
+===================================================================
+--- src/gfxinit.cpp	(revision 11729)
++++ src/gfxinit.cpp	(working copy)
+@@ -334,7 +334,9 @@
+ 	uint i = FIRST_GRF_SLOT;
+ 
+ 	LoadGrfIndexed(files->basic[0].filename, trg1idx, i++);
++   	DEBUG(sprite, 2, "Loading sprite tables, dup sprite 2");
+ 	DupSprite(  2, 130); // non-breaking space medium
++      	DEBUG(sprite, 2, "Loading sprite tables, dup sprite 226");
+ 	DupSprite(226, 354); // non-breaking space tiny
+ 	DupSprite(450, 578); // non-breaking space large
+ 
+@@ -344,6 +346,7 @@
+ 	 * has a few sprites less. However, we do not care about those missing
+ 	 * sprites as they are not shown anyway (logos in intro game).
+ 	 */
++   DEBUG(sprite, 2, "Loading grf file 4793"); 
+ 	LoadGrfFile(files->basic[1].filename, 4793, i++);
+ 
+ 	/*
+@@ -358,7 +361,7 @@
+ 			i++
+ 		);
+ 	}
+-
++   DEBUG(sprite, 2, "Loading grf indexed chars"); 
+ 	LoadGrfIndexed(files->chars.filename, _chars_grf_indexes, i++);
+ 
+ 	/* Initialize the unicode to sprite mapping table */
+@@ -372,13 +375,14 @@
+ 	GRFConfig *top = _grfconfig;
+ 	GRFConfig *master = CallocT<GRFConfig>(1);
+ 	master->filename = strdup(files->openttd.filename);
++   DEBUG(sprite, 2, "FillGRFDetails"); 
+ 	FillGRFDetails(master, false);
+ 	ClrBit(master->flags, GCF_INIT_ONLY);
+ 	master->next = top;
+ 	_grfconfig = master;
+-
++   DEBUG(sprite, 2, "Spr_newgrf_base"); 
+ 	LoadNewGRF(SPR_NEWGRFS_BASE, i);
+-
++   DEBUG(sprite, 2, "clear grf config"); 
+ 	/* Free and remove the top element. */
+ 	ClearGRFConfig(&master);
+ 	_grfconfig = top;
+@@ -391,5 +395,6 @@
+ 
+ 	GfxInitSpriteMem();
+ 	LoadSpriteTables();
++  	DEBUG(sprite, 2, "Loading sprite set %d end", _opt.landscape);
+ 	GfxInitPalettes();
+ }
+Index: src/openttd.cpp
+===================================================================
+--- src/openttd.cpp	(revision 11729)
++++ src/openttd.cpp	(working copy)
+@@ -288,6 +288,7 @@
+ 
+ static void LoadIntroGame()
+ {
++	DEBUG(sprite, 1, "GT :Load intro game");
+ 	_game_mode = GM_MENU;
+ 
+ 	_opt_ptr = &_opt_newgame;
+@@ -355,7 +356,9 @@
+ 		"f"
+ #endif
+ 	;
+-
++   DrawPixelInfo dpi;
++   _cur_dpi = &dpi;
++   _cur_dpi->zoom=ZOOM_LVL_NORMAL;
+ 	MyGetOptData mgo(argc - 1, argv + 1, optformat);
+ 
+ 	while ((i = MyGetOpt(&mgo)) != -1) {
+@@ -539,9 +542,9 @@
+ 		NetworkStartDebugLog(debuglog_conn, rport);
+ 	}
+ #endif /* ENABLE_NETWORK */
+-
++	DEBUG(driver, 1, "GT:Scanning new grf...");
+ 	ScanNewGRFFiles();
+-
++	DEBUG(driver, 1, "GT:ResetGRFConfig...");
+ 	_opt_ptr = &_opt_newgame;
+ 	ResetGRFConfig(false);
+ 
+@@ -559,10 +562,11 @@
+ 	_cursor.in_window = true;
+ 	InitializeGUI();
+ 	IConsoleCmdExec("exec scripts/autoexec.scr 0");
+-
++	DEBUG(driver, 1, "GT:Generate world...");
+ 	GenerateWorld(GW_EMPTY, 64, 64); // Make the viewport initialization happy
++   	DEBUG(driver, 1, "GT:Generate world..end.");
+ 	WaitTillGeneratedWorld();
+-
++   	DEBUG(driver, 1, "GT:After wait till Generated world..");
+ #ifdef ENABLE_NETWORK
+ 	if (network && _network_available) {
+ 		if (network_conn != NULL) {
+@@ -591,7 +595,10 @@
+ 		}
+ 	}
+ #endif /* ENABLE_NETWORK */
+-
++      if (_cur_dpi)
++      DEBUG(driver, 1, "Mainttd,before mainloop %d",_cur_dpi->zoom);
++   else   
++      DEBUG(driver, 1, "Mainttd,before mainloop cur dpi unknown");
+ 	_video_driver->MainLoop();
+ 
+ 	WaitTillSaved();
+@@ -708,7 +715,11 @@
+ static void MakeNewGame(bool from_heightmap)
+ {
+ 	_game_mode = GM_NORMAL;
+-
++	DEBUG(driver, 1, "GT:MakeNewGameGenerate world...");
++      if (_cur_dpi)
++      DEBUG(sprite, 2, "Makenewgame,zoom %d",_cur_dpi->zoom);
++   else   
++      DEBUG(sprite, 2, "Makenewgame,zoom cur dpi unknown");
+ 	ResetGRFConfig(true);
+ 	_house_mngr.ResetMapping();
+ 	_industile_mngr.ResetMapping();
+@@ -808,7 +819,12 @@
+ 			switch (ogm) {
+ 				case GM_MENU:   LoadIntroGame();      break;
+ 				case GM_EDITOR: MakeNewEditorWorld(); break;
+-				default:        MakeNewGame(false);   break;
++				default:        
++               if (_cur_dpi)
++                  DEBUG(sprite, 2, "Safesaveorload,zoom %d",_cur_dpi->zoom);
++               else   
++                  DEBUG(sprite, 2, "Safesaveorload,zoom cur dpi unknown");
++               MakeNewGame(false);   break;
+ 			}
+ 			return false;
+ 
+@@ -858,6 +874,10 @@
+ 			snprintf(_network_game_info.map_name, lengthof(_network_game_info.map_name), "Random Map");
+ 		}
+ #endif /* ENABLE_NETWORK */
++      if (_cur_dpi)
++      DEBUG(sprite, 2, "Switchmode newgame ,zoom %d",_cur_dpi->zoom);
++   else   
++      DEBUG(sprite, 2, "SwitchMode newgame,zoom cur dpi unknown");
+ 		MakeNewGame(false);
+ 		break;
+ 
+@@ -900,6 +920,10 @@
+ 			snprintf(_network_game_info.map_name, lengthof(_network_game_info.map_name), "%s (Heightmap)", _file_to_saveload.title);
+ 		}
+ #endif /* ENABLE_NETWORK */
++      if (_cur_dpi)
++      DEBUG(sprite, 2, "Makenewgame switchmode heigth,zoom %d",_cur_dpi->zoom);
++   else   
++      DEBUG(sprite, 2, "Makenewgame switchmode height,zoom cur dpi unknown");
+ 		MakeNewGame(true);
+ 		break;
+ 
+@@ -1069,7 +1093,10 @@
+ void GameLoop()
+ {
+ 	ThreadMsg message;
+-
++//   if (_cur_dpi)
++//      DEBUG(sprite, 2, "GameLoop,zoom %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(sprite, 2, "GameLoop,zoom cur dpi unknown");
+ 	if ((message = OTTD_PollThreadEvent()) != 0) ProcessSentMessage(message);
+ 
+ 	/* autosave game? */
+@@ -1123,6 +1150,10 @@
+ #else
+ 	StateGameLoop();
+ #endif /* ENABLE_NETWORK */
++//   if (_cur_dpi)
++//      DEBUG(sprite, 2, "GameLoop,after stategame loop zoom %d",_cur_dpi->zoom);
++//   else   
++//      DEBUG(sprite, 2, "GameLoop,after stategame loop zoom cur dpi unknown");
+ 
+ 	if (!_pause_game && HasBit(_display_opt, DO_FULL_ANIMATION)) DoPaletteAnimations();
+ 
+@@ -1247,6 +1278,7 @@
+  */
+ static bool InitializeWindowsAndCaches()
+ {
++  	DEBUG(sprite, 1, "GT :Init window and cache zoom ");
+ 	/* Initialize windows */
+ 	ResetWindowSystem();
+ 	SetupColorsAndInitialWindow();
+@@ -1259,10 +1291,12 @@
+ 	WP(w, vp_d).dest_scrollpos_y = _saved_scrollpos_y;
+ 
+ 	ViewPort *vp = w->viewport;
+-	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
++//	vp->zoom = (ZoomLevel)min(_saved_scrollpos_zoom, ZOOM_LVL_NORMAL);
++	vp->zoom = (ZoomLevel)ZOOM_LVL_NORMAL;
++   	DEBUG(sprite, 1, "GT :Init window and cache zoom %d", vp->zoom);
+ 	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
+ 	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
+-
++	DEBUG(sprite, 1, "GT :Init window and cache");
+ 	DoZoomInOutWindow(ZOOM_NONE, w); // update button status
+ 	MarkWholeScreenDirty();
+ 
+Index: src/main_gui.cpp
+===================================================================
+--- src/main_gui.cpp	(revision 11729)
++++ src/main_gui.cpp	(working copy)
+@@ -51,6 +51,7 @@
+ #include "transparency.h"
+ #include "strings_func.h"
+ #include "zoom_func.h"
++#include "debug.h"
+ 
+ static int _rename_id = 1;
+ static int _rename_what = -1;
+@@ -899,6 +900,8 @@
+ 	if (vp != NULL) { // the vp can be null when how == ZOOM_NONE
+ 		vp->virtual_left = WP(w, vp_d).scrollpos_x;
+ 		vp->virtual_top = WP(w, vp_d).scrollpos_y;
++      DEBUG(grf, 0, "zoomin virt left %d virt top %d v width %d v height %d zoom %d w %d", vp->virtual_left,
++   vp->virtual_top, vp->virtual_width,vp->virtual_height,vp->zoom, w->window_number);
+ 	}
+ 	SetWindowDirty(w);
+ 	/* Update the windows that have zoom-buttons to perhaps disable their buttons */
+@@ -908,6 +911,7 @@
+ 
+ static void ToolbarZoomInClick(Window *w)
+ {
++      	DEBUG(grf, 0, "main gui toolbar zoom in click");               
+ 	if (DoZoomInOutWindow(ZOOM_IN, FindWindowById(WC_MAIN_WINDOW, 0))) {
+ 		w->HandleButtonClick(17);
+ 		SndPlayFx(SND_15_BEEP);
+@@ -916,6 +920,7 @@
+ 
+ static void ToolbarZoomOutClick(Window *w)
+ {
++      	DEBUG(grf, 0, "main gui toolbar zoom out click");               
+ 	if (DoZoomInOutWindow(ZOOM_OUT,FindWindowById(WC_MAIN_WINDOW, 0))) {
+ 		w->HandleButtonClick(18);
+ 		SndPlayFx(SND_15_BEEP);
+@@ -1032,6 +1037,7 @@
+ 
+ static void ToolbarScenZoomOut(Window *w)
+ {
++      	DEBUG(grf, 0, "main gui toolbar scen zoom out");               
+ 	if (DoZoomInOutWindow(ZOOM_OUT, FindWindowById(WC_MAIN_WINDOW, 0))) {
+ 		w->HandleButtonClick(10);
+ 		SndPlayFx(SND_15_BEEP);
+@@ -1054,7 +1060,7 @@
+ 		pt = GetTileZoomCenterWindow(in,w);
+ 		if (pt.x != -1) {
+ 			ScrollWindowTo(pt.x, pt.y, w, true);
+-
++      	DEBUG(grf, 0, "main gui zoominor out to cursor ");               
+ 			DoZoomInOutWindow(in ? ZOOM_IN : ZOOM_OUT, w);
+ 		}
+ 	}
+@@ -2232,6 +2238,7 @@
+ 				Point pt = GetTileBelowCursor();
+ 				if (pt.x != -1) {
+ 					ScrollMainWindowTo(pt.x, pt.y);
++      	DEBUG(grf, 0, "main gui keypress max zoom");               
+ 					if (e->we.keypress.keycode == 'Z') MaxZoomInOut(ZOOM_IN, w);
+ 				}
+ 				break;
+@@ -2336,10 +2343,12 @@
+ 		} break;
+ 
+ 		case WE_MOUSEWHEEL:
++      	DEBUG(grf, 0, "main gui mousewheel zoominoroutto");               
+ 			ZoomInOrOutToCursorWindow(e->we.wheel.wheel < 0, w);
+ 			break;
+ 
+ 		case WE_MESSAGE:
++            	DEBUG(grf, 0, "main gui message");               
+ 			/* Forward the message to the appropiate toolbar (ingame or scenario editor) */
+ 			SendWindowMessage(WC_MAIN_TOOLBAR, 0, e->we.message.msg, e->we.message.wparam, e->we.message.lparam);
+ 			break;
+@@ -2396,7 +2405,7 @@
+ 
+ 	/* 'w' is for sure a WC_MAIN_TOOLBAR */
+ 	PositionMainToolbar(w);
+-
++DEBUG(grf, 1, "main gui, show vital windows, after position toolbar");
+ 	/* Status bad only for normal games */
+ 	if (_game_mode == GM_EDITOR) return;
+ 
