@@ -11,6 +11,20 @@ Index: src/sound.cpp
  assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_END - ZOOM_LVL_BEGIN);
  
  static const byte _sound_base_vol[] = {
+Index: src/station_cmd.cpp
+===================================================================
+--- src/station_cmd.cpp	(revision 11813)
++++ src/station_cmd.cpp	(working copy)
+@@ -2154,7 +2154,8 @@
+ 		}
+ 
+ 		SpriteID pal;
+-		if (!(!HasBit(image, SPRITE_MODIFIER_OPAQUE) && IsTransparencySet(TO_BUILDINGS)) && HasBit(image, PALETTE_MODIFIER_COLOR)) {
++		if (/*(HasBit(image, SPRITE_MODIFIER_OPAQUE) ||!IsTransparencySet(TO_BUILDINGS) ) 
++        &&*/ HasBit(image, PALETTE_MODIFIER_COLOR)) {
+ 			pal = palette;
+ 		} else {
+ 			pal = dtss->pal;
 Index: src/spriteloader/grf.cpp
 ===================================================================
 --- src/spriteloader/grf.cpp	(revision 11813)
@@ -65,7 +79,7 @@ Index: src/spriteloader/png.cpp
 +//   DEBUG(sprite, 1, "GT: openpng file , filename  %s",
 +//         filename==NULL?"NULL":filename);
 +	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d_%s%d%s.png", filename, id, "z",zoom,mask ? "m" : "");
-+//   DEBUG(sprite, 1, "GT: openpng file check file exist  %s", png_file);   
++   DEBUG(sprite, 1, "GT: openpng file check file exist  %s", png_file);   
 +	if (FioCheckFileExists(png_file)) {
 +//      DEBUG( sprite, 1, "GT: openpng file , filename  %s", png_file==NULL?"NULL":png_file);
 +		FioOpenFile(PNG_SLOT, png_file);
@@ -688,6 +702,15 @@ Index: src/viewport.cpp
  		return;
  
  	AddChildSpriteScreen(image, pal, pt.x - vd->parent_list[-1]->left, pt.y - vd->parent_list[-1]->top, false, sub);
+@@ -643,7 +649,7 @@
+ 	/* make the sprites transparent with the right palette */
+ 	if (transparent) {
+ 		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
+-		pal = PALETTE_TO_TRANSPARENT;
++//		pal = PALETTE_TO_TRANSPARENT;
+ 	}
+ 
+ 	if (vd->combine_sprites == 2) {
 @@ -682,10 +688,16 @@
  		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
  	} else {
@@ -724,6 +747,15 @@ Index: src/viewport.cpp
  		return;
  	}
  
+@@ -755,7 +767,7 @@
+ 	/* make the sprites transparent with the right palette */
+ 	if (transparent) {
+ 		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
+-		pal = PALETTE_TO_TRANSPARENT;
++//		pal = PALETTE_TO_TRANSPARENT;
+ 	}
+ 
+ 	if (vd->spritelist_mem >= vd->eof_spritelist_mem) {
 @@ -779,8 +791,8 @@
  	cs->image = image;
  	cs->pal = pal;
@@ -1362,7 +1394,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	/* Find where to start reading in the source sprite */
 -	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top * bp->sprite_width + bp->skip_left) * ScaleByZoom(1, zoom);
 +
-+	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top *  bp->sprite_width + bp->skip_left); // * ScaleByZoom(1, zoom);
++	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top *  bp->sprite_width + bp->skip_left); 
  	dst_line = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
  
  	for (int y = 0; y < bp->height; y++) {
@@ -1386,21 +1418,39 @@ Index: src/blitter/32bpp_optimized.cpp
  				dst += skip;
  				x   += skip - 1;
 -				src += ScaleByZoom(1, zoom) * skip;
-+				src += 1*skip; 
++				src += skip; 
  				continue;
  			}
  
-@@ -52,7 +57,8 @@
- 					 *  we produce a result the newgrf maker didn't expect ;) */
+@@ -47,12 +52,21 @@
+ 					break;
  
- 					/* Make the current color a bit more black, so it looks like this image is transparent */
+ 				case BM_TRANSPARENT:
+-					/* TODO -- We make an assumption here that the remap in fact is transparency, not some color.
+-					 *  This is never a problem with the code we produce, but newgrfs can make it fail... or at least:
+-					 *  we produce a result the newgrf maker didn't expect ;) */
+-
+-					/* Make the current color a bit more black, so it looks like this image is transparent */
 -					*dst = MakeTransparent(*dst, 192);
++               /* GeekToo: for 32bpp remap of colours and transparency are not 
++                  mutual exclusive. For now, check the remap ptr to check for 
++                  remapping, in the future a cleaner solution will be to create
++                  an extra blitter mode
++               */    
 +//					*dst = MakeTransparent(*dst, 192);
-+   				*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
++  					if (src->m == 0) {
++						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
++					} else {
++                  if(bp->remap){               
++						   if (bp->remap[src->m] != 0) *dst =
++                       ComposeColourPA(this->LookupColourInPalette(bp->remap[src->m]), src->a/2, *dst);
++                  } else      
++     						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
++					}
  					break;
  
  				default:
-@@ -60,7 +66,7 @@
+@@ -60,7 +74,7 @@
  					break;
  			}
  			dst++;
@@ -1409,7 +1459,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		}
  	}
  }
-@@ -108,3 +114,122 @@
+@@ -108,3 +122,122 @@
  	}
  	return dest_sprite;
  }
@@ -1590,16 +1640,26 @@ Index: src/gfx.cpp
 ===================================================================
 --- src/gfx.cpp	(revision 11813)
 +++ src/gfx.cpp	(working copy)
-@@ -657,7 +657,7 @@
+@@ -657,9 +657,16 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
 -		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
-+//		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
++      if (pal != PAL_NONE) {
++	   	_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
++		}
++      else
++      {
++         _color_remap_ptr = NULL;
++      }
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_TRANSPARENT, sub);
- 	} else if (pal != PAL_NONE) {
+-	} else if (pal != PAL_NONE) {
++	} else 
++   if (pal != PAL_NONE) {
  		_color_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
-@@ -689,15 +689,17 @@
+ 		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_COLOUR_REMAP, sub);
+ 	} else {
+@@ -689,15 +696,17 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -1623,7 +1683,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -711,37 +713,40 @@
+@@ -711,37 +720,40 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -1676,7 +1736,7 @@ Index: src/gfx.cpp
  		if (bp.width <= 0) return;
  	}
  
-@@ -1118,7 +1123,10 @@
+@@ -1118,7 +1130,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -1688,6 +1748,85 @@ Index: src/gfx.cpp
  	if (left < 0) left = 0;
  	if (top < 0) top = 0;
  	if (right > _screen.width) right = _screen.width;
+Index: src/player_gui.cpp
+===================================================================
+--- src/player_gui.cpp	(revision 11813)
++++ src/player_gui.cpp	(working copy)
+@@ -28,6 +28,7 @@
+ #include "window_func.h"
+ #include "date_func.h"
+ #include "string_func.h"
++#include "zoom_type.h"
+ 
+ static void DoShowPlayerFinances(PlayerID player, bool show_small, bool show_stickied);
+ static void DoSelectPlayerFace(PlayerID player, bool show_big);
+@@ -523,6 +524,7 @@
+ 		}
+ 		DrawSprite(GetPlayerFaceSprite(pf, pfv, ge), (pfv == PFV_EYEBROWS) ? pal : PAL_NONE, x, y);
+ 	}
++
+ }
+ 
+ /**
+@@ -584,15 +586,15 @@
+ /** Widget description for the normal/simple player face selection dialog */
+ static const Widget _select_player_face_widgets[] = {
+ {   WWT_CLOSEBOX,   RESIZE_NONE,    14,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
+-{    WWT_CAPTION,   RESIZE_NONE,    14,    11,   174,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
+-{     WWT_IMGBTN,   RESIZE_NONE,    14,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL
+-{      WWT_PANEL,   RESIZE_NONE,    14,     0,   189,    14,   150, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,    94,   151,   162, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   189,   151,   162, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,    95,   187,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,    95,   187,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   137,   148, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   187,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{    WWT_CAPTION,   RESIZE_NONE,    14,    11,   292,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
++{     WWT_IMGBTN,   RESIZE_NONE,    14,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL
++{      WWT_PANEL,   RESIZE_NONE,    14,     0,   307,    14,   313, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,    94,   314,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   307,   314,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,    190,  282,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,    190,  282,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   287,   298, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    190,  282,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+ {   WIDGETS_END},
+ };
+ 
+@@ -782,8 +784,15 @@
+ 				DrawFaceStringLabel(w, PFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetPlayerFaceBits(*pf, PFV_COLLAR,          ge), false);
+ 			}
+ 
++      	DrawPixelInfo bk, *old_dpi;
++         old_dpi = _cur_dpi;
++      	_cur_dpi = &bk;
++         *_cur_dpi = *old_dpi;
++         _cur_dpi->zoom = ZOOM_LVL_IN_2X;
++
+ 			/* Draw the player face picture */
+ 			DrawPlayerFace(*pf, GetPlayer((PlayerID)w->window_number)->player_color, 2, 16);
++         _cur_dpi = old_dpi;
+ 			break;
+ 
+ 		case WE_CLICK:
+@@ -907,7 +916,7 @@
+ 
+ /** normal/simple player face selection window description */
+ static const WindowDesc _select_player_face_desc = {
+-	WDP_AUTO, WDP_AUTO, 190, 163, 190, 163,
++	WDP_AUTO, WDP_AUTO, 309, 326, 309, 326,
+ 	WC_PLAYER_FACE, WC_NONE,
+ 	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
+ 	_select_player_face_widgets,
+@@ -916,7 +925,7 @@
+ 
+ /** advanced player face selection window description */
+ static const WindowDesc _select_player_face_adv_desc = {
+-	WDP_AUTO, WDP_AUTO, 220, 220, 220, 220,
++	WDP_AUTO, WDP_AUTO, 440, 440, 440, 440,
+ 	WC_PLAYER_FACE, WC_NONE,
+ 	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
+ 	_select_player_face_adv_widgets,
 Index: src/openttd.cpp
 ===================================================================
 --- src/openttd.cpp	(revision 11813)
