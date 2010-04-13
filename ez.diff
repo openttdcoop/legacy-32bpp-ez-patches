@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 12754)
+--- src/sound.cpp	(revision 13638)
 +++ src/sound.cpp	(working copy)
 @@ -166,7 +166,7 @@
  }
@@ -8,128 +8,14 @@ Index: src/sound.cpp
  
 -static const byte _vol_factor_by_zoom[] = {255, 190, 134, 87};
 +static const byte _vol_factor_by_zoom[] = {255, 255, 255, 190, 134, 87};
- assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_END - ZOOM_LVL_BEGIN);
+ assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_COUNT);
  
  static const byte _sound_base_vol[] = {
-Index: src/rail_cmd.cpp
-===================================================================
---- src/rail_cmd.cpp	(revision 12754)
-+++ src/rail_cmd.cpp	(working copy)
-@@ -2234,12 +2234,15 @@
- }
- 
- static const byte _fractcoords_behind[4] = { 0x8F, 0x8, 0x80, 0xF8 };
--static const byte _fractcoords_enter[4] = { 0x8A, 0x48, 0x84, 0xA8 };
-+static const byte _fractcoords_enter[4] = { 0x88, 0x88, 0x88, 0x88 };
- static const signed char _deltacoord_leaveoffset[8] = {
--	-1,  0,  1,  0, /* x */
--	 0,  1,  0, -1  /* y */
-+	 1,  0, -1,  0, /* x */
-+	 0, -1,  0,  1  /* y */
- };
-+// static const byte _fractcoords_leave[4] = { 0x80, 0xF8, 0x8F, 0x08 };
- 
-+//static const byte _vehicle_initial_x_fract[4] = { 15, 8, 0, 8};
-+//static const byte _vehicle_initial_y_fract[4] = { 8, 0, 8, 15};
- 
- /** Compute number of ticks when next wagon will leave a depot.
-  * Negative means next wagon should have left depot n ticks before.
-@@ -2266,9 +2269,10 @@
- static VehicleEnterTileStatus VehicleEnter_Track(Vehicle *v, TileIndex tile, int x, int y)
- {
- 	byte fract_coord;
--	byte fract_coord_leave;
-+//	byte fract_coord_leave;
- 	DiagDirection dir;
- 	int length;
-+	Vehicle *p;
- 
- 	/* this routine applies only to trains in depot tiles */
- 	if (v->type != VEH_TRAIN || !IsRailDepotTile(tile)) return VETSB_CONTINUE;
-@@ -2280,19 +2284,21 @@
- 	/* this depends on the length of the current vehicle */
- 	length = v->u.rail.cached_veh_length;
- 
--	fract_coord_leave =
--		((_fractcoords_enter[dir] & 0x0F) + // x
--			(length + 1) * _deltacoord_leaveoffset[dir]) +
--		(((_fractcoords_enter[dir] >> 4) +  // y
--			((length + 1) * _deltacoord_leaveoffset[dir+4])) << 4);
- 
-+//	fract_coord_leave =
-+//		((_fractcoords_leave[dir] & 0x0F) + // x
-+//			(0xF-length) * _deltacoord_leaveoffset[dir])  +
-+//		(((_fractcoords_leave[dir] >> 4) +  // y
-+//			((0xF-length ) * _deltacoord_leaveoffset[dir+4])) << 4);
-+			
- 	fract_coord = (x & 0xF) + ((y & 0xF) << 4);
- 
- 	if (_fractcoords_behind[dir] == fract_coord) {
- 		/* make sure a train is not entering the tile from behind */
- 		return VETSB_CANNOT_ENTER;
--	} else if (_fractcoords_enter[dir] == fract_coord) {
--		if (DiagDirToDir(ReverseDiagDir(dir)) == v->direction) {
-+	} else
-+	if (DiagDirToDir(ReverseDiagDir(dir)) == v->direction) { 
-+		if (_fractcoords_enter[dir] == fract_coord) {
- 			/* enter the depot */
- 			v->u.rail.track = TRACK_BIT_DEPOT,
- 			v->vehstatus |= VS_HIDDEN; /* hide it */
-@@ -2303,16 +2309,43 @@
- 			InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
- 			return VETSB_ENTERED_WORMHOLE;
- 		}
--	} else if (fract_coord_leave == fract_coord) {
--		if (DiagDirToDir(dir) == v->direction) {
--			/* leave the depot? */
--			if ((v = v->Next()) != NULL) {
--				v->vehstatus &= ~VS_HIDDEN;
--				v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
-+	} else {
-+		bool leave = false;
-+		if ( (p = v->Previous()) != NULL){   // carriages 		
-+			if (!(p->vehstatus & VS_HIDDEN)) { // prev carriage or engine already outside.
-+				switch (dir) {
-+					case DIAGDIR_NE: leave = (v->x_pos - p->x_pos >= 0xE);
-+						break;
-+					case DIAGDIR_SE: leave = (p->y_pos - v->y_pos >= 0xE);
-+						break;
-+					case DIAGDIR_SW: leave = (p->x_pos - v->x_pos >= 0xE);
-+						break;
-+					case DIAGDIR_NW: leave = (v->y_pos - p->y_pos >= 0xE);
-+						break;
-+					default: leave = false;
-+						break;
-+				}
-+				if (leave){
-+					v->vehstatus &= ~VS_HIDDEN;
-+					v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);					
-+				}
- 			}
- 		}
-+//		else if (fract_coord_leave == fract_coord) {
-+//			if (DiagDirToDir(dir) == v->direction) {
-+			/* leave the depot? */
-+//				if ((v = v->Next()) != NULL) {
-+//					v->vehstatus &= ~VS_HIDDEN;
-+//					v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
-+//				v->x_pos = (v->x_pos & ~0x0F) | _vehicle_initial_x_fract[dir];
-+//				v->y_pos = (v->y_pos & ~0x0F) | _vehicle_initial_y_fract[dir];
-+//			   }
-+//		   }
-+//	   }
- 	}
-+	
- 
-+
- 	return VETSB_CONTINUE;
- }
- 
 Index: src/station_cmd.cpp
 ===================================================================
---- src/station_cmd.cpp	(revision 12754)
+--- src/station_cmd.cpp	(revision 13638)
 +++ src/station_cmd.cpp	(working copy)
-@@ -2198,12 +2198,10 @@
+@@ -2235,12 +2235,10 @@
  		}
  
  		SpriteID pal;
@@ -146,19 +32,11 @@ Index: src/station_cmd.cpp
  		} else {
  			pal = PAL_NONE;
  		}
-@@ -2421,7 +2419,6 @@
- 				if (x == 12) return VETSB_ENTERED_STATION | (VehicleEnterTileStatus)(station_id << VETS_STATION_ID_OFFSET); /* enter station */
- 				if (x < 12) {
- 					uint16 spd;
--
- 					v->vehstatus |= VS_TRAIN_SLOWING;
- 					spd = _enter_station_speedtable[x];
- 					if (spd < v->cur_speed) v->cur_speed = spd;
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 12754)
+--- src/table/sprites.h	(revision 13638)
 +++ src/table/sprites.h	(working copy)
-@@ -1427,7 +1427,7 @@
+@@ -1450,7 +1450,7 @@
  	RECOLOR_BIT = 30,           ///< toggles recoloring in the sprite
  	OFFSET_BIT = 29,
  	OPAQUE_BIT = 28,
@@ -167,7 +45,7 @@ Index: src/table/sprites.h
  	PALETTE_WIDTH = 24,         ///< number of bits of the sprite containing the recolor palette
  	SPRITE_WIDTH = 24,          ///< number of bits for the sprite number
  };
-@@ -1454,6 +1454,7 @@
+@@ -1477,6 +1477,7 @@
  	PALETTE_MODIFIER_GREYOUT        = TRANSPARENT_BIT,
  	///Set when a colortable mode is used. @see GfxFillRect
  	USE_COLORTABLE                  = RECOLOR_BIT,
@@ -177,49 +55,49 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 12754)
+--- src/spriteloader/grf.cpp	(revision 13638)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -9,7 +9,7 @@
  #include "../core/alloc_func.hpp"
  #include "grf.hpp"
  
--bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos)
-+bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos, ZoomLevel zoom)
+-bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos)
++bool SpriteLoaderGrf::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, ZoomLevel zoom)
  {
  	/* Open the right file and go to the correct position */
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 12754)
+--- src/spriteloader/spriteloader.hpp	(revision 13638)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
-@@ -26,8 +26,7 @@
+@@ -26,8 +26,8 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
--	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos) = 0;
--
-+	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos, ZoomLevel zoom) = 0;
+-	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos) = 0;
+ 
++	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, ZoomLevel zoom) = 0;
  	virtual ~SpriteLoader() { }
  };
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 12754)
+--- src/spriteloader/grf.hpp	(revision 13638)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
--	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos);
-+	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos, ZoomLevel zoom);
+-	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos);
++	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, ZoomLevel zoom);
  };
  
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 12754)
+--- src/spriteloader/png.cpp	(revision 13638)
 +++ src/spriteloader/png.cpp	(working copy)
-@@ -30,21 +30,28 @@
+@@ -30,21 +30,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
  }
  
@@ -247,12 +125,13 @@ Index: src/spriteloader/png.cpp
  	return false;
  }
  
--static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, bool mask)
-+static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, bool mask, ZoomLevel zoom)
+-static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, volatile bool mask)
++
++static bool LoadPNG(SpriteLoader::Sprite *sprite, const char *filename, uint32 id, volatile bool mask, ZoomLevel zoom)
  {
  	png_byte header[8];
  	png_structp png_ptr;
-@@ -54,7 +61,7 @@
+@@ -54,7 +62,7 @@
  	png_bytep row_pointer;
  	SpriteLoader::CommonPixel *dst;
  
@@ -261,7 +140,7 @@ Index: src/spriteloader/png.cpp
  
  	/* Check the header */
  	FioReadBlock(header, 8);
-@@ -148,9 +155,7 @@
+@@ -148,9 +156,7 @@
  		for (uint x = 0; x < info_ptr->width; x++) {
  			if (mask) {
  				if (row_pointer[x * sizeof(uint8)] != 0) {
@@ -272,158 +151,39 @@ Index: src/spriteloader/png.cpp
  					/* Alpha channel is used from the original image (to allow transparency in remap colors) */
  					dst[x].m = row_pointer[x * sizeof(uint8)];
  				}
-@@ -170,11 +175,11 @@
+@@ -170,11 +176,13 @@
  	return true;
  }
  
--bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos)
-+bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos, ZoomLevel zoom)
+-bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos)
++bool SpriteLoaderPNG::LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, ZoomLevel zoom)
  {
  	const char *filename = FioGetFilename(file_slot);
--	if (!LoadPNG(sprite, filename, file_pos, false)) return false;
--	if (!LoadPNG(sprite, filename, file_pos, true)) return false;
+-	if (!LoadPNG(sprite, filename, (uint32)file_pos, false)) return false;
+-	if (!LoadPNG(sprite, filename, (uint32)file_pos, true)) return false;
++
 +	if (!LoadPNG(sprite, filename, file_pos, false, zoom)) return false;
 +	if (!LoadPNG(sprite, filename, file_pos, true, zoom)) return false;
++
  	return true;
  }
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 12754)
+--- src/spriteloader/png.hpp	(revision 13638)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
--	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos);
-+	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, uint32 file_pos, ZoomLevel zoom);
+-	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos);
++	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t  file_pos, ZoomLevel zoom);
  };
  
  #endif /* SPRITELOADER_PNG_HPP */
-Index: src/train_cmd.cpp
-===================================================================
---- src/train_cmd.cpp	(revision 12754)
-+++ src/train_cmd.cpp	(working copy)
-@@ -56,10 +56,11 @@
- static void TrainController(Vehicle *v, Vehicle *nomove, bool update_image);
- static TileIndex TrainApproachingCrossingTile(const Vehicle *v);
- 
--static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
--static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
- 
-+static const byte _vehicle_initial_x_fract[4] = { 8, 8, 8, 8};
-+static const byte _vehicle_initial_y_fract[4] = { 8, 8, 8, 8};
- 
-+
- /**
-  * Determine the side in which the train will leave the tile
-  *
-@@ -281,7 +282,7 @@
- 		}
- 		if (veh_len == CALLBACK_FAILED) veh_len = rvi_u->shorten_factor;
- 		veh_len = Clamp(veh_len, 0, u->Next() == NULL ? 7 : 5); // the clamp on vehicles not the last in chain is stricter, as too short wagons can break the 'follow next vehicle' code
--		u->u.rail.cached_veh_length = 8 - veh_len;
-+		u->u.rail.cached_veh_length = 0xF- veh_len;
- 		v->u.rail.cached_total_length += u->u.rail.cached_veh_length;
- 	}
- 
-@@ -1494,16 +1495,17 @@
- void Train::UpdateDeltaXY(Direction direction)
- {
- #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
-+
- 	static const uint32 _delta_xy_table[8] = {
--		MKIT(3, 3, -1, -1),
--		MKIT(3, 7, -1, -3),
--		MKIT(3, 3, -1, -1),
--		MKIT(7, 3, -3, -1),
--		MKIT(3, 3, -1, -1),
--		MKIT(3, 7, -1, -3),
--		MKIT(3, 3, -1, -1),
--		MKIT(7, 3, -3, -1),
--	};
-+		MKIT(3, 3, -1,  -1),   // N
-+		MKIT(3, 15, 0,  -8),   // NE
-+		MKIT(3, 3, -1,  -1),    // E
-+		MKIT(15, 3, -8, -0),  // SE
-+		MKIT(7, 7, -1,  -1),   // S
-+		MKIT(3, 15, 0,  -8),   // SW
-+		MKIT(7, 7, -1,  -1),   // W
-+		MKIT(15, 3, -8,  0),   // NW
-+	}; 
- #undef MKIT
- 
- 	uint32 x = _delta_xy_table[direction];
-@@ -2318,12 +2320,12 @@
- }
- 
- static const byte _initial_tile_subcoord[6][4][3] = {
--{{ 15, 8, 1 }, { 0, 0, 0 }, { 0, 8, 5 }, { 0,  0, 0 }},
--{{  0, 0, 0 }, { 8, 0, 3 }, { 0, 0, 0 }, { 8, 15, 7 }},
--{{  0, 0, 0 }, { 7, 0, 2 }, { 0, 7, 6 }, { 0,  0, 0 }},
--{{ 15, 8, 2 }, { 0, 0, 0 }, { 0, 0, 0 }, { 8, 15, 6 }},
--{{ 15, 7, 0 }, { 8, 0, 4 }, { 0, 0, 0 }, { 0,  0, 0 }},
--{{  0, 0, 0 }, { 0, 0, 0 }, { 0, 8, 4 }, { 7, 15, 0 }},
-+{{ 15, 8, 1 }, { 0, 0, 0 }, { 0, 8, 5 }, { 0,  0, 0 }},  // x
-+{{  0, 0, 0 }, { 8, 0, 3 }, { 0, 0, 0 }, { 8, 15, 7 }},  // y
-+{{  0, 0, 0 }, { 7, 0, 2 }, { 0, 7, 6 }, { 0,  0, 0 }},  // up
-+{{ 15, 8, 2 }, { 0, 0, 0 }, { 0, 0, 0 }, { 8, 15, 6 }},  // low
-+{{ 15, 7, 0 }, { 8, 0, 4 }, { 0, 0, 0 }, { 0,  0, 0 }},  // left
-+{{  0, 0, 0 }, { 0, 0, 0 }, { 0, 8, 4 }, { 7, 15, 0 }},  // right
- };
- 
- static const byte _search_directions[6][4] = {
-@@ -2915,6 +2917,7 @@
- 					/* Inside depot */
- 					gp.x = v->x_pos;
- 					gp.y = v->y_pos;
-+					VehicleEnterTile(v, gp.new_tile, gp.x, gp.y);
- 				} else {
- 					/* Not inside depot */
- 
-@@ -2996,10 +2999,18 @@
- 					}
- 				} else {
- 					static const TrackBits _matching_tracks[8] = {
--							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT, TRACK_BIT_X,
--							TRACK_BIT_UPPER | TRACK_BIT_LOWER, TRACK_BIT_Y,
--							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT, TRACK_BIT_X,
--							TRACK_BIT_UPPER | TRACK_BIT_LOWER, TRACK_BIT_Y
-+							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT,     //N
-+							TRACK_BIT_X | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
-+											TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //NE
-+							TRACK_BIT_UPPER | TRACK_BIT_LOWER,     //E
-+							TRACK_BIT_Y | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
-+											TRACK_BIT_LOWER | TRACK_BIT_UPPER, //SE  
-+							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT,     //S 
-+							TRACK_BIT_X | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
-+											TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //SW
-+							TRACK_BIT_UPPER | TRACK_BIT_LOWER,     //W         
-+							TRACK_BIT_Y | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
-+											  TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //NW
- 					};
- 
- 					/* The wagon is active, simply follow the prev vehicle. */
-@@ -3007,11 +3018,12 @@
- 				}
- 
- 				/* Make sure chosen track is a valid track */
--				assert(
--						chosen_track == TRACK_BIT_X     || chosen_track == TRACK_BIT_Y ||
--						chosen_track == TRACK_BIT_UPPER || chosen_track == TRACK_BIT_LOWER ||
--						chosen_track == TRACK_BIT_LEFT  || chosen_track == TRACK_BIT_RIGHT);
-+//				assert(
-+//						chosen_track == TRACK_BIT_X     || chosen_track == TRACK_BIT_Y ||
-+//						chosen_track == TRACK_BIT_UPPER || chosen_track == TRACK_BIT_LOWER ||
-+//						chosen_track == TRACK_BIT_LEFT  || chosen_track == TRACK_BIT_RIGHT);
- 
-+				assert(chosen_track);
- 				/* Update XY to reflect the entrance to the new tile, and select the direction to use */
- 				const byte *b = _initial_tile_subcoord[FIND_FIRST_BIT(chosen_track)][enterdir];
- 				gp.x = (gp.x & ~0xF) | b[0];
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 12754)
+--- src/spritecache.cpp	(revision 13638)
 +++ src/spritecache.cpp	(working copy)
 @@ -7,6 +7,8 @@
  #include "variables.h"
@@ -450,7 +210,7 @@ Index: src/spritecache.cpp
 -	void *ptr;
 +	void *ptr[ZOOM_LVL_END];
  	uint32 id;
- 	uint32 file_pos;
+ 	size_t file_pos;
  	uint16 file_slot;
 @@ -51,6 +53,10 @@
  
@@ -466,7 +226,7 @@ Index: src/spritecache.cpp
 @@ -124,8 +130,11 @@
  {
  	uint8 file_slot = sc->file_slot;
- 	uint32 file_pos = sc->file_pos;
+ 	size_t file_pos = sc->file_pos;
 +	ZoomLevel zoom = ZOOM_LVL_NORMAL;
  
 -	DEBUG(sprite, 9, "Load sprite %d", id);
@@ -616,18 +376,7 @@ Index: src/spritecache.cpp
  	scnew->id = scold->id;
  }
  
-@@ -284,9 +341,8 @@
- 	uint32 tot_size = 0;
- 	MemBlock* s;
- 
--	for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s)) {
-+	for (s = _spritecache_ptr; s->size != 0; s = NextBlock(s)) 
- 		if (!(s->size & S_FREE_MASK)) tot_size += s->size;
--	}
- 
- 	return tot_size;
- }
-@@ -294,6 +350,7 @@
+@@ -294,6 +351,7 @@
  
  void IncreaseSpriteLRU()
  {
@@ -635,7 +384,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -302,7 +359,8 @@
+@@ -302,7 +360,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -645,7 +394,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -325,6 +383,7 @@
+@@ -325,6 +384,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -653,7 +402,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
  
-@@ -341,11 +400,16 @@
+@@ -341,11 +401,16 @@
  			if (next->size == 0) break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -674,7 +423,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -367,16 +431,21 @@
+@@ -367,16 +432,21 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock* s;
@@ -701,7 +450,7 @@ Index: src/spritecache.cpp
  		}
  	}
  
-@@ -384,19 +453,24 @@
+@@ -384,19 +454,24 @@
  	 * This shouldn't really happen, unless all sprites are locked. */
  	if (best == (uint)-1) error("Out of sprite memory");
  
@@ -736,7 +485,7 @@ Index: src/spritecache.cpp
  	}
  }
  
-@@ -407,7 +481,7 @@
+@@ -407,7 +482,7 @@
  	/* Align this to an uint32 boundary. This also makes sure that the 2 least
  	 * bits are not used, so we could use those for other things. */
  	mem_req = Align(mem_req, sizeof(uint32));
@@ -745,7 +494,7 @@ Index: src/spritecache.cpp
  	for (;;) {
  		MemBlock* s;
  
-@@ -442,6 +516,7 @@
+@@ -442,6 +517,7 @@
  {
  	SpriteCache *sc;
  	void* p;
@@ -753,19 +502,20 @@ Index: src/spritecache.cpp
  
  	assert(sprite < _spritecache_items);
  
-@@ -450,8 +525,9 @@
+@@ -450,8 +526,11 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
 -	p = sc->ptr;
--
-+ 	zoom = ZoomLevel(_cur_dpi->zoom);
-+ 	p = sc->ptr[zoom];
-+	
+ 
++
++	zoom = ZoomLevel(_cur_dpi->zoom);
++	p = sc->ptr[zoom];
++
  	/* Load the sprite, if it is not loaded, yet */
  	if (p == NULL) p = ReadSprite(sc, sprite, real_sprite);
  
-@@ -462,7 +538,7 @@
+@@ -462,7 +541,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -774,93 +524,16 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -473,6 +549,5 @@
+@@ -473,6 +552,5 @@
  	free(_spritecache);
  	_spritecache_items = 0;
  	_spritecache = NULL;
 -
  	_compact_cache_counter = 0;
  }
-Index: src/tunnelbridge_cmd.cpp
-===================================================================
---- src/tunnelbridge_cmd.cpp	(revision 12754)
-+++ src/tunnelbridge_cmd.cpp	(working copy)
-@@ -1251,10 +1251,10 @@
- 	}
- }
- 
--
--static const byte _tunnel_fractcoord_1[4]    = {0x8E, 0x18, 0x81, 0xE8};
--static const byte _tunnel_fractcoord_2[4]    = {0x81, 0x98, 0x87, 0x38};
--static const byte _tunnel_fractcoord_3[4]    = {0x82, 0x88, 0x86, 0x48};
-+/** clip coordinate                              NE    SE     SW    NW*/
-+static const byte _tunnel_fractcoord_1[4]    = {0x8A, 0x58, 0x84, 0x88};
-+/**  hide coordinate */
-+static const byte _tunnel_fractcoord_2[4]    = {0x84, 0xD8, 0x8F, 0x38};
- static const byte _exit_tunnel_track[4]      = {1, 2, 1, 2};
- 
- /** Get the trackdir of the exit of a tunnel */
-@@ -1267,7 +1267,9 @@
- static const byte _tunnel_fractcoord_5[4]    = {0x92, 0x89, 0x58, 0x25};
- static const byte _tunnel_fractcoord_6[4]    = {0x92, 0x89, 0x56, 0x45};
- static const byte _tunnel_fractcoord_7[4]    = {0x52, 0x85, 0x96, 0x49};
--
-+static const VehStatus  _clip_part[4] = {VS_CLIP_RIGHT, VS_CLIP_RIGHT,
-+													  VS_CLIP_LEFT, VS_CLIP_LEFT};
-+													  
- static VehicleEnterTileStatus VehicleEnter_TunnelBridge(Vehicle *v, TileIndex tile, int x, int y)
- {
- 	int z = GetSlopeZ(x, y) - v->z_pos;
-@@ -1285,11 +1287,14 @@
- 			vdir = DirToDiagDir(v->direction);
- 
- 			if (v->u.rail.track != TRACK_BIT_WORMHOLE && dir == vdir) {
--				if (IsFrontEngine(v) && fc == _tunnel_fractcoord_1[dir]) {
--					if (!PlayVehicleSound(v, VSE_TUNNEL) && RailVehInfo(v->engine_type)->engclass == 0) {
--						SndPlayVehicleFx(SND_05_TRAIN_THROUGH_TUNNEL, v);
--					}
--					return VETSB_CONTINUE;
-+				if (fc == _tunnel_fractcoord_1[dir]) {
-+					if (IsFrontEngine(v) ) {
-+						if (!PlayVehicleSound(v, VSE_TUNNEL) && RailVehInfo(v->engine_type)->engclass == 0) {
-+							SndPlayVehicleFx(SND_05_TRAIN_THROUGH_TUNNEL, v);
-+						}
-+					}	
-+					v->vehstatus |= _clip_part[dir];
-+					return VETSB_ENTERED_WORMHOLE;
- 				}
- 				if (fc == _tunnel_fractcoord_2[dir]) {
- 					v->tile = tile;
-@@ -1299,13 +1304,20 @@
- 				}
- 			}
- 
--			if (dir == ReverseDiagDir(vdir) && fc == _tunnel_fractcoord_3[dir] && z == 0) {
-+			if (dir == ReverseDiagDir(vdir)  && z == 0) {
- 				/* We're at the tunnel exit ?? */
--				v->tile = tile;
--				v->u.rail.track = (TrackBits)_exit_tunnel_track[dir];
--				assert(v->u.rail.track);
--				v->vehstatus &= ~VS_HIDDEN;
--				return VETSB_ENTERED_WORMHOLE;
-+				if (fc == _tunnel_fractcoord_2[dir]) {
-+					v->tile = tile;
-+					v->u.rail.track = (TrackBits)_exit_tunnel_track[dir];
-+					assert(v->u.rail.track);
-+					v->vehstatus &= ~(VS_HIDDEN | VS_CLIP_LEFT | VS_CLIP_RIGHT);
-+					v->vehstatus |= _clip_part[dir];
-+					return VETSB_ENTERED_WORMHOLE;
-+				}
-+				if (fc == _tunnel_fractcoord_1[dir]) {
-+					v->vehstatus &= ~(VS_CLIP_LEFT | VS_CLIP_RIGHT);
-+					return VETSB_ENTERED_WORMHOLE;
-+				}
- 			}
- 		} else if (v->type == VEH_ROAD) {
- 			fc = (x & 0xF) + (y << 4);
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 12754)
+--- src/spritecache.h	(revision 13638)
 +++ src/spritecache.h	(working copy)
 @@ -7,8 +7,9 @@
  
@@ -875,9 +548,9 @@ Index: src/spritecache.h
  	int16 y_offs;
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 12754)
+--- src/texteff.cpp	(revision 13638)
 +++ src/texteff.cpp	(working copy)
-@@ -386,6 +386,35 @@
+@@ -384,6 +384,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
  {
  	switch (dpi->zoom) {
@@ -889,7 +562,7 @@ Index: src/texteff.cpp
 +						dpi->top  <= te->bottom &&
 +						dpi->left + dpi->width  > te->x &&
 +						dpi->top  + dpi->height > te->y) {
-+					if (te->mode == TE_RISING || (_patches.loading_indicators && !IsTransparencySet(TO_LOADING))) {
++					if (te->mode == TE_RISING || (_settings_client.gui.loading_indicators && !IsTransparencySet(TO_LOADING))) {
 +						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
 +					}
 +				}
@@ -903,7 +576,7 @@ Index: src/texteff.cpp
 +						dpi->top  <= te->bottom &&
 +						dpi->left + dpi->width  > te->x &&
 +						dpi->top  + dpi->height > te->y) {
-+					if (te->mode == TE_RISING || (_patches.loading_indicators && !IsTransparencySet(TO_LOADING))) {
++					if (te->mode == TE_RISING || (_settings_client.gui.loading_indicators && !IsTransparencySet(TO_LOADING))) {
 +						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
 +					}
 +				}
@@ -915,26 +588,26 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 12754)
+--- src/window.cpp	(revision 13638)
 +++ src/window.cpp	(working copy)
-@@ -248,6 +248,8 @@
+@@ -245,6 +245,7 @@
  	}
  }
  
 +
-+
  /**
   * Generate repaint events for the visible part of window *wz within the rectangle.
   *
-@@ -313,6 +315,7 @@
- 	CallWindowEventNP(*wz, WE_PAINT);
+@@ -311,6 +312,8 @@
+ 	(*wz)->OnPaint();
  }
  
++
 +
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -324,7 +327,8 @@
+@@ -322,7 +325,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window* const *wz;
@@ -944,7 +617,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS(wz) {
-@@ -336,6 +340,7 @@
+@@ -335,6 +339,7 @@
  			DrawOverlappedWindow(wz, left, top, right, bottom);
  		}
  	}
@@ -952,67 +625,11 @@ Index: src/window.cpp
  }
  
  /**
-Index: src/landscape.cpp
-===================================================================
---- src/landscape.cpp	(revision 12754)
-+++ src/landscape.cpp	(working copy)
-@@ -385,7 +385,7 @@
- 		if (!IsNonContinuousFoundation(f)) {
- 			/* Lower part of foundation */
- 			AddSortableSpriteToDraw(
--				leveled_base + (ti->tileh & ~SLOPE_STEEP), PAL_NONE, ti->x, ti->y, 16, 16, 7, ti->z
-+				leveled_base + (ti->tileh & ~SLOPE_STEEP), PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z
- 			);
- 		}
- 
-@@ -396,7 +396,7 @@
- 			/* inclined foundation */
- 			byte inclined = highest_corner * 2 + (f == FOUNDATION_INCLINED_Y ? 1 : 0);
- 
--			AddSortableSpriteToDraw(inclined_base + inclined, PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z);
-+			AddSortableSpriteToDraw(inclined_base + inclined, PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z, false, 0, 0,-11);
- 			OffsetGroundSprite(31, 9);
- 		} else if (f == FOUNDATION_STEEP_LOWER) {
- 			/* one corner raised */
-@@ -406,13 +406,13 @@
- 			int x_bb = (((highest_corner == CORNER_W) || (highest_corner == CORNER_S)) ? 8 : 0);
- 			int y_bb = (((highest_corner == CORNER_S) || (highest_corner == CORNER_E)) ? 8 : 0);
- 
--			AddSortableSpriteToDraw(halftile_base + highest_corner, PAL_NONE, ti->x + x_bb, ti->y + y_bb, 8, 8, 7, ti->z + TILE_HEIGHT);
-+			AddSortableSpriteToDraw(halftile_base + highest_corner, PAL_NONE, ti->x + x_bb, ti->y + y_bb, 8, 8, 1, ti->z + TILE_HEIGHT);
- 			OffsetGroundSprite(31, 9);
- 		}
- 	} else {
- 		if (IsLeveledFoundation(f)) {
- 			/* leveled foundation */
--			AddSortableSpriteToDraw(leveled_base + ti->tileh, PAL_NONE, ti->x, ti->y, 16, 16, 7, ti->z);
-+			AddSortableSpriteToDraw(leveled_base + ti->tileh, PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z);
- 			OffsetGroundSprite(31, 1);
- 		} else if (IsNonContinuousFoundation(f)) {
- 			/* halftile foundation */
-@@ -420,7 +420,7 @@
- 			int x_bb = (((halftile_corner == CORNER_W) || (halftile_corner == CORNER_S)) ? 8 : 0);
- 			int y_bb = (((halftile_corner == CORNER_S) || (halftile_corner == CORNER_E)) ? 8 : 0);
- 
--			AddSortableSpriteToDraw(halftile_base + halftile_corner, PAL_NONE, ti->x + x_bb, ti->y + y_bb, 8, 8, 7, ti->z);
-+			AddSortableSpriteToDraw(halftile_base + halftile_corner, PAL_NONE, ti->x + x_bb, ti->y + y_bb, 8, 8, 1, ti->z);
- 			OffsetGroundSprite(31, 9);
- 		} else if (IsSpecialRailFoundation(f)) {
- 			/* anti-zig-zag foundation */
-@@ -438,7 +438,7 @@
- 			/* inclined foundation */
- 			byte inclined = GetHighestSlopeCorner(ti->tileh) * 2 + (f == FOUNDATION_INCLINED_Y ? 1 : 0);
- 
--			AddSortableSpriteToDraw(inclined_base + inclined, PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z);
-+			AddSortableSpriteToDraw(inclined_base + inclined, PAL_NONE, ti->x, ti->y, 16, 16, 1, ti->z, false, 0, 0, -11);
- 			OffsetGroundSprite(31, 9);
- 		}
- 		ti->z += ApplyFoundationToSlope(f, &ti->tileh);
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 12754)
+--- src/roadveh_cmd.cpp	(revision 13638)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -532,14 +532,14 @@
+@@ -536,14 +536,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1037,7 +654,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 12754)
+--- src/zoom_type.h	(revision 13638)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -1052,7 +669,7 @@ Index: src/zoom_type.h
  	ZOOM_LVL_OUT_2X,
  	ZOOM_LVL_OUT_4X,
  	ZOOM_LVL_OUT_8X,
-@@ -29,7 +31,7 @@
+@@ -32,7 +34,7 @@
  
  	ZOOM_LVL_DETAIL   = ZOOM_LVL_OUT_2X, ///< All zoomlevels below or equal to this, will result in details on the screen, like road-work, ...
  
@@ -1063,52 +680,24 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 12754)
+--- src/vehicle.cpp	(revision 13638)
 +++ src/vehicle.cpp	(working copy)
-@@ -761,6 +761,12 @@
- 	return CommandCost(expense_type, (EngInfo(engine_type)->refit_cost * base_cost) >> 10);
- }
- 
-+SubSprite sub[2] = {{-31,   -31, 64, 30},    /* CLIP_RIGHT */
-+						  {-31,   -31, 64, 30}};   /* CLIP_LEFT  */
-+						  //   N  NE  E  SE  S  SW  W  NW
-+int clip_offset_l[8] = { 0, -8, 0, 9, 0, -8, 0, 9};						  
-+int clip_offset_r[8] = { 0, -1, 0,  8, 0, -1, 0,  8};						  
-+
- static void DoDrawVehicle(const Vehicle *v)
- {
- 	SpriteID image = v->cur_image;
-@@ -768,8 +774,27 @@
+@@ -791,9 +791,12 @@
+ 	SpriteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
- 
--	AddSortableSpriteToDraw(image, pal, v->x_pos + v->x_offs, v->y_pos + v->y_offs,
--		v->x_extent, v->y_extent, v->z_extent, v->z_pos, (v->vehstatus & VS_SHADOW) != 0);
+-
 +   if ((v->vehstatus & VS_SHADOW) != 0)
 +   {
 +      SetBit(image, PALETTE_MODIFIER_SHADOW);
 +   }
-+   if ((v->vehstatus & (VS_CLIP_LEFT | VS_CLIP_RIGHT)) != 0){
-+		if (v->vehstatus & VS_CLIP_RIGHT){
-+			sub[0].right = clip_offset_r[v->direction] 
-+								+ ((v->x_pos & 0xF) - (v->y_pos & 0xF))<<1;
-+		}
-+		if (v->vehstatus & VS_CLIP_LEFT){
-+			sub[1].left =  clip_offset_l[v->direction] 
-+								+ ((v->x_pos & 0xF) - (v->y_pos & 0xF))<<1;
-+		}
-+		AddSortableSpriteToDraw(image, pal, v->x_pos + v->x_offs, v->y_pos + v->y_offs,
-+			v->x_extent, v->y_extent, v->z_extent, v->z_pos, false, 
-+			0, 0, 0, (const SubSprite *)&sub[(v->vehstatus>>8)-1]);
-+	}
-+	else{
-+		AddSortableSpriteToDraw(image, pal, v->x_pos + v->x_offs, v->y_pos + v->y_offs,
-+			v->x_extent, v->y_extent, v->z_extent, v->z_pos, false);	
-+	}
+ 	AddSortableSpriteToDraw(image, pal, v->x_pos + v->x_offs, v->y_pos + v->y_offs,
+-		v->x_extent, v->y_extent, v->z_extent, v->z_pos, (v->vehstatus & VS_SHADOW) != 0);
++		v->x_extent, v->y_extent, v->z_extent, v->z_pos, false);
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -806,11 +831,7 @@
+@@ -830,11 +833,11 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1117,11 +706,15 @@ Index: src/vehicle.cpp
 -						t <= v->bottom_coord &&
 -						r >= v->left_coord &&
 -						b >= v->top_coord) {
-+				if (!(v->vehstatus & VS_HIDDEN) ) { 
++				if (!(v->vehstatus & VS_HIDDEN) ) { //&&
++//						l <= v->right_coord &&
++//						t <= v->bottom_coord &&
++//						r >= v->left_coord &&
++//						b >= v->top_coord) {
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -1431,8 +1452,8 @@
+@@ -854,8 +857,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -1134,18 +727,9 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN|VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 12754)
+--- src/viewport.cpp	(revision 13638)
 +++ src/viewport.cpp	(working copy)
-@@ -83,7 +83,7 @@
- struct ParentSpriteToDraw {
- 	SpriteID image;                 ///< sprite to draw
- 	SpriteID pal;                   ///< palette to use
--	const SubSprite *sub;           ///< only draw a rectangular part of the sprite
-+	SubSprite sub;           ///< only draw a rectangular part of the sprite
- 
- 	int32 x;                        ///< screen X coordinate of sprite
- 	int32 y;                        ///< screen Y coordinate of sprite
-@@ -119,7 +119,7 @@
+@@ -121,7 +121,7 @@
  
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -1154,7 +738,7 @@ Index: src/viewport.cpp
  	StringSpriteToDrawVector string_sprites_to_draw;
  	TileSpriteToDrawVector tile_sprites_to_draw;
  	ParentSpriteToDrawVector parent_sprites_to_draw;
-@@ -278,14 +278,13 @@
+@@ -291,14 +291,14 @@
  	int i;
  	int left, top, width, height;
  
@@ -1168,11 +752,12 @@ Index: src/viewport.cpp
  	 */
 -	old_left = UnScaleByZoomLower(old_left, vp->zoom);
 -	old_top = UnScaleByZoomLower(old_top, vp->zoom);
-+
++//	old_left = UnScaleByZoomLower(old_left, vp->zoom);
++//	old_top = UnScaleByZoomLower(old_top, vp->zoom);
  	x = UnScaleByZoomLower(x, vp->zoom);
  	y = UnScaleByZoomLower(y, vp->zoom);
  
-@@ -348,9 +347,8 @@
+@@ -368,9 +368,8 @@
  				return pt;
  	}
  
@@ -1184,7 +769,7 @@ Index: src/viewport.cpp
  	a = y-x;
  	b = y+x;
  
-@@ -551,16 +549,20 @@
+@@ -569,10 +568,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite* spr = GetSprite(image & SPRITE_MASK);
  
@@ -1202,30 +787,33 @@ Index: src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
- 	AddChildSpriteScreen(image, pal, pt.x - pstd->left, pt.y - pstd->top, false, sub);
- }
- 
-+
- /** Draw a (transparent) sprite at given coordinates with a given bounding box.
-  * The bounding box extends from (x + bb_offset_x, y + bb_offset_y, z + bb_offset_z) to (x + w - 1, y + h - 1, z + dz - 1), both corners included.
-  * Bounding boxes with bb_offset_x == w or bb_offset_y == h or bb_offset_z == dz are allowed and produce thin slices.
-@@ -594,7 +596,6 @@
+@@ -612,7 +614,7 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
 -		pal = PALETTE_TO_TRANSPARENT;
++//		pal = PALETTE_TO_TRANSPARENT;
  	}
  
  	if (_vd.combine_sprites == 2) {
-@@ -615,25 +616,32 @@
- 		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
+@@ -627,31 +629,37 @@
+ 
+ 	/* Compute screen extents of sprite */
+ 	if (image == SPR_EMPTY_BOUNDING_BOX) {
+-		left = tmp_left = RemapCoords(x + w          , y + bb_offset_y, z + bb_offset_z).x;
+-		right           = RemapCoords(x + bb_offset_x, y + h          , z + bb_offset_z).x + 1;
+-		top  = tmp_top  = RemapCoords(x + bb_offset_x, y + bb_offset_y, z + dz         ).y;
+-		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
++		left = tmp_left = RemapCoords(x + w				, y + bb_offset_y, z + bb_offset_z).x;
++		right				 = RemapCoords(x + bb_offset_x, y + h			  , z + bb_offset_z).x + 1;
++		top  = tmp_top  = RemapCoords(x + bb_offset_x, y + bb_offset_y, z + dz	  		 ).y;
++		bottom			 = RemapCoords(x + w				, y + h			  , z + bb_offset_z).y + 1;
  	} else {
  		const Sprite *spr = GetSprite(image & SPRITE_MASK);
 -		left = tmp_left = (pt.x += spr->x_offs);
 -		right           = (pt.x +  spr->width );
 -		top  = tmp_top  = (pt.y += spr->y_offs);
 -		bottom          = (pt.y +  spr->height);
-+
 +		int x_offs, y_offs,swidth, sheight;
 +
 +		x_offs = ScaleByZoom(spr->x_offs, _vd.vp->zoom);
@@ -1262,35 +850,15 @@ Index: src/viewport.cpp
  		return;
  	}
  
-@@ -646,7 +654,18 @@
- 
- 	ps->image = image;
- 	ps->pal = pal;
--	ps->sub = sub;
-+	if (sub) {
-+		ps->sub.left = UnScaleByZoom(sub->left, _vd.vp->zoom);
-+		ps->sub.right = UnScaleByZoom(sub->right, _vd.vp->zoom);
-+		ps->sub.top = UnScaleByZoom(sub->top, _vd.vp->zoom);
-+		ps->sub.bottom = UnScaleByZoom(sub->bottom, _vd.vp->zoom);
-+	}
-+	else {
-+		ps->sub.left = -1000; 
-+		ps->sub.right = 0x7fff;
-+		ps->sub.top = -1000;
-+		ps->sub.bottom = 0x7fff;
-+	}
- 	ps->xmin = x + bb_offset_x;
- 	ps->xmax = x + max(bb_offset_x, w) - 1;
- 
-@@ -695,7 +714,6 @@
+@@ -712,7 +720,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
 -		pal = PALETTE_TO_TRANSPARENT;
  	}
  
- 	/* Append the sprite to the active ChildSprite list.
-@@ -704,8 +722,8 @@
+ 	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
+@@ -721,8 +728,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -1298,10 +866,10 @@ Index: src/viewport.cpp
 -	cs->y = y;
 +	cs->x = UnScaleByZoom(x, _vd.dpi.zoom);
 +	cs->y = UnScaleByZoom(y, _vd.dpi.zoom);
- 	cs->next = NULL;
+ 	cs->next = -1;
  
- 	*_vd.last_child = _vd.child_screen_sprites_to_draw.items;
-@@ -912,25 +930,28 @@
+ 	/* Append the sprite to the active ChildSprite list.
+@@ -934,25 +941,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -1341,7 +909,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -938,7 +959,7 @@
+@@ -960,7 +970,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -1350,7 +918,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt;
  
-@@ -961,14 +982,17 @@
+@@ -983,14 +993,17 @@
  			y_cur += 0x10;
  			x_cur -= 0x10;
  
@@ -1376,7 +944,7 @@ Index: src/viewport.cpp
  		} while (--width_cur);
  
  		if ((direction ^= 1) != 0) {
-@@ -976,7 +1000,7 @@
+@@ -998,7 +1011,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1385,7 +953,7 @@ Index: src/viewport.cpp
  }
  
  
-@@ -994,12 +1018,36 @@
+@@ -1016,12 +1029,36 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1396,7 +964,7 @@ Index: src/viewport.cpp
 +						right > t->sign.left &&
 +						left	< t->sign.left + t->sign.width_1) {
 +					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
 +						t->index, t->population);
 +				}
 +			}
@@ -1408,7 +976,7 @@ Index: src/viewport.cpp
 +						right  > t->sign.left &&
 +						left	 < t->sign.left + t->sign.width_1) {
 +					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
 +						t->index, t->population);
 +				}
 +			}
@@ -1422,24 +990,24 @@ Index: src/viewport.cpp
 -						left   < t->sign.left + t->sign.width_1) {
 +						left	 < t->sign.left + t->sign.width_1) {
  					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
- 						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
+ 						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
  						t->index, t->population);
-@@ -1012,10 +1060,10 @@
+@@ -1034,10 +1071,10 @@
  			bottom += 2;
  
  			FOR_ALL_TOWNS(t) {
 -				if (bottom > t->sign.top &&
 -						top    < t->sign.top + 24 &&
 -						right  > t->sign.left &&
--						left   < t->sign.left + t->sign.width_1*2) {
+-						left   < t->sign.left + t->sign.width_1 * 2) {
 +				if (bottom  > t->sign.top &&
 +						top   < t->sign.top + 24 &&
 +						right > t->sign.left &&
 +						left	< t->sign.left + t->sign.width_1*2) {
  					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
- 						_patches.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
+ 						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
  						t->index, t->population);
-@@ -1029,10 +1077,10 @@
+@@ -1051,10 +1088,10 @@
  			bottom += ScaleByZoom(1, dpi->zoom) + 1;
  
  			FOR_ALL_TOWNS(t) {
@@ -1453,7 +1021,7 @@ Index: src/viewport.cpp
  					AddStringToDraw(t->sign.left + 5, t->sign.top + 1, STR_TOWN_LABEL_TINY_BLACK, t->index, 0);
  					AddStringToDraw(t->sign.left + 1, t->sign.top - 3, STR_TOWN_LABEL_TINY_WHITE, t->index, 0);
  				}
-@@ -1064,12 +1112,33 @@
+@@ -1086,12 +1123,33 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1489,19 +1057,19 @@ Index: src/viewport.cpp
  					AddStation(st, STR_305C_0, st->sign.width_1);
  				}
  			}
-@@ -1080,9 +1149,9 @@
+@@ -1102,9 +1160,9 @@
  			bottom += 2;
  			FOR_ALL_STATIONS(st) {
  				if (bottom > st->sign.top &&
 -						top    < st->sign.top + 24 &&
 +						top	 < st->sign.top + 24 &&
  						right  > st->sign.left &&
--						left   < st->sign.left + st->sign.width_1*2) {
+-						left   < st->sign.left + st->sign.width_1 * 2) {
 +						left	 < st->sign.left + st->sign.width_1*2) {
  					AddStation(st, STR_305C_0, st->sign.width_1);
  				}
  			}
-@@ -1128,6 +1197,26 @@
+@@ -1150,6 +1208,26 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1528,7 +1096,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_SIGNS(si) {
  				if (bottom > si->sign.top &&
-@@ -1192,6 +1281,26 @@
+@@ -1214,6 +1292,26 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1555,7 +1123,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_WAYPOINTS(wp) {
  				if (bottom > wp->sign.top &&
-@@ -1260,7 +1369,15 @@
+@@ -1282,7 +1380,15 @@
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
  		Point pt = RemapCoords(ts->x, ts->y, ts->z);
@@ -1572,60 +1140,59 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1326,14 +1443,19 @@
+@@ -1348,16 +1454,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
 +	int  x,y, left, top;
  	const ParentSpriteToDraw * const *psd_end = psd->End();
  	for (const ParentSpriteToDraw * const *it = psd->Begin(); it != psd_end; it++) {
- 		const ParentSpriteToDraw *ps = *it;
+-		const ParentSpriteToDraw *ps = *it;
 -		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSprite(ps->image, ps->pal, ps->x, ps->y, ps->sub);
++		const ParentSpriteToDraw* ps = *it;
+ 
 +		x = UnScaleByZoom(ps->x, _cur_dpi->zoom) - _vd.vp->virtual_left;
 +		y = UnScaleByZoom(ps->y, _cur_dpi->zoom) - _vd.vp->virtual_top;
 +		left = UnScaleByZoom(ps->left, _cur_dpi->zoom) - _vd.vp->virtual_left;
 +		top = UnScaleByZoom(ps->top, _cur_dpi->zoom) - _vd.vp->virtual_top;
-+		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSprite(ps->image, ps->pal, x, y, &ps->sub);
- 
- 		const ChildScreenSpriteToDraw *last = csstdv->Get(ps->last_child);
- 		for (const ChildScreenSpriteToDraw *cs = csstdv->Get(ps->first_child); cs != last; cs++) {
++		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSprite(ps->image, ps->pal, x, y, ps->sub);
++
+ 		int child_idx = ps->first_child;
+ 		while (child_idx >= 0) {
+ 			const ChildScreenSpriteToDraw *cs = csstdv->Get(child_idx);
+ 			child_idx = cs->next;
 -			DrawSprite(cs->image, cs->pal, ps->left + cs->x, ps->top + cs->y, cs->sub);
 +			DrawSprite(cs->image, cs->pal, left + cs->x, top + cs->y, cs->sub);
  		}
  	}
  }
-@@ -1344,14 +1466,26 @@
+@@ -1368,6 +1480,8 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
 +	ZoomLevel zoom = _cur_dpi->zoom;
-+	
++
  	const ParentSpriteToDraw * const *psd_end = psd->End();
  	for (const ParentSpriteToDraw * const *it = psd->Begin(); it != psd_end; it++) {
  		const ParentSpriteToDraw *ps = *it;
--		Point pt1 = RemapCoords(ps->xmax + 1, ps->ymax + 1, ps->zmax + 1); // top front corner
--		Point pt2 = RemapCoords(ps->xmin    , ps->ymax + 1, ps->zmax + 1); // top left corner
--		Point pt3 = RemapCoords(ps->xmax + 1, ps->ymin    , ps->zmax + 1); // top right corner
--		Point pt4 = RemapCoords(ps->xmax + 1, ps->ymax + 1, ps->zmin    ); // bottom front corner
+@@ -1376,6 +1490,16 @@
+ 		Point pt3 = RemapCoords(ps->xmax + 1, ps->ymin    , ps->zmax + 1); // top right corner
+ 		Point pt4 = RemapCoords(ps->xmax + 1, ps->ymax + 1, ps->zmin    ); // bottom front corner
  
-+		Point pt1 = RemapCoords(ps->xmax , ps->ymax, ps->zmax); // top front corner
-+		Point pt2 = RemapCoords(ps->xmin , ps->ymax, ps->zmax); // top left corner
-+		Point pt3 = RemapCoords(ps->xmax , ps->ymin, ps->zmax); // top right corner
-+		Point pt4 = RemapCoords(ps->xmax , ps->ymax, ps->zmin); // bottom front corner
++		pt1.x = UnScaleByZoom(pt1.x, zoom) - _vd.vp->virtual_left;
++		pt1.y = UnScaleByZoom(pt1.y, zoom) - _vd.vp->virtual_top;
++		pt2.x = UnScaleByZoom(pt2.x, zoom) - _vd.vp->virtual_left;
++		pt2.y = UnScaleByZoom(pt2.y, zoom) - _vd.vp->virtual_top;
++		pt3.x = UnScaleByZoom(pt3.x, zoom) - _vd.vp->virtual_left;
++		pt3.y = UnScaleByZoom(pt3.y, zoom) - _vd.vp->virtual_top;
++		pt4.x = UnScaleByZoom(pt4.x, zoom) - _vd.vp->virtual_left;
++		pt4.y = UnScaleByZoom(pt4.y, zoom) - _vd.vp->virtual_top;
 +
-+		pt1.x =  UnScaleByZoom(pt1.x, zoom) -  _vd.vp->virtual_left;
-+		pt1.y =  UnScaleByZoom(pt1.y, zoom) -  _vd.vp->virtual_top;
-+		pt2.x =  UnScaleByZoom(pt2.x, zoom) -  _vd.vp->virtual_left;
-+		pt2.y =  UnScaleByZoom(pt2.y, zoom) -  _vd.vp->virtual_top;
-+		pt3.x =  UnScaleByZoom(pt3.x, zoom) -  _vd.vp->virtual_left;
-+		pt3.y =  UnScaleByZoom(pt3.y, zoom) -  _vd.vp->virtual_top;
-+		pt4.x =  UnScaleByZoom(pt4.x, zoom) -  _vd.vp->virtual_left;
-+		pt4.y =  UnScaleByZoom(pt4.y, zoom) -  _vd.vp->virtual_top;
 +
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
  		        pt3.x - pt1.x, pt3.y - pt1.y,
-@@ -1370,11 +1504,6 @@
+@@ -1394,11 +1518,6 @@
  	zoom = dp.zoom;
  	dp.zoom = ZOOM_LVL_NORMAL;
  
@@ -1637,19 +1204,18 @@ Index: src/viewport.cpp
  	const StringSpriteToDraw *ssend = sstdv->End();
  	for (const StringSpriteToDraw *ss = sstdv->Begin(); ss != ssend; ++ss) {
  		uint16 colour;
-@@ -1382,9 +1511,9 @@
- 		if (ss->width != 0) {
+@@ -1407,8 +1526,8 @@
  			/* Do not draw signs nor station names if they are set invisible */
  			if (IsInvisibilitySet(TO_SIGNS) && ss->string != STR_2806) continue;
-+			int x = UnScaleByZoom(ss->x, zoom) - 1 - _vd.vp->virtual_left;
-+			int y = UnScaleByZoom(ss->y, zoom) - 1 - _vd.vp->virtual_top;
  
 -			int x = UnScaleByZoom(ss->x, zoom) - 1;
 -			int y = UnScaleByZoom(ss->y, zoom) - 1;
++			int x = UnScaleByZoom(ss->x, zoom) - 1 - _vd.vp->virtual_left;
++			int y = UnScaleByZoom(ss->y, zoom) - 1 - _vd.vp->virtual_top;
  			int bottom = y + 11;
  			int w = ss->width;
  
-@@ -1417,7 +1546,7 @@
+@@ -1441,7 +1560,7 @@
  			colour = TC_BLACK;
  		}
  		DrawString(
@@ -1658,63 +1224,58 @@ Index: src/viewport.cpp
  			ss->string, colour
  		);
  	}
-@@ -1425,12 +1554,21 @@
- 
+@@ -1450,31 +1569,45 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
-+	int x;
-+	int y;
-+
  	DrawPixelInfo *old_dpi = _cur_dpi;
 +	DrawPixelInfo tmp_dpi;
-+	int mask = ScaleByZoom(-1, vp->zoom);
-+
++	
  	_cur_dpi = &_vd.dpi;
--
- 	_vd.dpi.zoom = vp->zoom;
--	int mask = ScaleByZoom(-1, vp->zoom);
++	_cur_dpi->zoom = vp->zoom;
+ 
+-	_vd.dpi.zoom = vp->zoom;
+ 	int mask = ScaleByZoom(-1, vp->zoom);
++	
++	int x = left;
++	int y = top;
  
 +	left = left - vp->left;
 +	top  = top - vp->top;
 +	right= right - vp->left;
 +	bottom = bottom - vp->top;
 +
++	_vd.dpi.zoom = vp->zoom;
  	_vd.combine_sprites = 0;
- 
- 	_vd.dpi.width = (right - left) & mask;
-@@ -1440,17 +1578,34 @@
+-
+-	_vd.dpi.width = (right - left) & mask;
+-	_vd.dpi.height = (bottom - top) & mask;
+-	_vd.dpi.left = left & mask;
+-	_vd.dpi.top = top & mask;
++	_vd.dpi.width = (right - left) ;
++	_vd.dpi.height = (bottom - top) ;
++	_vd.dpi.left = left ;
++	_vd.dpi.top = top ;
  	_vd.dpi.pitch = old_dpi->pitch;
  	_vd.last_child = NULL;
- 
+-
 -	int x = UnScaleByZoom(_vd.dpi.left - (vp->virtual_left & mask), vp->zoom) + vp->left;
 -	int y = UnScaleByZoom(_vd.dpi.top - (vp->virtual_top & mask), vp->zoom) + vp->top;
- 
+-
 +	_vd.vp = vp;
-+	_vd.dpi.zoom = vp->zoom;
-+
-+	_vd.dpi.width = right - left;
-+	_vd.dpi.height = bottom - top;
-+	_vd.dpi.left = left;
-+	_vd.dpi.top = top;
-+	_vd.dpi.pitch = old_dpi->pitch;
-+	_vd.last_child = NULL;
-+	
-+	x = left + vp->left;
-+	y = top  + vp->top;
-+
  	_vd.dpi.dst_ptr = BlitterFactoryBase::GetCurrentBlitter()->MoveTo(old_dpi->dst_ptr, x - old_dpi->left, y - old_dpi->top);
  
  	ViewportAddLandscape();
 -	ViewportAddVehicles(&_vd.dpi);
 -	DrawTextEffects(&_vd.dpi);
-+	tmp_dpi = _vd.dpi;
-+	tmp_dpi.left = ScaleByZoom(_vd.vp->virtual_left, _vd.vp->zoom);
-+	tmp_dpi.top = ScaleByZoom(_vd.vp->virtual_top, _vd.vp->zoom);
-+	tmp_dpi.width = ScaleByZoom(_vd.vp->width, _vd.vp->zoom);
-+	tmp_dpi.height = ScaleByZoom(_vd.vp->height, _vd.vp->zoom);
  
 -	ViewportAddTownNames(&_vd.dpi);
 -	ViewportAddStationNames(&_vd.dpi);
++	tmp_dpi = _vd.dpi;
++	tmp_dpi.left = ScaleByZoom(vp->virtual_left, vp->zoom);
++	tmp_dpi.top = ScaleByZoom(vp->virtual_top, vp->zoom);
++	tmp_dpi.width = ScaleByZoom(vp->width, vp->zoom);
++	tmp_dpi.height = ScaleByZoom(vp->height, vp->zoom);
++
 +	ViewportAddVehicles(&tmp_dpi);
 +	DrawTextEffects(&tmp_dpi);
 +
@@ -1723,7 +1284,7 @@ Index: src/viewport.cpp
  	ViewportAddSigns(&_vd.dpi);
  	ViewportAddWaypoints(&_vd.dpi);
  
-@@ -1481,7 +1636,8 @@
+@@ -1505,7 +1638,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1733,7 +1294,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1492,12 +1648,7 @@
+@@ -1516,12 +1650,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1747,7 +1308,17 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1599,26 +1750,32 @@
+@@ -1608,8 +1737,8 @@
+ 		}
+ 
+ 		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
++		SetViewportPosition(w, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
+ 
+-		SetViewportPosition(w, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
+ 	}
+ }
+ 
+@@ -1624,26 +1753,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1793,8 +1364,8 @@ Index: src/viewport.cpp
 +	SetDirtyBlocks(left + vp->left, top + vp->top, right + vp->left, bottom + vp->top);
  }
  
- void MarkAllViewportsDirty(int left, int top, int right, int bottom)
-@@ -1717,6 +1874,32 @@
+ /**
+@@ -1750,6 +1885,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
  
  	switch (vp->zoom) {
@@ -1827,7 +1398,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1775,6 +1958,32 @@
+@@ -1808,6 +1969,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES)) return false;
  
  	switch (vp->zoom) {
@@ -1860,7 +1431,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1834,6 +2043,32 @@
+@@ -1867,6 +2054,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || IsInvisibilitySet(TO_SIGNS) || _current_player == PLAYER_SPECTATOR) return false;
  
  	switch (vp->zoom) {
@@ -1893,7 +1464,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1892,6 +2127,32 @@
+@@ -1925,6 +2138,32 @@
  	if (!HasBit(_display_opt, DO_WAYPOINTS)) return false;
  
  	switch (vp->zoom) {
@@ -1928,17 +1499,17 @@ Index: src/viewport.cpp
  			y = y - vp->top  + vp->virtual_top;
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 12754)
+--- src/blitter/32bpp_optimized.cpp	(revision 13638)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
-@@ -1,6 +1,7 @@
- /* $Id$ */
+@@ -3,6 +3,7 @@
+ /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
  
  #include "../stdafx.h"
 +#include "../core/alloc_func.hpp"
  #include "../zoom_func.h"
  #include "../gfx_func.h"
  #include "../debug.h"
-@@ -14,53 +15,164 @@
+@@ -16,7 +17,8 @@
  	uint32 *dst, *dst_line;
  
  	/* Find where to start reading in the source sprite */
@@ -1946,124 +1517,68 @@ Index: src/blitter/32bpp_optimized.cpp
 +
 +	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top *  bp->sprite_width + bp->skip_left);
  	dst_line = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
-+	dst = dst_line;
-+	src = src_line;
-+	switch (mode) {
-+		case BM_COLOUR_REMAP:
-+			for (int y = 0; y < bp->height; y++) {
-+				dst = dst_line;
-+				dst_line += bp->pitch;
-+				src = src_line;
-+				src_line += bp->sprite_width ;
  
--	for (int y = 0; y < bp->height; y++) {
--		dst = dst_line;
--		dst_line += bp->pitch;
-+				for (int x = 0; x < bp->width; x++) {
-+					if (src->a == 0) {
-+						/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
+ 	for (int y = 0; y < bp->height; y++) {
+@@ -24,44 +26,70 @@
+ 		dst_line += bp->pitch;
  
--		src = src_line;
+ 		src = src_line;
 -		src_line += bp->sprite_width * ScaleByZoom(1, zoom);
-+						int skip = src->r;
++		src_line += bp->sprite_width ;
  
--		for (int x = 0; x < bp->width; x++) {
--			if (src->a == 0) {
--				/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
+ 		for (int x = 0; x < bp->width; x++) {
+ 			if (src->a == 0) {
+ 				/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
 -				int skip = UnScaleByZoom(src->r, zoom);
--
--				dst += skip;
+ 
++				int skip = src->r;
++
++				if (skip == 0)
++					continue;
+ 				dst += skip;
 -				x   += skip - 1;
 -				src += ScaleByZoom(1, zoom) * skip;
--				continue;
-+						dst += skip;
-+						x	 += skip - 1;
-+						src += skip;
-+						continue;
-+					}
-+					/* In case the m-channel is zero, do not remap this pixel in any way */
-+					if (src->m == 0) {
-+						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
-+					} else {
++				x	 += skip - 1;
++				src += skip;
+ 				continue;
+ 			}
+-
++			/* GeekToo: This switch really has to be taken out of the loops, no need to check it every pixel !
++			   Will do that when optimizing, for now just prove it works
++			*/	
+ 			switch (mode) {
+ 				case BM_COLOUR_REMAP:
+ 					/* In case the m-channel is zero, do not remap this pixel in any way */
+ 					if (src->m == 0) {
+ 						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
+ 					} else {
 +						if (bp->remap[src->m] != 0) {
 +							*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
 +							*dst = ComposeColourBlend(this->LookupColourInPalette(bp->remap[src->m]), *dst);
 +						}
 +					}
-+					dst++;
-+					src++;
-+				}
- 			}
-+			break;
-+		case BM_COLOUR_OPAQUE:
-+			for (int y = 0; y < bp->height; y++) {
-+				dst = dst_line;
-+				dst_line += bp->pitch;
- 
--			switch (mode) {
--				case BM_COLOUR_REMAP:
--					/* In case the m-channel is zero, do not remap this pixel in any way */
-+				src = src_line;
-+				src_line += bp->sprite_width ;
-+
-+				for (int x = 0; x < bp->width; x++) {
-+					if (src->a == 0) {
-+						/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
-+
-+						int skip = src->r;
-+
-+						dst += skip;
-+						x	 += skip - 1;
-+						src += skip;
-+						continue;
-+					}
-+			  		/* In case the m-channel is zero, do not remap this pixel in any way */
- 					if (src->m == 0) {
- 						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
- 					} else {
++					break;
++				case BM_COLOUR_OPAQUE:
++				  	/* In case the m-channel is zero, do not remap this pixel in any way */
++					if (src->m == 0) {
++						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
++					} else {
  						if (bp->remap[src->m] != 0) *dst = ComposeColourPA(this->LookupColourInPalette(bp->remap[src->m]), src->a, *dst);
  					}
--					break;
-+					dst++;
-+					src++;
-+				}
-+			}
-+			break;
-+		case BM_TRANSPARENT:
-+			for (int y = 0; y < bp->height; y++) {
-+				dst = dst_line;
-+				dst_line += bp->pitch;
- 
--				case BM_TRANSPARENT:
+ 					break;
+-
+ 				case BM_TRANSPARENT:
 -					/* TODO -- We make an assumption here that the remap in fact is transparency, not some color.
 -					 *  This is never a problem with the code we produce, but newgrfs can make it fail... or at least:
 -					 *  we produce a result the newgrf maker didn't expect ;) */
-+				src = src_line;
-+				src_line += bp->sprite_width ;
- 
--					/* Make the current color a bit more black, so it looks like this image is transparent */
--					*dst = MakeTransparent(*dst, 192);
--					break;
-+				for (int x = 0; x < bp->width; x++) {
-+					if (src->a == 0) {
-+					/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
- 
--				default:
--					*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
--					break;
-+						int skip = src->r;
-+
-+						dst += skip;
-+						x	 += skip - 1;
-+						src += skip;
-+						continue;
-+					}
 +					/* GeekToo: for 32bpp remap of colours and transparency are not
 +						mutual exclusive. For now, check the remap ptr to check for
 +						remapping, in the future a cleaner solution will be to create
 +						an extra blitter mode
 +					*/
-+
+ 
+-					/* Make the current color a bit more black, so it looks like this image is transparent */
+-					*dst = MakeTransparent(*dst, 192);
 +  					if (src->m == 0) {
 +						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
 +					} else {
@@ -2073,69 +1588,49 @@ Index: src/blitter/32bpp_optimized.cpp
 +						} else
 +	  						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
 +					}
-+
-+					dst++;
-+					src++;
-+				}
- 			}
--			dst++;
--			src += ScaleByZoom(1, zoom);
--		}
-+			break;
-+		case BM_SHADOW:
-+			for (int y = 0; y < bp->height; y++) {
-+				dst = dst_line;
-+				dst_line += bp->pitch;
-+
-+				src = src_line;
-+				src_line += bp->sprite_width ;
-+
-+				for (int x = 0; x < bp->width; x++) {
-+					if (src->a == 0) {
-+						/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
-+
-+						int skip = src->r;
-+
-+						dst += skip;
-+						x	 += skip - 1;
-+						src += skip;
-+						continue;
-+					}
+ 					break;
+-
++				case BM_SHADOW:
 +					*dst = MakeTransparent(*dst, 150);
-+
-+					dst++;
-+					src++;
-+				}
-+			}
-+			break;
-+		default:
-+			for (int y = 0; y < bp->height; y++) {
-+				dst = dst_line;
-+				dst_line += bp->pitch;
-+
-+				src = src_line;
-+				src_line += bp->sprite_width ;
-+
-+				for (int x = 0; x < bp->width; x++) {
-+					if (src[x].a == 0) {
-+					/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
-+						int skip = src[x].r;
-+						x	 += skip - 1;
-+						continue;
-+					}	
-+					if (src[x].a == 255) {
-+						dst[x] = ComposeColour(src[x].a, src[x].r, src[x].g, src[x].b);
-+							continue;
-+					}	
-+					dst[x] = ComposeColourRGBA(src[x].r, src[x].g, src[x].b, src[x].a, dst[x]);
-+				}
-+
-+			}
-+			break;
++					break;
+ 				default:
+ 					*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
+ 					break;
+ 			}
+ 			dst++;
+-			src += ScaleByZoom(1, zoom);
++			src++;
+ 		}
+ 	}
+ }
+@@ -70,6 +98,8 @@
+ {
+ 	switch (zoom) {
+ 		default: NOT_REACHED();
++		case ZOOM_LVL_IN_4X:  Draw<mode, ZOOM_LVL_IN_4X>(bp); return;
++		case ZOOM_LVL_IN_2X:  Draw<mode, ZOOM_LVL_IN_2X>(bp); return;		
+ 		case ZOOM_LVL_NORMAL: Draw<mode, ZOOM_LVL_NORMAL>(bp); return;
+ 		case ZOOM_LVL_OUT_2X: Draw<mode, ZOOM_LVL_OUT_2X>(bp); return;
+ 		case ZOOM_LVL_OUT_4X: Draw<mode, ZOOM_LVL_OUT_4X>(bp); return;
+@@ -79,11 +109,13 @@
+ 
+ void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom)
+ {
+-	switch (mode) {
++		switch (mode) {
+ 		default: NOT_REACHED();
+-		case BM_NORMAL:       Draw<BM_NORMAL>      (bp, zoom); return;
+-		case BM_COLOUR_REMAP: Draw<BM_COLOUR_REMAP>(bp, zoom); return;
+-		case BM_TRANSPARENT:  Draw<BM_TRANSPARENT> (bp, zoom); return;
++		case BM_NORMAL:        Draw<BM_NORMAL>       (bp, zoom); return;
++		case BM_COLOUR_REMAP:  Draw<BM_COLOUR_REMAP> (bp, zoom); return;
++		case BM_COLOUR_OPAQUE: Draw<BM_COLOUR_OPAQUE>(bp, zoom); return;
++		case BM_TRANSPARENT:   Draw<BM_TRANSPARENT>  (bp, zoom); return;
++		case BM_SHADOW:        Draw<BM_SHADOW>       (bp, zoom); return;
  	}
  }
  
-@@ -89,21 +201,236 @@
+@@ -112,21 +144,236 @@
  				/* Save transparent block length in red channel; max value is 255 the red channel can contain */
  				if (trans < 255) trans++;
  				dst->r = trans;
@@ -2382,9 +1877,22 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/base.hpp
+===================================================================
+--- src/blitter/base.hpp	(revision 13638)
++++ src/blitter/base.hpp	(working copy)
+@@ -13,6 +13,8 @@
+ 	BM_NORMAL,
+ 	BM_COLOUR_REMAP,
+ 	BM_TRANSPARENT,
++   BM_COLOUR_OPAQUE,
++   BM_SHADOW
+ };
+ 
+ /**
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 12754)
+--- src/blitter/32bpp_optimized.hpp	(revision 13638)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -10,9 +10,14 @@
  
@@ -2402,24 +1910,11 @@ Index: src/blitter/32bpp_optimized.hpp
 +																	  SpriteLoader::Sprite *dest_sprite);                                               
 +						void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
  	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
- };
  
-Index: src/blitter/base.hpp
-===================================================================
---- src/blitter/base.hpp	(revision 12754)
-+++ src/blitter/base.hpp	(working copy)
-@@ -11,6 +11,8 @@
- 	BM_NORMAL,
- 	BM_COLOUR_REMAP,
- 	BM_TRANSPARENT,
-+   BM_COLOUR_OPAQUE,
-+   BM_SHADOW
- };
- 
- /**
+ 	template <BlitterMode mode, ZoomLevel zoom> void Draw(Blitter::BlitterParams *bp);
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 12754)
+--- src/blitter/32bpp_base.hpp	(revision 13638)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -7,6 +7,7 @@
  
@@ -2429,31 +1924,7 @@ Index: src/blitter/32bpp_base.hpp
  
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -59,6 +60,11 @@
- 
- 		/* The 256 is wrong, it should be 255, but 256 is much faster... */
- 		return ComposeColour(0xFF,
-+												((r - cr) * a ) / 256 + cr,
-+												((g - cg) * a ) / 256 + cg,
-+												((b - cb) * a ) / 256 + cb);
-+
-+		return ComposeColour(0xFF,
- 												(r * a + cr * (256 - a)) / 256,
- 												(g * a + cg * (256 - a)) / 256,
- 												(b * a + cb * (256 - a)) / 256);
-@@ -79,6 +85,11 @@
- 		cr = GB(current, 16, 8);
- 		cg = GB(current, 8,  8);
- 		cb = GB(current, 0,  8);
-+		/* The 256 is wrong, it should be 255, but 256 is much faster... */
-+		return ComposeColour(0xFF,
-+												((r - cr) * a ) / 256 + cr,
-+												((g - cg) * a ) / 256 + cg,
-+												((b - cb) * a ) / 256 + cb);
- 
- 		/* The 256 is wrong, it should be 255, but 256 is much faster... */
- 		return ComposeColour(0xFF,
-@@ -87,6 +98,75 @@
+@@ -86,6 +87,79 @@
  												(b * a + cb * (256 - a)) / 256);
  	}
  
@@ -2462,7 +1933,7 @@ Index: src/blitter/32bpp_base.hpp
 +	*/
 +	static inline uint ComposeColourBlend(uint colour, uint current)
 +	{
-+		uint r, g, b, cr, cg, cb;
++		uint r, g, b, cr, cg, cb, lm, ls, max_m, min_m, max_s, min_s, mid_s;
 +
 +		if (colour == current) {
 +			return colour;
@@ -2482,46 +1953,50 @@ Index: src/blitter/32bpp_base.hpp
 +			Swap(cg,cb);
 +		if (cr < cg)
 +			Swap(cr,cg);
-+			
-+		if (r>g) {
-+			if(r>b) {
-+				r = cr;
-+				if(b>g){
-+					b = cg;
-+					g = cb;
-+				}
-+				else {
-+					g = cg;
-+					b = cb;
-+				}
-+			}
-+			else {
-+				b = cr;
-+				r = cg;
-+				g = cb;
-+			}
-+		}
-+		else {
-+			if(r>b) {
-+				g = cr;
-+				r = cg;
-+				b = cb;
-+			}
-+			else {
-+				if(b>g) {
-+					b = cr;
-+					g = cg;
-+					r = cb;
-+				}
-+				else {
-+					if ((r != g) && (r != b)){
-+						g = cr;
-+						b = cg;
-+						r = cb;
-+					}
-+				}
-+			}
-+		}
++		if (r>g)
++			if(r>b)
++				if(b>g)
++					mid_s=3;
++				else
++					mid_s=2;
++			else
++					mid_s=1;
++		else
++			if(r>b)
++				mid_s=1;
++			else
++				if(b>g)
++					mid_s=2;
++				else
++					mid_s=3;	
++							
++								
++		
++		max_s = max(max(cr,cg),cb);
++		min_s = min(min(cr,cg),cb);
++		max_m = max(max(r,g),b);
++		min_m = min(min(r,g),b);
++
++		lm = r + g + b;  
++		ls = cr + cg + cb;	 
++		if (r==max_m)
++			r=cr;
++		if (g==max_m)
++			g=cr;	
++		if (b==max_m)
++			b=cr;	
++		if (r==min_m)
++			r=cb;
++		if (g==min_m)
++			g=cb;	
++		if (b==min_m)
++			b=cb;
++		if(mid_s==1)
++			r=cg;			
++		if(mid_s==2)
++			g=cg;				
++		if(mid_s==3)
++			b=cg;				
 +  		return ComposeColour(0xff,r,g,b);		
 +	}
 +
@@ -2529,7 +2004,7 @@ Index: src/blitter/32bpp_base.hpp
  	/**
  	* Make a pixel looks like it is transparent.
  	* @param colour the colour already on the screen.
-@@ -95,7 +175,8 @@
+@@ -94,7 +168,8 @@
  	*/
  	static inline uint MakeTransparent(uint colour, uint amount)
  	{
@@ -2541,9 +2016,9 @@ Index: src/blitter/32bpp_base.hpp
  		b = GB(colour, 0,  8);
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 12754)
+--- src/blitter/32bpp_anim.cpp	(revision 13638)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
-@@ -79,8 +79,10 @@
+@@ -82,8 +82,10 @@
  					 *  we produce a result the newgrf maker didn't expect ;) */
  
  					/* Make the current color a bit more black, so it looks like this image is transparent */
@@ -2558,35 +2033,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 12754)
+--- src/gfx.cpp	(revision 13638)
 +++ src/gfx.cpp	(working copy)
-@@ -196,16 +196,16 @@
- 
- 	static const byte color = 255;
- 
--	GfxDrawLineUnscaled(x, y, x + dx1, y + dy1, color);
--	GfxDrawLineUnscaled(x, y, x + dx2, y + dy2, color);
--	GfxDrawLineUnscaled(x, y, x + dx3, y + dy3, color);
-+	GfxDrawLine(x, y, x + dx1, y + dy1, color);
-+	GfxDrawLine(x, y, x + dx2, y + dy2, color);
-+	GfxDrawLine(x, y, x + dx3, y + dy3, color);
- 
--	GfxDrawLineUnscaled(x + dx1, y + dy1, x + dx1 + dx2, y + dy1 + dy2, color);
--	GfxDrawLineUnscaled(x + dx1, y + dy1, x + dx1 + dx3, y + dy1 + dy3, color);
--	GfxDrawLineUnscaled(x + dx2, y + dy2, x + dx2 + dx1, y + dy2 + dy1, color);
--	GfxDrawLineUnscaled(x + dx2, y + dy2, x + dx2 + dx3, y + dy2 + dy3, color);
--	GfxDrawLineUnscaled(x + dx3, y + dy3, x + dx3 + dx1, y + dy3 + dy1, color);
--	GfxDrawLineUnscaled(x + dx3, y + dy3, x + dx3 + dx2, y + dy3 + dy2, color);
-+	GfxDrawLine(x + dx1, y + dy1, x + dx1 + dx2, y + dy1 + dy2, color);
-+	GfxDrawLine(x + dx1, y + dy1, x + dx1 + dx3, y + dy1 + dy3, color);
-+	GfxDrawLine(x + dx2, y + dy2, x + dx2 + dx1, y + dy2 + dy1, color);
-+	GfxDrawLine(x + dx2, y + dy2, x + dx2 + dx3, y + dy2 + dy3, color);
-+	GfxDrawLine(x + dx3, y + dy3, x + dx3 + dx1, y + dy3 + dy1, color);
-+	GfxDrawLine(x + dx3, y + dy3, x + dx3 + dx2, y + dy3 + dy2, color);
- }
- 
- 
-@@ -633,7 +633,7 @@
+@@ -640,7 +640,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
  			if (x + 26 >= dpi->left) {
@@ -2595,7 +2044,7 @@ Index: src/gfx.cpp
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -673,12 +673,21 @@
+@@ -680,12 +680,21 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -2619,32 +2068,7 @@ Index: src/gfx.cpp
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_NORMAL, sub);
  	}
  }
-@@ -689,11 +698,20 @@
- 	Blitter::BlitterParams bp;
- 
- 	/* Amount of pixels to clip from the source sprite */
--	int clip_left   = (sub != NULL ? max(0,                   -sprite->x_offs + sub->left       ) : 0);
--	int clip_top    = (sub != NULL ? max(0,                   -sprite->y_offs + sub->top        ) : 0);
--	int clip_right  = (sub != NULL ? max(0, sprite->width  - (-sprite->x_offs + sub->right  + 1)) : 0);
--	int clip_bottom = (sub != NULL ? max(0, sprite->height - (-sprite->y_offs + sub->bottom + 1)) : 0);
- 
-+	int clip_left   = 0;
-+	int clip_top    = 0;
-+	int clip_right  = 0;
-+	int clip_bottom = 0;
-+
-+	if ( sub && sub->right != 0x7FFF)
-+	{
-+		clip_left   = max(0,                   -sprite->x_offs + sub->left       );
-+		clip_top    = max(0,                   -sprite->y_offs + sub->top        );
-+		clip_right  = max(0, sprite->width  - (-sprite->x_offs + sub->right  + 1));
-+		clip_bottom = max(0, sprite->height - (-sprite->y_offs + sub->bottom + 1));
-+	}
-+
- 	if (clip_left + clip_right >= sprite->width) return;
- 	if (clip_top + clip_bottom >= sprite->height) return;
- 
-@@ -705,15 +723,17 @@
+@@ -712,15 +721,17 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2656,8 +2080,8 @@ Index: src/gfx.cpp
 +	bp.height = (sprite->height - clip_top - clip_bottom) ;
  	bp.top = 0;
  	bp.left = 0;
--	bp.skip_left = UnScaleByZoom(clip_left, dpi->zoom);
--	bp.skip_top = UnScaleByZoom(clip_top, dpi->zoom);
+-	bp.skip_left = UnScaleByZoomLower(clip_left, dpi->zoom);
+-	bp.skip_top = UnScaleByZoomLower(clip_top, dpi->zoom);
 +	bp.skip_left = clip_left ;
 +	bp.skip_top = clip_top ;
  
@@ -2668,7 +2092,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -727,37 +747,40 @@
+@@ -734,42 +745,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2692,7 +2116,7 @@ Index: src/gfx.cpp
 +
  	if (y > 0) {
 -		bp.height -= UnScaleByZoom(y, dpi->zoom);
-+		bp.height -= y; 
++		bp.height -= y; //UnScaleByZoom(y, dpi->zoom);
  		if (bp.height <= 0) return;
  	}
  
@@ -2719,7 +2143,14 @@ Index: src/gfx.cpp
  		if (bp.width <= 0) return;
  	}
  
-@@ -1134,7 +1157,10 @@
+-	assert(bp.skip_left + bp.width <= UnScaleByZoom(sprite->width, dpi->zoom));
+-	assert(bp.skip_top + bp.height <= UnScaleByZoom(sprite->height, dpi->zoom));
++//	assert(bp.skip_left + bp.width <= UnScaleByZoom(sprite->width, dpi->zoom));
++//	assert(bp.skip_top + bp.height <= UnScaleByZoom(sprite->height, dpi->zoom));
+ 
+ 	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
+ }
+@@ -1147,7 +1161,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2731,49 +2162,28 @@ Index: src/gfx.cpp
  	if (left < 0) left = 0;
  	if (top < 0) top = 0;
  	if (right > _screen.width) right = _screen.width;
-Index: src/vehicle_base.h
-===================================================================
---- src/vehicle_base.h	(revision 12754)
-+++ src/vehicle_base.h	(working copy)
-@@ -67,6 +67,8 @@
- 	VS_SHADOW          = 0x20,
- 	VS_AIRCRAFT_BROKEN = 0x40,
- 	VS_CRASHED         = 0x80,
-+	VS_CLIP_RIGHT      = 0x100,
-+	VS_CLIP_LEFT       = 0x200,
- };
- 
- enum VehicleFlags {
-@@ -245,7 +247,7 @@
- 	byte progress;
- 	uint32 motion_counter;
- 
--	byte vehstatus;          // Status
-+	uint16 vehstatus;          // Status
- 	StationID last_station_visited;
- 
- 	CargoID cargo_type;      // type of cargo this vehicle is carrying
 Index: src/player_gui.cpp
 ===================================================================
---- src/player_gui.cpp	(revision 12754)
+--- src/player_gui.cpp	(revision 13638)
 +++ src/player_gui.cpp	(working copy)
-@@ -30,6 +30,7 @@
+@@ -27,9 +27,9 @@
+ #include "string_func.h"
  #include "settings_type.h"
  #include "widgets/dropdown_func.h"
- #include "widgets/dropdown_type.h"
 +#include "zoom_type.h"
- 
+ #include "widgets/dropdown_type.h"
+ #include "tilehighlight_func.h"
+-
  #include "table/sprites.h"
  #include "table/strings.h"
-@@ -599,6 +600,7 @@
+ 
+@@ -585,72 +585,73 @@
  		}
  		DrawSprite(GetPlayerFaceSprite(pf, pfv, ge), (pfv == PFV_EYEBROWS) ? pal : PAL_NONE, x, y);
  	}
 +
  }
  
- /**
-@@ -660,67 +662,67 @@
  /** Widget description for the normal/simple player face selection dialog */
  static const Widget _select_player_face_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,    14,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
@@ -2896,23 +2306,26 @@ Index: src/player_gui.cpp
  {   WIDGETS_END},
  };
  
-@@ -858,8 +860,15 @@
- 				DrawFaceStringLabel(w, PFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetPlayerFaceBits(*pf, PFV_COLLAR,          ge), false);
- 			}
+@@ -864,10 +865,18 @@
+ 			this->DrawFaceStringLabel(PFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetPlayerFaceBits(this->face, PFV_COLLAR,          this->ge), false);
+ 		}
  
-+      	DrawPixelInfo bk, *old_dpi;
-+         old_dpi = _cur_dpi;
-+      	_cur_dpi = &bk;
-+         *_cur_dpi = *old_dpi;
-+         _cur_dpi->zoom = ZOOM_LVL_IN_2X;
++		DrawPixelInfo bk, *old_dpi;
++		old_dpi = _cur_dpi;
++		_cur_dpi = &bk;
++		*_cur_dpi = *old_dpi;
++		_cur_dpi->zoom = ZOOM_LVL_IN_2X;
 +
- 			/* Draw the player face picture */
- 			DrawPlayerFace(*pf, GetPlayer((PlayerID)w->window_number)->player_color, 2, 16);
-+         _cur_dpi = old_dpi;
- 			break;
+ 		/* Draw the player face picture */
+ 		DrawPlayerFace(this->face, GetPlayer((PlayerID)this->window_number)->player_color, 2, 16);
++		_cur_dpi = old_dpi;
+ 	}
  
- 		case WE_CLICK:
-@@ -987,7 +996,7 @@
++
+ 	virtual void OnClick(Point pt, int widget)
+ 	{
+ 		switch (widget) {
+@@ -1004,7 +1013,7 @@
  
  /** normal/simple player face selection window description */
  static const WindowDesc _select_player_face_desc = {
@@ -2921,7 +2334,7 @@ Index: src/player_gui.cpp
  	WC_PLAYER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
  	_select_player_face_widgets,
-@@ -996,7 +1005,7 @@
+@@ -1012,7 +1021,7 @@
  
  /** advanced player face selection window description */
  static const WindowDesc _select_player_face_adv_desc = {
@@ -2932,9 +2345,9 @@ Index: src/player_gui.cpp
  	_select_player_face_adv_widgets,
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 12754)
+--- src/openttd.cpp	(revision 13638)
 +++ src/openttd.cpp	(working copy)
-@@ -363,7 +363,9 @@
+@@ -409,7 +409,9 @@
  		"f"
  #endif
  	;
@@ -2945,13 +2358,11 @@ Index: src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -1282,7 +1284,8 @@
- 	WP(w, vp_d).dest_scrollpos_y = _saved_scrollpos_y;
+@@ -1248,6 +1250,7 @@
+ 	extern void ResetViewportAfterLoadGame();
+ 	ResetViewportAfterLoadGame();
  
- 	ViewPort *vp = w->viewport;
--	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
-+//	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
-+   vp->zoom = ZOOM_LVL_NORMAL;
- 	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
- 	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
- 
++
+ 	/* Update coordinates of the signs. */
+ 	UpdateAllStationVirtCoord();
+ 	UpdateAllSignVirtCoords();
