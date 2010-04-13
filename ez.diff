@@ -110,7 +110,21 @@ Index: src/spriteloader/png.cpp
  	/* Check the header */
  	FioReadBlock(header, 8);
  	if (png_sig_cmp(header, 0, 8) != 0) return false;
-@@ -181,10 +190,10 @@
+@@ -159,9 +168,10 @@
+ 		for (uint x = 0; x < info_ptr->width; x++) {
+ 			if (mask) {
+ 				if (row_pointer[x * sizeof(uint8)] != 0) {
+-					dst[x].b = 0;
+-					dst[x].g = 0;
+-					dst[x].r = 0;
++/* GeekToo: dont overwrite sprite data if mask is present */
++//					dst[x].b = 0;
++//					dst[x].g = 0;
++//					dst[x].r = 0;
+ 					/* Alpha channel is used from the original image (to allow transparency in remap colors) */
+ 					dst[x].m = row_pointer[x * sizeof(uint8)];
+ 				}
+@@ -181,10 +191,10 @@
  	return true;
  }
  
@@ -193,22 +207,47 @@ Index: src/spritecache.cpp
  
  	if (!SpriteExists(id)) {
  		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", id);
-@@ -142,11 +152,11 @@
+@@ -140,14 +150,32 @@
+ #ifdef WITH_PNG
+ 		/* Try loading 32bpp graphics in case we are 32bpp output */
  		SpriteLoaderPNG sprite_loader;
- 		SpriteLoader::Sprite sprite;
+-		SpriteLoader::Sprite sprite;
++		SpriteLoader::Sprite sprite, dst_sprite;
++      ZoomLevel zoom_idx = (zoom > ZOOM_LVL_NORMAL ? ZOOM_LVL_NORMAL : zoom);
++      bool found = false;
++		do {
++         found = sprite_loader.LoadSprite(&sprite, sc->grf_name, 0,
++                                          sc->id,zoom_idx); 
++         zoom_idx--;                                 
++		} while ( !found && (zoom_idx >= ZOOM_LVL_MIN ) );
++      if (found) {
++         zoom_idx++;
++         if (zoom > zoom_idx)
++         {
++            Blitter_32bppOptimized *blitter = (Blitter_32bppOptimized *)BlitterFactoryBase::GetCurrentBlitter();
++            do{
++               blitter->RescaleSpriteHalfSize(&sprite, &dst_sprite, true);
++               free(sprite.data);
++               sprite = dst_sprite;
++               zoom_idx++;
++            }while (zoom_idx < zoom);
++         }
++   		sc->ptr[zoom] = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
++	   	free(sprite.data);
++		   return sc->ptr[zoom];
++      }
  
 -		if (sprite_loader.LoadSprite(&sprite, sc->grf_name, 0, sc->id)) {
 -			sc->ptr = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
-+		if (sprite_loader.LoadSprite(&sprite, sc->grf_name, 0, sc->id,zoom)) {
-+			sc->ptr[zoom] = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
- 			free(sprite.data);
- 
+-			free(sprite.data);
+-
 -			return sc->ptr;
-+			return sc->ptr[zoom];
- 		}
+-		}
++      
  		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
  #else
-@@ -175,10 +185,10 @@
+ 		static bool show_once = true;
+@@ -175,10 +203,10 @@
  
  		byte *dest = (byte *)AllocSprite(num);
  
@@ -221,7 +260,7 @@ Index: src/spritecache.cpp
  	}
  	/* Ugly hack to work around the problem that the old landscape
  	 *  generator assumes that those sprites are stored uncompressed in
-@@ -197,7 +207,7 @@
+@@ -197,7 +225,7 @@
  
  		num = width * height;
  		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
@@ -230,7 +269,7 @@ Index: src/spritecache.cpp
  		sprite->height = height;
  		sprite->width  = width;
  		sprite->x_offs = FioReadWord();
-@@ -217,7 +227,7 @@
+@@ -217,7 +245,7 @@
  			}
  		}
  
@@ -239,7 +278,7 @@ Index: src/spritecache.cpp
  	}
  
  	if (!real_sprite) {
-@@ -227,14 +237,38 @@
+@@ -227,14 +255,38 @@
  	}
  
  	SpriteLoaderGrf sprite_loader;
@@ -282,7 +321,7 @@ Index: src/spritecache.cpp
  }
  
  
-@@ -252,7 +286,12 @@
+@@ -252,7 +304,12 @@
  	sc = AllocateSpriteCache(load_index);
  	sc->file_slot = file_slot;
  	sc->file_pos = file_pos;
@@ -296,7 +335,7 @@ Index: src/spritecache.cpp
  	sc->lru = 0;
  	sc->id = file_sprite_id;
  
-@@ -277,10 +316,12 @@
+@@ -277,10 +334,12 @@
  {
  	SpriteCache *scold = GetSpriteCache(old_spr);
  	SpriteCache *scnew = AllocateSpriteCache(new_spr);
@@ -310,7 +349,7 @@ Index: src/spritecache.cpp
  	scnew->id = scold->id;
  	free((char *)scnew->grf_name);
  	scnew->grf_name = strdup(scold->grf_name);
-@@ -305,17 +346,26 @@
+@@ -305,17 +364,26 @@
  static uint32 GetSpriteCacheUsage()
  {
  	uint32 tot_size = 0;
@@ -340,7 +379,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -324,7 +374,8 @@
+@@ -324,7 +392,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -350,7 +389,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -347,6 +398,7 @@
+@@ -347,6 +416,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -358,7 +397,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
  
-@@ -364,11 +416,16 @@
+@@ -364,11 +434,16 @@
  				break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -380,7 +419,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -390,37 +447,53 @@
+@@ -390,37 +465,53 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock* s;
@@ -453,7 +492,7 @@ Index: src/spritecache.cpp
  }
  
  void* AllocSprite(size_t mem_req)
-@@ -430,7 +503,7 @@
+@@ -430,7 +521,7 @@
  	/* Align this to an uint32 boundary. This also makes sure that the 2 least
  	 * bits are not used, so we could use those for other things. */
  	mem_req = Align(mem_req, sizeof(uint32));
@@ -462,7 +501,7 @@ Index: src/spritecache.cpp
  	for (;;) {
  		MemBlock* s;
  
-@@ -465,7 +538,8 @@
+@@ -465,7 +556,8 @@
  {
  	SpriteCache *sc;
  	void* p;
@@ -472,7 +511,7 @@ Index: src/spritecache.cpp
  	assert(sprite < _spritecache_items);
  
  	sc = GetSpriteCache(sprite);
-@@ -473,10 +547,16 @@
+@@ -473,10 +565,16 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
@@ -490,7 +529,7 @@ Index: src/spritecache.cpp
  	return p;
  }
  
-@@ -484,7 +564,7 @@
+@@ -484,7 +582,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -499,7 +538,7 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -492,10 +572,10 @@
+@@ -492,10 +590,10 @@
  	NextBlock(_spritecache_ptr)->size = 0;
  
  	/* Reset the spritecache 'pool' */
@@ -621,6 +660,23 @@ Index: src/vehicle.cpp
 ===================================================================
 --- src/vehicle.cpp	(revision 11813)
 +++ src/vehicle.cpp	(working copy)
+@@ -785,11 +785,11 @@
+ 			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
+ 
+ 			while (v != NULL) {
+-				if (!(v->vehstatus & VS_HIDDEN) &&
+-						l <= v->right_coord &&
+-						t <= v->bottom_coord &&
+-						r >= v->left_coord &&
+-						b >= v->top_coord) {
++				if (!(v->vehstatus & VS_HIDDEN) ) { //&&
++//						l <= v->right_coord &&
++//						t <= v->bottom_coord &&
++//						r >= v->left_coord &&
++//						b >= v->top_coord) {
+ 					DoDrawVehicle(v);
+ 				}
+ 				v = v->next_hash;
 @@ -1416,8 +1416,8 @@
  			 (uint)(y -= vp->top) >= (uint)vp->height)
  				return NULL;
@@ -1125,8 +1181,8 @@ Index: src/viewport.cpp
 +   tmp_dpi = vd.dpi;
 +   tmp_dpi.left = ScaleByZoom(vd.vp->virtual_left, vd.vp->zoom);
 +   tmp_dpi.top = ScaleByZoom(vd.vp->virtual_top, vd.vp->zoom);
-+	tmp_dpi.width = vd.vp->width;
-+	tmp_dpi.height = vd.vp->height;
++   tmp_dpi.width = ScaleByZoom(vd.vp->width, vd.vp->zoom);
++   tmp_dpi.height = ScaleByZoom(vd.vp->height, vd.vp->zoom);
  
 -	ViewportAddTownNames(&vd.dpi);
 -	ViewportAddStationNames(&vd.dpi);
@@ -1422,9 +1478,25 @@ Index: src/blitter/32bpp_optimized.cpp
  				continue;
  			}
  
-@@ -47,12 +52,21 @@
+@@ -42,17 +47,36 @@
+ 					if (src->m == 0) {
+ 						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
+ 					} else {
++						if (bp->remap[src->m] != 0) {
++                     *dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
++                     *dst = ComposeColourMultiply(this->LookupColourInPalette(bp->remap[src->m]), *dst);                     
++                  }
++					}
++					break;
++            case BM_COLOUR_OPAQUE:
++              	/* In case the m-channel is zero, do not remap this pixel in any way */
++					if (src->m == 0) {
++						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
++					} else {
+ 						if (bp->remap[src->m] != 0) *dst = ComposeColourPA(this->LookupColourInPalette(bp->remap[src->m]), src->a, *dst);
+ 					}
  					break;
- 
+-
  				case BM_TRANSPARENT:
 -					/* TODO -- We make an assumption here that the remap in fact is transparency, not some color.
 -					 *  This is never a problem with the code we produce, but newgrfs can make it fail... or at least:
@@ -1450,7 +1522,7 @@ Index: src/blitter/32bpp_optimized.cpp
  					break;
  
  				default:
-@@ -60,7 +74,7 @@
+@@ -60,7 +84,7 @@
  					break;
  			}
  			dst++;
@@ -1459,7 +1531,26 @@ Index: src/blitter/32bpp_optimized.cpp
  		}
  	}
  }
-@@ -108,3 +122,122 @@
+@@ -97,10 +121,14 @@
+ 				trans = 0;
+ 				if (dst->m != 0) {
+ 					/* Pre-convert the mapping channel to a RGB value */
+-					uint color = this->LookupColourInPalette(dst->m);
+-					dst->r = GB(color, 16, 8);
+-					dst->g = GB(color, 8,  8);
+-					dst->b = GB(color, 0,  8);
++               /* GeekToo: only do this when the source data is 8bpp ) */
++               if ( !dst->r && !dst->g && !dst->b )
++					{
++                  uint color = this->LookupColourInPalette(dst->m);
++					   dst->r = GB(color, 16, 8);
++					   dst->g = GB(color, 8,  8);
++					   dst->b = GB(color, 0,  8);
++               }
+ 				}
+ 			}
+ 			dst--;
+@@ -108,3 +136,122 @@
  	}
  	return dest_sprite;
  }
@@ -1582,6 +1673,18 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/base.hpp
+===================================================================
+--- src/blitter/base.hpp	(revision 11813)
++++ src/blitter/base.hpp	(working copy)
+@@ -11,6 +11,7 @@
+ 	BM_NORMAL,
+ 	BM_COLOUR_REMAP,
+ 	BM_TRANSPARENT,
++   BM_COLOUR_OPAQUE
+ };
+ 
+ /**
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
 --- src/blitter/32bpp_optimized.hpp	(revision 11813)
@@ -1602,7 +1705,95 @@ Index: src/blitter/32bpp_base.hpp
 ===================================================================
 --- src/blitter/32bpp_base.hpp	(revision 11813)
 +++ src/blitter/32bpp_base.hpp	(working copy)
-@@ -95,12 +95,14 @@
+@@ -7,6 +7,7 @@
+ 
+ #include "base.hpp"
+ #include "../core/bitmath_func.hpp"
++#include "../core/math_func.hpp"
+ 
+ class Blitter_32bppBase : public Blitter {
+ public:
+@@ -87,6 +88,79 @@
+ 												(b * a + cb * (256 - a)) / 256);
+ 	}
+ 
++/**
++	* Compose a colour based on Pixel value, alpha value, and the current pixel value.
++	*/
++	static inline uint ComposeColourMultiply(uint colour, uint current)
++	{
++		uint r, g, b, cr, cg, cb, lm, ls, max_m, min_m, max_s, min_s, mid_s;
++
++      if (colour == current) {
++         return colour;
++      }
++
++		r  = GB(colour,  16, 8);
++		g  = GB(colour,  8,  8);
++		b  = GB(colour,  0,  8);
++      
++		cr = GB(current, 16, 8);
++		cg = GB(current, 8,  8);
++		cb = GB(current, 0,  8);
++
++      if (cr < cg)
++         Swap(cr,cg);
++      if (cg < cb)
++         Swap(cg,cb);
++      if (cr < cg)
++         Swap(cr,cg);
++      if (r>g)
++         if(r>b)
++            if(b>g)
++               mid_s=3;
++            else
++               mid_s=2;
++         else
++               mid_s=1;
++      else
++         if(r>b)
++            mid_s=1;
++         else
++            if(b>g)
++               mid_s=2;
++            else
++               mid_s=3;   
++                     
++                        
++      
++      max_s = max(max(cr,cg),cb);
++      min_s = max(max(cr,cg),cb);
++      max_m = max(max(r,g),b);
++      min_m = min(min(r,g),b);
++
++      lm = r + g + b;  
++      ls = cr + cg + cb;    
++      if (r==max_m)
++         r=cr;
++      if (g==max_m)
++         g=cr;   
++      if (b==max_m)
++         b=cr;   
++      if (r==min_m)
++         r=cb;
++      if (g==min_m)
++         g=cb;   
++      if (b==min_m)
++         b=cb;
++      if(mid_s==1)
++         r=cg;         
++      if(mid_s==2)
++         g=cg;            
++      if(mid_s==3)
++         b=cg;            
++  		return ComposeColour(0xff,r,g,b);      
++	}
++
++
+ 	/**
+ 	* Make a pixel looks like it is transparent.
+ 	* @param colour the colour already on the screen.
+@@ -95,12 +169,14 @@
  	*/
  	static inline uint MakeTransparent(uint colour, uint amount)
  	{
@@ -1640,6 +1831,15 @@ Index: src/gfx.cpp
 ===================================================================
 --- src/gfx.cpp	(revision 11813)
 +++ src/gfx.cpp	(working copy)
+@@ -617,7 +617,7 @@
+ 		if (IsPrintable(c)) {
+ 			if (x >= dpi->left + dpi->width) goto skip_char;
+ 			if (x + 26 >= dpi->left) {
+-				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_REMAP);
++				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_OPAQUE);
+ 			}
+ 			x += GetCharacterWidth(size, c);
+ 		} else if (c == '\n') { // newline = {}
 @@ -657,9 +657,16 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
@@ -1768,7 +1968,7 @@ Index: src/player_gui.cpp
  }
  
  /**
-@@ -584,15 +586,15 @@
+@@ -584,67 +586,67 @@
  /** Widget description for the normal/simple player face selection dialog */
  static const Widget _select_player_face_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,    14,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
@@ -1783,13 +1983,111 @@ Index: src/player_gui.cpp
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   187,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
 +{    WWT_CAPTION,   RESIZE_NONE,    14,    11,   292,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
 +{     WWT_IMGBTN,   RESIZE_NONE,    14,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,    14,     0,   307,    14,   313, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,    94,   314,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   307,   314,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,    14,    190,  282,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,    14,    190,  282,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   287,   298, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    190,  282,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{      WWT_PANEL,   RESIZE_NONE,    14,     0,   307,    14,   311, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,   154,   312,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    155,  307,   312,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,    201,  303,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,    201,  303,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   277,   288, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    201,  303,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+ {   WIDGETS_END},
+ };
+ 
+ /** Widget description for the advanced player face selection dialog */
+ static const Widget _select_player_face_adv_widgets[] = {
+ {   WWT_CLOSEBOX,   RESIZE_NONE,    14,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
+-{    WWT_CAPTION,   RESIZE_NONE,    14,    11,   204,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
+-{     WWT_IMGBTN,   RESIZE_NONE,    14,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL
+-{      WWT_PANEL,   RESIZE_NONE,    14,     0,   219,    14,   207, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,    94,   208,   219, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   219,   208,   219, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,    96,   156,    32,    43, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,   157,   217,    32,    43, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   137,   148, STR_RANDOM,              STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    95,   217,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   158,   169, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // PFW_WIDGET_LOAD
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   170,   181, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // PFW_WIDGET_FACECODE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   182,   193, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // PFW_WIDGET_SAVE
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,    96,   156,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // PFW_WIDGET_ETHNICITY_EUR
+-{    WWT_TEXTBTN,   RESIZE_NONE,    14,   157,   217,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // PFW_WIDGET_ETHNICITY_AFR
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   175,   217,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // PFW_WIDGET_HAS_MOUSTACHE_EARRING
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   175,   217,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // PFW_WIDGET_HAS_GLASSES
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    175,  183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    184,  208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    209,  217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_R
++{    WWT_CAPTION,   RESIZE_NONE,    14,    11,   313,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
++{     WWT_IMGBTN,   RESIZE_NONE,    14,   313,   327,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL
++{      WWT_PANEL,   RESIZE_NONE,    14,     0,   327,    14,   311, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     0,   163,   312,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   164,   327,   312,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,   202,   262,    32,    43, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,   263,   323,    32,    43, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   257,   268, STR_RANDOM,              STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   201,   323,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   273,   284, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // PFW_WIDGET_LOAD
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   285,   296, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // PFW_WIDGET_FACECODE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,     2,    93,   297,   308, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // PFW_WIDGET_SAVE
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,   202,   262,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // PFW_WIDGET_ETHNICITY_EUR
++{    WWT_TEXTBTN,   RESIZE_NONE,    14,   263,   323,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // PFW_WIDGET_ETHNICITY_AFR
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   281,   323,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // PFW_WIDGET_HAS_MOUSTACHE_EARRING
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,   281,   323,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // PFW_WIDGET_HAS_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    281,  289,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,    14,    290,  314,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,    14,    315,  323,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_R
  {   WIDGETS_END},
  };
  
@@ -1814,7 +2112,7 @@ Index: src/player_gui.cpp
  /** normal/simple player face selection window description */
  static const WindowDesc _select_player_face_desc = {
 -	WDP_AUTO, WDP_AUTO, 190, 163, 190, 163,
-+	WDP_AUTO, WDP_AUTO, 309, 326, 309, 326,
++	WDP_AUTO, WDP_AUTO, 307, 323, 307, 323,
  	WC_PLAYER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
  	_select_player_face_widgets,
@@ -1823,7 +2121,7 @@ Index: src/player_gui.cpp
  /** advanced player face selection window description */
  static const WindowDesc _select_player_face_adv_desc = {
 -	WDP_AUTO, WDP_AUTO, 220, 220, 220, 220,
-+	WDP_AUTO, WDP_AUTO, 440, 440, 440, 440,
++	WDP_AUTO, WDP_AUTO, 327, 324, 327, 324,
  	WC_PLAYER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
  	_select_player_face_adv_widgets,
