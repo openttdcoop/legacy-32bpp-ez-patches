@@ -308,6 +308,46 @@ Index: src/train_cmd.cpp
  };
  
  static const uint32 _reachable_tracks[4] = {
+@@ -3096,10 +3098,18 @@
+ 					}
+ 				} else {
+ 					static const TrackBits _matching_tracks[8] = {
+-							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT, TRACK_BIT_X,
+-							TRACK_BIT_UPPER | TRACK_BIT_LOWER, TRACK_BIT_Y,
+-							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT, TRACK_BIT_X,
+-							TRACK_BIT_UPPER | TRACK_BIT_LOWER, TRACK_BIT_Y
++							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT,     //N
++							TRACK_BIT_X | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
++											TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //NE
++							TRACK_BIT_UPPER | TRACK_BIT_LOWER,     //E
++							TRACK_BIT_Y | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
++											TRACK_BIT_LOWER | TRACK_BIT_UPPER, //SE  
++							TRACK_BIT_LEFT  | TRACK_BIT_RIGHT,     //S 
++							TRACK_BIT_X | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
++											TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //SW
++							TRACK_BIT_UPPER | TRACK_BIT_LOWER,     //W         
++							TRACK_BIT_Y | TRACK_BIT_LEFT | TRACK_BIT_RIGHT |
++											  TRACK_BIT_LOWER | TRACK_BIT_UPPER,  //NW
+ 					};
+ 
+ 					/* The wagon is active, simply follow the prev vehicle. */
+@@ -3107,11 +3117,12 @@
+ 				}
+ 
+ 				/* Make sure chosen track is a valid track */
+-				assert(
+-						chosen_track == TRACK_BIT_X     || chosen_track == TRACK_BIT_Y ||
+-						chosen_track == TRACK_BIT_UPPER || chosen_track == TRACK_BIT_LOWER ||
+-						chosen_track == TRACK_BIT_LEFT  || chosen_track == TRACK_BIT_RIGHT);
++//				assert(
++//						chosen_track == TRACK_BIT_X     || chosen_track == TRACK_BIT_Y ||
++//						chosen_track == TRACK_BIT_UPPER || chosen_track == TRACK_BIT_LOWER ||
++//						chosen_track == TRACK_BIT_LEFT  || chosen_track == TRACK_BIT_RIGHT);
+ 
++				assert(chosen_track);
+ 				/* Update XY to reflect the entrance to the new tile, and select the direction to use */
+ 				const byte *b = _initial_tile_subcoord[FIND_FIRST_BIT(chosen_track)][enterdir];
+ 				gp.x = (gp.x & ~0xF) | b[0];
 Index: src/spritecache.cpp
 ===================================================================
 --- src/spritecache.cpp	(revision 12359)
