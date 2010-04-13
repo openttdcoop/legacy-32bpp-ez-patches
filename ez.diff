@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 12579)
+--- src/sound.cpp	(revision 12652)
 +++ src/sound.cpp	(working copy)
 @@ -166,7 +166,7 @@
  }
@@ -13,60 +13,123 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/rail_cmd.cpp
 ===================================================================
---- src/rail_cmd.cpp	(revision 12580)
+--- src/rail_cmd.cpp	(revision 12652)
 +++ src/rail_cmd.cpp	(working copy)
 @@ -2231,12 +2231,15 @@
  }
  
  static const byte _fractcoords_behind[4] = { 0x8F, 0x8, 0x80, 0xF8 };
 -static const byte _fractcoords_enter[4] = { 0x8A, 0x48, 0x84, 0xA8 };
-+static const byte _fractcoords_enter[4] = { 0x8E, 0x18, 0x86, 0xE8 };
++static const byte _fractcoords_enter[4] = { 0x88, 0x88, 0x88, 0x88 };
  static const signed char _deltacoord_leaveoffset[8] = {
 -	-1,  0,  1,  0, /* x */
 -	 0,  1,  0, -1  /* y */
 +	 1,  0, -1,  0, /* x */
 +	 0, -1,  0,  1  /* y */
  };
-+static const byte _fractcoords_leave[4] = { 0x80, 0xF8, 0x8F, 0x08 };
++// static const byte _fractcoords_leave[4] = { 0x80, 0xF8, 0x8F, 0x08 };
  
-+static const byte _vehicle_initial_x_fract[4] = { 15, 8, 0, 8};
-+static const byte _vehicle_initial_y_fract[4] = { 8, 0, 8, 15};
++//static const byte _vehicle_initial_x_fract[4] = { 15, 8, 0, 8};
++//static const byte _vehicle_initial_y_fract[4] = { 8, 0, 8, 15};
  
  /** Compute number of ticks when next wagon will leave a depot.
   * Negative means next wagon should have left depot n ticks before.
-@@ -2277,12 +2280,13 @@
+@@ -2263,9 +2266,10 @@
+ static VehicleEnterTileStatus VehicleEnter_Track(Vehicle *v, TileIndex tile, int x, int y)
+ {
+ 	byte fract_coord;
+-	byte fract_coord_leave;
++//	byte fract_coord_leave;
+ 	DiagDirection dir;
+ 	int length;
++	Vehicle *p;
+ 
+ 	/* this routine applies only to trains in depot tiles */
+ 	if (v->type != VEH_TRAIN || !IsTileDepotType(tile, TRANSPORT_RAIL)) return VETSB_CONTINUE;
+@@ -2277,19 +2281,21 @@
  	/* this depends on the length of the current vehicle */
  	length = v->u.rail.cached_veh_length;
  
-+
- 	fract_coord_leave =
+-	fract_coord_leave =
 -		((_fractcoords_enter[dir] & 0x0F) + // x
 -			(length + 1) * _deltacoord_leaveoffset[dir]) +
 -		(((_fractcoords_enter[dir] >> 4) +  // y
 -			((length + 1) * _deltacoord_leaveoffset[dir+4])) << 4);
--
-+		((_fractcoords_leave[dir] & 0x0F) + // x
-+			(0xF-length) * _deltacoord_leaveoffset[dir])  +
-+		(((_fractcoords_leave[dir] >> 4) +  // y
-+			((0xF-length ) * _deltacoord_leaveoffset[dir+4])) << 4);
+ 
++//	fract_coord_leave =
++//		((_fractcoords_leave[dir] & 0x0F) + // x
++//			(0xF-length) * _deltacoord_leaveoffset[dir])  +
++//		(((_fractcoords_leave[dir] >> 4) +  // y
++//			((0xF-length ) * _deltacoord_leaveoffset[dir+4])) << 4);
 +			
  	fract_coord = (x & 0xF) + ((y & 0xF) << 4);
  
  	if (_fractcoords_behind[dir] == fract_coord) {
-@@ -2306,6 +2310,8 @@
- 			if ((v = v->Next()) != NULL) {
- 				v->vehstatus &= ~VS_HIDDEN;
- 				v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
-+				v->x_pos = (v->x_pos & ~0x0F) | _vehicle_initial_x_fract[dir];
-+				v->y_pos = (v->y_pos & ~0x0F) | _vehicle_initial_y_fract[dir];
+ 		/* make sure a train is not entering the tile from behind */
+ 		return VETSB_CANNOT_ENTER;
+-	} else if (_fractcoords_enter[dir] == fract_coord) {
+-		if (DiagDirToDir(ReverseDiagDir(dir)) == v->direction) {
++	} else
++	if (DiagDirToDir(ReverseDiagDir(dir)) == v->direction) { 
++		if (_fractcoords_enter[dir] == fract_coord) {
+ 			/* enter the depot */
+ 			v->u.rail.track = TRACK_BIT_DEPOT,
+ 			v->vehstatus |= VS_HIDDEN; /* hide it */
+@@ -2300,16 +2306,43 @@
+ 			InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
+ 			return VETSB_ENTERED_WORMHOLE;
+ 		}
+-	} else if (fract_coord_leave == fract_coord) {
+-		if (DiagDirToDir(dir) == v->direction) {
+-			/* leave the depot? */
+-			if ((v = v->Next()) != NULL) {
+-				v->vehstatus &= ~VS_HIDDEN;
+-				v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
++	} else {
++		bool leave = false;
++		if ( (p = v->Previous()) != NULL){   // carriages 		
++			if (!(p->vehstatus & VS_HIDDEN)) { // prev carriage or engine already outside.
++				switch (dir) {
++					case DIAGDIR_NE: leave = (v->x_pos - p->x_pos >= 0xE);
++						break;
++					case DIAGDIR_SE: leave = (p->y_pos - v->y_pos >= 0xE);
++						break;
++					case DIAGDIR_SW: leave = (p->x_pos - v->x_pos >= 0xE);
++						break;
++					case DIAGDIR_NW: leave = (v->y_pos - p->y_pos >= 0xE);
++						break;
++					default: leave = false;
++						break;
++				}
++				if (leave){
++					v->vehstatus &= ~VS_HIDDEN;
++					v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);					
++				}
  			}
  		}
++//		else if (fract_coord_leave == fract_coord) {
++//			if (DiagDirToDir(dir) == v->direction) {
++			/* leave the depot? */
++//				if ((v = v->Next()) != NULL) {
++//					v->vehstatus &= ~VS_HIDDEN;
++//					v->u.rail.track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
++//				v->x_pos = (v->x_pos & ~0x0F) | _vehicle_initial_x_fract[dir];
++//				v->y_pos = (v->y_pos & ~0x0F) | _vehicle_initial_y_fract[dir];
++//			   }
++//		   }
++//	   }
  	}
++	
+ 
++
+ 	return VETSB_CONTINUE;
+ }
+ 
 Index: src/station_cmd.cpp
 ===================================================================
---- src/station_cmd.cpp	(revision 12579)
+--- src/station_cmd.cpp	(revision 12652)
 +++ src/station_cmd.cpp	(working copy)
-@@ -2197,7 +2197,8 @@
+@@ -2199,7 +2199,8 @@
  		}
  
  		SpriteID pal;
@@ -76,20 +139,17 @@ Index: src/station_cmd.cpp
  			pal = palette;
  		} else {
  			pal = dtss->image.pal;
-@@ -2417,8 +2418,8 @@
- 					if (DiagDirToAxis(dir) != AXIS_X) Swap(x, y);
- 					if (y == TILE_SIZE / 2) {
- 						if (dir != DIAGDIR_SE && dir != DIAGDIR_SW) x = TILE_SIZE - 1 - x;
--						if (x == 12) return VETSB_ENTERED_STATION | (VehicleEnterTileStatus)(station_id << VETS_STATION_ID_OFFSET); /* enter station */
--						if (x < 12) {
-+						if (x == 13) return VETSB_ENTERED_STATION | (VehicleEnterTileStatus)(station_id << VETS_STATION_ID_OFFSET); /* enter station */
-+						if (x < 13) {
- 							uint16 spd;
- 
- 							v->vehstatus |= VS_TRAIN_SLOWING;
+@@ -2418,7 +2419,6 @@
+ 				if (x == 12) return VETSB_ENTERED_STATION | (VehicleEnterTileStatus)(station_id << VETS_STATION_ID_OFFSET); /* enter station */
+ 				if (x < 12) {
+ 					uint16 spd;
+-
+ 					v->vehstatus |= VS_TRAIN_SLOWING;
+ 					spd = _enter_station_speedtable[x];
+ 					if (spd < v->cur_speed) v->cur_speed = spd;
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 12579)
+--- src/table/sprites.h	(revision 12652)
 +++ src/table/sprites.h	(working copy)
 @@ -1427,7 +1427,7 @@
  	RECOLOR_BIT = 30,           ///< toggles recoloring in the sprite
@@ -110,7 +170,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 12579)
+--- src/spriteloader/grf.cpp	(revision 12652)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -9,7 +9,7 @@
  #include "../core/alloc_func.hpp"
@@ -123,7 +183,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 12579)
+--- src/spriteloader/spriteloader.hpp	(revision 12652)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -26,8 +26,7 @@
  	/**
@@ -137,7 +197,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 12579)
+--- src/spriteloader/grf.hpp	(revision 12652)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -150,7 +210,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 12579)
+--- src/spriteloader/png.cpp	(revision 12652)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -30,21 +30,28 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -222,7 +282,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 12579)
+--- src/spriteloader/png.hpp	(revision 12652)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -235,7 +295,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/train_cmd.cpp
 ===================================================================
---- src/train_cmd.cpp	(revision 12579)
+--- src/train_cmd.cpp	(revision 12652)
 +++ src/train_cmd.cpp	(working copy)
 @@ -55,10 +55,11 @@
  static void TrainController(Vehicle *v, Vehicle *nomove, bool update_image);
@@ -244,8 +304,8 @@ Index: src/train_cmd.cpp
 -static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
 -static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
  
-+static const byte _vehicle_initial_x_fract[4] = { 15, 8, 0, 8};
-+static const byte _vehicle_initial_y_fract[4] = { 8, 0, 8, 15};
++static const byte _vehicle_initial_x_fract[4] = { 8, 8, 8, 8};
++static const byte _vehicle_initial_y_fract[4] = { 8, 8, 8, 8};
  
 +
  /**
@@ -260,7 +320,7 @@ Index: src/train_cmd.cpp
  		v->u.rail.cached_total_length += u->u.rail.cached_veh_length;
  	}
  
-@@ -1513,16 +1514,17 @@
+@@ -1493,16 +1494,17 @@
  void Train::UpdateDeltaXY(Direction direction)
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
@@ -287,7 +347,7 @@ Index: src/train_cmd.cpp
  #undef MKIT
  
  	uint32 x = _delta_xy_table[direction];
-@@ -2375,12 +2377,12 @@
+@@ -2352,12 +2354,12 @@
  }
  
  static const byte _initial_tile_subcoord[6][4][3] = {
@@ -306,7 +366,15 @@ Index: src/train_cmd.cpp
  };
  
  static const byte _search_directions[6][4] = {
-@@ -3046,10 +3048,18 @@
+@@ -2942,6 +2944,7 @@
+ 					/* Inside depot */
+ 					gp.x = v->x_pos;
+ 					gp.y = v->y_pos;
++					VehicleEnterTile(v, gp.new_tile, gp.x, gp.y);
+ 				} else {
+ 					/* Not inside depot */
+ 
+@@ -3023,10 +3026,18 @@
  					}
  				} else {
  					static const TrackBits _matching_tracks[8] = {
@@ -329,7 +397,7 @@ Index: src/train_cmd.cpp
  					};
  
  					/* The wagon is active, simply follow the prev vehicle. */
-@@ -3057,11 +3067,12 @@
+@@ -3034,11 +3045,12 @@
  				}
  
  				/* Make sure chosen track is a valid track */
@@ -348,7 +416,7 @@ Index: src/train_cmd.cpp
  				gp.x = (gp.x & ~0xF) | b[0];
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 12579)
+--- src/spritecache.cpp	(revision 12652)
 +++ src/spritecache.cpp	(working copy)
 @@ -7,6 +7,8 @@
  #include "variables.h"
@@ -708,9 +776,9 @@ Index: src/spritecache.cpp
  }
 Index: src/tunnelbridge_cmd.cpp
 ===================================================================
---- src/tunnelbridge_cmd.cpp	(revision 12579)
+--- src/tunnelbridge_cmd.cpp	(revision 12652)
 +++ src/tunnelbridge_cmd.cpp	(working copy)
-@@ -1241,10 +1241,10 @@
+@@ -1249,10 +1249,10 @@
  	}
  }
  
@@ -725,7 +793,7 @@ Index: src/tunnelbridge_cmd.cpp
  static const byte _exit_tunnel_track[4]      = {1, 2, 1, 2};
  
  /** Get the trackdir of the exit of a tunnel */
-@@ -1257,7 +1257,9 @@
+@@ -1265,7 +1265,9 @@
  static const byte _tunnel_fractcoord_5[4]    = {0x92, 0x89, 0x58, 0x25};
  static const byte _tunnel_fractcoord_6[4]    = {0x92, 0x89, 0x56, 0x45};
  static const byte _tunnel_fractcoord_7[4]    = {0x52, 0x85, 0x96, 0x49};
@@ -736,7 +804,7 @@ Index: src/tunnelbridge_cmd.cpp
  static VehicleEnterTileStatus VehicleEnter_TunnelBridge(Vehicle *v, TileIndex tile, int x, int y)
  {
  	int z = GetSlopeZ(x, y) - v->z_pos;
-@@ -1275,11 +1277,14 @@
+@@ -1283,11 +1285,14 @@
  			vdir = DirToDiagDir(v->direction);
  
  			if (v->u.rail.track != TRACK_BIT_WORMHOLE && dir == vdir) {
@@ -756,7 +824,7 @@ Index: src/tunnelbridge_cmd.cpp
  				}
  				if (fc == _tunnel_fractcoord_2[dir]) {
  					v->tile = tile;
-@@ -1289,13 +1294,20 @@
+@@ -1297,13 +1302,20 @@
  				}
  			}
  
@@ -785,7 +853,7 @@ Index: src/tunnelbridge_cmd.cpp
  			fc = (x & 0xF) + (y << 4);
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 12579)
+--- src/spritecache.h	(revision 12652)
 +++ src/spritecache.h	(working copy)
 @@ -7,8 +7,9 @@
  
@@ -800,7 +868,7 @@ Index: src/spritecache.h
  	int16 y_offs;
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 12579)
+--- src/texteff.cpp	(revision 12652)
 +++ src/texteff.cpp	(working copy)
 @@ -386,6 +386,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
@@ -840,9 +908,9 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 12579)
+--- src/window.cpp	(revision 12652)
 +++ src/window.cpp	(working copy)
-@@ -235,7 +235,8 @@
+@@ -263,7 +263,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window* const *wz;
@@ -852,17 +920,17 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS(wz) {
-@@ -247,6 +248,7 @@
+@@ -275,6 +276,7 @@
  			DrawOverlappedWindow(wz, left, top, right, bottom);
  		}
  	}
 +	_cur_dpi = old_dpi;
  }
  
- static void DrawOverlappedWindow(Window* const *wz, int left, int top, int right, int bottom)
+ /**
 Index: src/landscape.cpp
 ===================================================================
---- src/landscape.cpp	(revision 12579)
+--- src/landscape.cpp	(revision 12652)
 +++ src/landscape.cpp	(working copy)
 @@ -385,7 +385,7 @@
  		if (!IsNonContinuousFoundation(f)) {
@@ -918,9 +986,9 @@ Index: src/landscape.cpp
  		ti->z += ApplyFoundationToSlope(f, &ti->tileh);
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 12579)
+--- src/roadveh_cmd.cpp	(revision 12652)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -570,14 +570,14 @@
+@@ -566,14 +566,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -945,7 +1013,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 12579)
+--- src/zoom_type.h	(revision 12652)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -971,9 +1039,9 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 12579)
+--- src/vehicle.cpp	(revision 12652)
 +++ src/vehicle.cpp	(working copy)
-@@ -755,6 +755,12 @@
+@@ -761,6 +761,12 @@
  	return CommandCost(expense_type, (EngInfo(engine_type)->refit_cost * base_cost) >> 10);
  }
  
@@ -986,7 +1054,7 @@ Index: src/vehicle.cpp
  static void DoDrawVehicle(const Vehicle *v)
  {
  	SpriteID image = v->cur_image;
-@@ -766,8 +772,27 @@
+@@ -772,8 +778,27 @@
  		pal = PAL_NONE;
  	}
  
@@ -1016,7 +1084,7 @@ Index: src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -804,11 +829,7 @@
+@@ -810,11 +835,7 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1029,7 +1097,7 @@ Index: src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -1435,8 +1456,8 @@
+@@ -1441,8 +1462,8 @@
  			 (uint)(y -= vp->top) >= (uint)vp->height)
  				return NULL;
  
@@ -1042,7 +1110,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN|VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 12579)
+--- src/viewport.cpp	(revision 12652)
 +++ src/viewport.cpp	(working copy)
 @@ -106,7 +106,7 @@
  struct ParentSpriteToDraw {
@@ -1844,7 +1912,7 @@ Index: src/viewport.cpp
  			y = y - vp->top  + vp->virtual_top;
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 12579)
+--- src/blitter/32bpp_optimized.cpp	(revision 12652)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -1,6 +1,7 @@
  /* $Id$ */
@@ -2298,9 +2366,22 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/base.hpp
+===================================================================
+--- src/blitter/base.hpp	(revision 12652)
++++ src/blitter/base.hpp	(working copy)
+@@ -11,6 +11,8 @@
+ 	BM_NORMAL,
+ 	BM_COLOUR_REMAP,
+ 	BM_TRANSPARENT,
++   BM_COLOUR_OPAQUE,
++   BM_SHADOW
+ };
+ 
+ /**
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 12579)
+--- src/blitter/32bpp_optimized.hpp	(revision 12652)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -10,9 +10,14 @@
  
@@ -2320,22 +2401,9 @@ Index: src/blitter/32bpp_optimized.hpp
  	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
  };
  
-Index: src/blitter/base.hpp
-===================================================================
---- src/blitter/base.hpp	(revision 12579)
-+++ src/blitter/base.hpp	(working copy)
-@@ -11,6 +11,8 @@
- 	BM_NORMAL,
- 	BM_COLOUR_REMAP,
- 	BM_TRANSPARENT,
-+   BM_COLOUR_OPAQUE,
-+   BM_SHADOW
- };
- 
- /**
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 12579)
+--- src/blitter/32bpp_base.hpp	(revision 12652)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -7,6 +7,7 @@
  
@@ -2457,7 +2525,7 @@ Index: src/blitter/32bpp_base.hpp
  		b = GB(colour, 0,  8);
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 12579)
+--- src/blitter/32bpp_anim.cpp	(revision 12652)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -79,8 +79,10 @@
  					 *  we produce a result the newgrf maker didn't expect ;) */
@@ -2474,7 +2542,7 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 12579)
+--- src/gfx.cpp	(revision 12652)
 +++ src/gfx.cpp	(working copy)
 @@ -196,16 +196,16 @@
  
@@ -2649,7 +2717,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/vehicle_base.h
 ===================================================================
---- src/vehicle_base.h	(revision 12579)
+--- src/vehicle_base.h	(revision 12652)
 +++ src/vehicle_base.h	(working copy)
 @@ -67,6 +67,8 @@
  	VS_SHADOW          = 0x20,
@@ -2671,7 +2739,7 @@ Index: src/vehicle_base.h
  	CargoID cargo_type;      // type of cargo this vehicle is carrying
 Index: src/player_gui.cpp
 ===================================================================
---- src/player_gui.cpp	(revision 12579)
+--- src/player_gui.cpp	(revision 12652)
 +++ src/player_gui.cpp	(working copy)
 @@ -29,7 +29,7 @@
  #include "string_func.h"
@@ -2682,7 +2750,7 @@ Index: src/player_gui.cpp
  #include "table/sprites.h"
  #include "table/strings.h"
  
-@@ -544,6 +544,7 @@
+@@ -571,6 +571,7 @@
  		}
  		DrawSprite(GetPlayerFaceSprite(pf, pfv, ge), (pfv == PFV_EYEBROWS) ? pal : PAL_NONE, x, y);
  	}
@@ -2690,7 +2758,7 @@ Index: src/player_gui.cpp
  }
  
  /**
-@@ -605,67 +606,67 @@
+@@ -632,67 +633,67 @@
  /** Widget description for the normal/simple player face selection dialog */
  static const Widget _select_player_face_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,    14,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
@@ -2813,7 +2881,7 @@ Index: src/player_gui.cpp
  {   WIDGETS_END},
  };
  
-@@ -803,8 +804,15 @@
+@@ -830,8 +831,15 @@
  				DrawFaceStringLabel(w, PFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetPlayerFaceBits(*pf, PFV_COLLAR,          ge), false);
  			}
  
@@ -2829,7 +2897,7 @@ Index: src/player_gui.cpp
  			break;
  
  		case WE_CLICK:
-@@ -928,7 +936,7 @@
+@@ -959,7 +967,7 @@
  
  /** normal/simple player face selection window description */
  static const WindowDesc _select_player_face_desc = {
@@ -2838,7 +2906,7 @@ Index: src/player_gui.cpp
  	WC_PLAYER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS,
  	_select_player_face_widgets,
-@@ -937,7 +945,7 @@
+@@ -968,7 +976,7 @@
  
  /** advanced player face selection window description */
  static const WindowDesc _select_player_face_adv_desc = {
@@ -2849,7 +2917,7 @@ Index: src/player_gui.cpp
  	_select_player_face_adv_widgets,
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 12579)
+--- src/openttd.cpp	(revision 12652)
 +++ src/openttd.cpp	(working copy)
 @@ -364,7 +364,9 @@
  		"f"
