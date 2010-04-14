@@ -1,8 +1,8 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 16366)
+--- src/sound.cpp	(revision 17832)
 +++ src/sound.cpp	(working copy)
-@@ -146,7 +146,7 @@
+@@ -179,7 +179,7 @@
  }
  
  
@@ -13,9 +13,9 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 16366)
+--- src/table/sprites.h	(revision 17832)
 +++ src/table/sprites.h	(working copy)
-@@ -1411,7 +1411,7 @@
+@@ -1418,7 +1418,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
  	OFFSET_BIT = 29,
  	OPAQUE_BIT = 28,
@@ -24,7 +24,7 @@ Index: src/table/sprites.h
  	PALETTE_WIDTH = 24,         ///< number of bits of the sprite containing the recolour palette
  	SPRITE_WIDTH = 24,          ///< number of bits for the sprite number
  };
-@@ -1432,6 +1432,7 @@
+@@ -1439,6 +1439,7 @@
  	PALETTE_MODIFIER_TRANSPARENT  = TRANSPARENT_BIT,
  	/** this bit is set when a recolouring process is in action */
  	PALETTE_MODIFIER_COLOUR       = RECOLOUR_BIT,
@@ -34,9 +34,9 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 16366)
+--- src/spriteloader/grf.cpp	(revision 17832)
 +++ src/spriteloader/grf.cpp	(working copy)
-@@ -32,7 +32,7 @@
+@@ -38,7 +38,7 @@
  	return false;
  }
  
@@ -47,9 +47,9 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 16366)
+--- src/spriteloader/spriteloader.hpp	(revision 17832)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
-@@ -43,8 +43,9 @@
+@@ -50,8 +50,9 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
@@ -62,9 +62,9 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 16366)
+--- src/spriteloader/grf.hpp	(revision 17832)
 +++ src/spriteloader/grf.hpp	(working copy)
-@@ -12,7 +12,7 @@
+@@ -19,7 +19,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
@@ -75,9 +75,9 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 16366)
+--- src/spriteloader/png.cpp	(revision 17832)
 +++ src/spriteloader/png.cpp	(working copy)
-@@ -30,21 +30,29 @@
+@@ -36,21 +36,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
  }
  
@@ -111,7 +111,7 @@ Index: src/spriteloader/png.cpp
  {
  	png_byte header[8];
  	png_structp png_ptr;
-@@ -53,7 +61,7 @@
+@@ -59,7 +67,7 @@
  	uint i, pixelsize;
  	SpriteLoader::CommonPixel *dst;
  
@@ -120,7 +120,7 @@ Index: src/spriteloader/png.cpp
  
  	/* Check the header */
  	FioReadBlock(header, 8);
-@@ -143,9 +151,7 @@
+@@ -149,9 +157,7 @@
  		for (uint x = 0; x < info_ptr->width; x++) {
  			if (mask) {
  				if (row_pointer[x * sizeof(uint8)] != 0) {
@@ -131,7 +131,7 @@ Index: src/spriteloader/png.cpp
  					/* Alpha channel is used from the original image (to allow transparency in remap colours) */
  					dst[x].m = row_pointer[x * sizeof(uint8)];
  				}
-@@ -164,11 +170,13 @@
+@@ -170,11 +176,13 @@
  	return true;
  }
  
@@ -150,9 +150,9 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 16366)
+--- src/spriteloader/png.hpp	(revision 17832)
 +++ src/spriteloader/png.hpp	(working copy)
-@@ -12,7 +12,7 @@
+@@ -19,7 +19,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
@@ -163,9 +163,9 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 16366)
+--- src/spritecache.cpp	(revision 17832)
 +++ src/spritecache.cpp	(working copy)
-@@ -4,6 +4,8 @@
+@@ -11,6 +11,8 @@
  
  #include "stdafx.h"
  #include "gfx_type.h"
@@ -173,8 +173,8 @@ Index: src/spritecache.cpp
 +#include "table/sprites.h"
  #include "fileio_func.h"
  #include "spriteloader/grf.hpp"
- #include "core/alloc_func.hpp"
-@@ -12,6 +14,8 @@
+ #include "gfx_func.h"
+@@ -18,6 +20,8 @@
  #include "spriteloader/png.hpp"
  #endif /* WITH_PNG */
  #include "blitter/factory.hpp"
@@ -183,7 +183,7 @@ Index: src/spritecache.cpp
  #include "core/math_func.hpp"
  
  #include "table/sprites.h"
-@@ -22,7 +26,7 @@
+@@ -28,7 +32,7 @@
  typedef SimpleTinyEnumT<SpriteType, byte> SpriteTypeByte;
  
  struct SpriteCache {
@@ -192,7 +192,7 @@ Index: src/spritecache.cpp
  	size_t file_pos;
  	uint32 id;
  	uint16 file_slot;
-@@ -56,6 +60,10 @@
+@@ -62,6 +66,10 @@
  
  		_spritecache = ReallocT(_spritecache, items);
  
@@ -203,7 +203,7 @@ Index: src/spritecache.cpp
  		/* Reset the new items and update the count */
  		memset(_spritecache + _spritecache_items, 0, (items - _spritecache_items) * sizeof(*_spritecache));
  		_spritecache_items = items;
-@@ -142,6 +150,13 @@
+@@ -148,6 +156,13 @@
  	uint8 file_slot = sc->file_slot;
  	size_t file_pos = sc->file_pos;
  
@@ -217,7 +217,7 @@ Index: src/spritecache.cpp
  	assert(IsMapgenSpriteID(id) == (sprite_type == ST_MAPGEN));
  	assert(sc->type == sprite_type);
  
-@@ -151,12 +166,28 @@
+@@ -157,12 +172,28 @@
  #ifdef WITH_PNG
  		/* Try loading 32bpp graphics in case we are 32bpp output */
  		SpriteLoaderPNG sprite_loader;
@@ -251,7 +251,7 @@ Index: src/spritecache.cpp
  		}
  		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
  #else
-@@ -184,8 +215,7 @@
+@@ -190,8 +221,7 @@
  		static const int RECOLOUR_SPRITE_SIZE = 257;
  		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num));
  
@@ -261,7 +261,7 @@ Index: src/spritecache.cpp
  		if (_palette_remap_grf[sc->file_slot]) {
  			byte *dest_tmp = AllocaM(byte, max(RECOLOUR_SPRITE_SIZE, num));
  
-@@ -201,7 +231,7 @@
+@@ -207,7 +237,7 @@
  			FioReadBlock(dest, num);
  		}
  
@@ -270,7 +270,7 @@ Index: src/spritecache.cpp
  	}
  
  	/* Ugly hack to work around the problem that the old landscape
-@@ -221,7 +251,7 @@
+@@ -227,7 +257,7 @@
  
  		num = width * height;
  		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
@@ -279,7 +279,7 @@ Index: src/spritecache.cpp
  		sprite->height = height;
  		sprite->width  = width;
  		sprite->x_offs = FioReadWord();
-@@ -243,21 +273,44 @@
+@@ -249,21 +279,44 @@
  
  		sc->type = sprite_type;
  
@@ -331,7 +331,7 @@ Index: src/spritecache.cpp
  }
  
  
-@@ -283,7 +336,12 @@
+@@ -289,7 +342,12 @@
  	SpriteCache *sc = AllocateSpriteCache(load_index);
  	sc->file_slot = file_slot;
  	sc->file_pos = file_pos;
@@ -345,7 +345,7 @@ Index: src/spritecache.cpp
  	sc->lru = 0;
  	sc->id = file_sprite_id;
  	sc->type = type;
-@@ -297,10 +355,12 @@
+@@ -303,10 +361,12 @@
  {
  	SpriteCache *scnew = AllocateSpriteCache(new_spr); // may reallocate: so put it first
  	SpriteCache *scold = GetSpriteCache(old_spr);
@@ -359,7 +359,7 @@ Index: src/spritecache.cpp
  	scnew->id = scold->id;
  	scnew->type = scold->type;
  	scnew->warned = false;
-@@ -329,6 +389,7 @@
+@@ -345,6 +405,7 @@
  
  void IncreaseSpriteLRU()
  {
@@ -367,7 +367,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -337,7 +398,8 @@
+@@ -353,7 +414,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -377,7 +377,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -360,6 +422,7 @@
+@@ -376,6 +438,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -385,7 +385,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=" PRINTF_SIZE, GetSpriteCacheUsage());
  
-@@ -376,11 +439,16 @@
+@@ -392,11 +455,16 @@
  			if (next->size == 0) break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -406,7 +406,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -402,16 +470,21 @@
+@@ -418,16 +486,21 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock *s;
@@ -433,7 +433,7 @@ Index: src/spritecache.cpp
  		}
  	}
  
-@@ -419,19 +492,24 @@
+@@ -435,19 +508,24 @@
  	 * This shouldn't really happen, unless all sprites are locked. */
  	if (best == UINT_MAX) error("Out of sprite memory");
  
@@ -468,16 +468,16 @@ Index: src/spritecache.cpp
  	}
  }
  
-@@ -442,7 +520,7 @@
- 	/* Align this to an uint32 boundary. This also makes sure that the 2 least
- 	 * bits are not used, so we could use those for other things. */
- 	mem_req = Align(mem_req, sizeof(uint32));
+@@ -458,7 +536,7 @@
+ 	/* Align this to correct boundary. This also makes sure at least one
+ 	 * bit is not used, so we can use it for other things. */
+ 	mem_req = Align(mem_req, S_FREE_MASK + 1);
 -
 +	DEBUG(sprite, 3, "AllocSprite, memreq=%d", mem_req);
  	for (;;) {
  		MemBlock *s;
  
-@@ -519,6 +597,7 @@
+@@ -535,6 +613,7 @@
  {
  	assert(IsMapgenSpriteID(sprite) == (type == ST_MAPGEN));
  	assert(type < ST_INVALID);
@@ -485,7 +485,7 @@ Index: src/spritecache.cpp
  
  	if (!SpriteExists(sprite)) {
  		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", sprite);
-@@ -534,7 +613,8 @@
+@@ -550,7 +629,8 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
@@ -495,7 +495,7 @@ Index: src/spritecache.cpp
  
  	/* Load the sprite, if it is not loaded, yet */
  	if (p == NULL) p = ReadSprite(sc, sprite, type);
-@@ -546,7 +626,7 @@
+@@ -562,7 +642,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -504,7 +504,7 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -557,7 +637,6 @@
+@@ -573,7 +653,6 @@
  	free(_spritecache);
  	_spritecache_items = 0;
  	_spritecache = NULL;
@@ -514,29 +514,29 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 16366)
+--- src/spritecache.h	(revision 17832)
 +++ src/spritecache.h	(working copy)
-@@ -7,11 +7,14 @@
+@@ -14,12 +14,13 @@
  
  #include "gfx_type.h"
  
-+
+-/** Data structure describing a sprite. */
  struct Sprite {
--	byte height;
-+	uint16 height;
- 	uint16 width;
- 	int16 x_offs;
- 	int16 y_offs;
+-	byte height;  ///< Height of the sprite.
++	uint16 height;  ///< Height of the sprite.
+ 	uint16 width; ///< Width of the sprite.
+ 	int16 x_offs; ///< Number of pixels to shift the sprite to the right.
+ 	int16 y_offs; ///< Number of pixels to shift the sprite downwards.
 +	int16 hue;
-+	int16 m;
- 	byte data[VARARRAY_SIZE];
++	int16 m;	
+ 	byte data[];  ///< Sprite data.
  };
  
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 16366)
+--- src/texteff.cpp	(revision 17832)
 +++ src/texteff.cpp	(working copy)
-@@ -162,6 +162,35 @@
+@@ -165,6 +165,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
  {
  	switch (dpi->zoom) {
@@ -549,7 +549,7 @@ Index: src/texteff.cpp
 +						dpi->left + dpi->width  > te->x &&
 +						dpi->top  + dpi->height > te->y) {
 +					if (te->mode == TE_RISING || (_settings_client.gui.loading_indicators && !IsTransparencySet(TO_LOADING))) {
-+						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
++						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, INVALID_STRING_ID);
 +					}
 +				}
 +			}
@@ -563,7 +563,7 @@ Index: src/texteff.cpp
 +						dpi->left + dpi->width  > te->x &&
 +						dpi->top  + dpi->height > te->y) {
 +					if (te->mode == TE_RISING || (_settings_client.gui.loading_indicators && !IsTransparencySet(TO_LOADING))) {
-+						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, te->params_2);
++						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, INVALID_STRING_ID);
 +					}
 +				}
 +			}
@@ -574,9 +574,9 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 16366)
+--- src/window.cpp	(revision 17832)
 +++ src/window.cpp	(working copy)
-@@ -421,6 +421,7 @@
+@@ -502,6 +502,7 @@
  	}
  }
  
@@ -584,7 +584,7 @@ Index: src/window.cpp
  /**
   * Generate repaint events for the visible part of window w within the rectangle.
   *
-@@ -484,6 +485,8 @@
+@@ -565,6 +566,8 @@
  	w->OnPaint();
  }
  
@@ -593,7 +593,7 @@ Index: src/window.cpp
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -495,7 +498,8 @@
+@@ -576,7 +579,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -603,7 +603,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -507,6 +511,7 @@
+@@ -588,6 +592,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
@@ -613,9 +613,9 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 16366)
+--- src/company_gui.cpp	(revision 17832)
 +++ src/company_gui.cpp	(working copy)
-@@ -863,7 +863,7 @@
+@@ -889,7 +889,7 @@
  		NWidget(NWID_HORIZONTAL),
  			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
  			NWidget(NWID_VERTICAL),
@@ -624,14 +624,14 @@ Index: src/company_gui.cpp
  				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP),
  				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
  			EndContainer(),
-@@ -880,24 +880,24 @@
+@@ -906,24 +906,24 @@
  		EndContainer(),
  	EndContainer(),
  	NWidget(NWID_HORIZONTAL),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(154, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(154, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
++	NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(154, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
++	NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(154, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
  	EndContainer(),
  };
  
@@ -639,45 +639,45 @@ Index: src/company_gui.cpp
  static const Widget _select_company_manager_face_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,          STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
 -{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   174,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
--{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
+-{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 -{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   189,    14,   150, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   151,   162, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   189,   151,   162, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   151,   162, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   189,   151,   162, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    75,    86, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
 -{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
 +{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   292,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
++{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 +{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   307,    14,   310, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   153,   311,   322, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   154,   307,   311,   322, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   153,   311,   322, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   154,   307,   311,   322, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   155,   166, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   167,   178, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
 +{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,    96,   107, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,    96,   107, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
 +{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
  {   WIDGETS_END},
  };
  
-@@ -911,7 +911,7 @@
+@@ -937,7 +937,7 @@
  		NWidget(NWID_HORIZONTAL),
  			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
  			NWidget(NWID_VERTICAL),
 -				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119), SetPadding(2, 0, 2, 0),
 +				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279), SetPadding(2, 0, 2, 0),
- 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_RANDOM, STR_FACE_NEW_FACE_TOOLTIP),
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_MAPGEN_RANDOM, STR_FACE_NEW_FACE_TOOLTIP),
  				NWidget(NWID_SPACER), SetMinimalSize(0, 9),
- 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_LOAD), SetMinimalSize(92, 12), SetDataTip(STR_FACE_LOAD, STR_FACE_LOAD_TIP),
-@@ -1003,62 +1003,62 @@
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_LOAD), SetMinimalSize(92, 12), SetDataTip(STR_FACE_LOAD, STR_FACE_LOAD_TOOLTIP),
+@@ -1029,62 +1029,62 @@
  		EndContainer(),
  	EndContainer(),
  	NWidget(NWID_HORIZONTAL),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(125, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(169, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(169, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(125, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(169, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(169, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
  	EndContainer(),
  };
  
@@ -685,105 +685,105 @@ Index: src/company_gui.cpp
  static const Widget _select_company_manager_face_adv_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
 -{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   204,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
--{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
+-{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 -{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   219,    14,   207, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   208,   219, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   219,   208,   219, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   208,   219, STR_BUTTON_CANCEL,       STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   219,   208,   219, STR_BUTTON_OK,           STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    32,    43, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    32,    43, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   217,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_MAPGEN_RANDOM,       STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   217,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
 -{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   158,   169, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   170,   181, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   182,   193, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   158,   169, STR_FACE_LOAD,           STR_FACE_LOAD_TOOLTIP},                  // SCMFW_WIDGET_LOAD
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   170,   181, STR_FACE_FACECODE,       STR_FACE_FACECODE_TOOLTIP},              // SCMFW_WIDGET_FACECODE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   182,   193, STR_FACE_SAVE,           STR_FACE_SAVE_TOOLTIP},                  // SCMFW_WIDGET_SAVE
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TOOLTIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP},               // SCMFW_WIDGET_HAS_GLASSES
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_R
 -{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,    96,   170,    60,   205, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
 +{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   322,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   323,   337,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
++{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   323,   337,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 +{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   337,    14,   367, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   168,   368,   379, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   169,   337,   368,   379, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   168,   368,   379, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   169,   337,   368,   379, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   112,   123, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   112,   123, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   335,    96,   107, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_MAPGEN_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   335,    96,   107, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
 +{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   318,   329, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   330,   341, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   342,   353, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   318,   329, STR_FACE_LOAD,           STR_FACE_LOAD_TOOLTIP},                  // SCMFW_WIDGET_LOAD
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   330,   341, STR_FACE_FACECODE,       STR_FACE_FACECODE_TOOLTIP},              // SCMFW_WIDGET_FACECODE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   342,   353, STR_FACE_SAVE,           STR_FACE_SAVE_TOOLTIP},                  // SCMFW_WIDGET_SAVE
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   126,   137, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
 +{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   126,   137, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   140,   151, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   152,   163, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   190,   201, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   190,   201, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   190,   201, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   238,   249, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   238,   249, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   238,   249, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   178,   189, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   178,   189, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   178,   189, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   226,   237, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   226,   237, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   226,   237, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   214,   225, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   214,   225, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   214,   225, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   166,   177, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   166,   177, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   166,   177, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   250,   261, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   250,   261, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   250,   261, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   262,   273, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   262,   273, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   262,   273, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   274,   285, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   274,   285, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   274,   285, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   202,   213, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   202,   213, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   202,   213, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   140,   151, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TOOLTIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   152,   163, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP},               // SCMFW_WIDGET_HAS_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   190,   201, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   190,   201, STR_EMPTY,               STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   190,   201, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   238,   249, SPR_ARROW_LEFT,          STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   238,   249, STR_EMPTY,               STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   238,   249, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   178,   189, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   178,   189, STR_EMPTY,               STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   178,   189, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   226,   237, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   226,   237, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   226,   237, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   214,   225, SPR_ARROW_LEFT,          STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   214,   225, STR_EMPTY,               STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   214,   225, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   166,   177, SPR_ARROW_LEFT,          STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   166,   177, STR_EMPTY,               STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   166,   177, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   250,   261, SPR_ARROW_LEFT,          STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   250,   261, STR_EMPTY,               STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   250,   261, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   262,   273, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   262,   273, STR_EMPTY,               STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   262,   273, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   274,   285, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   274,   285, STR_EMPTY,               STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   274,   285, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   202,   213, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   202,   213, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   202,   213, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_R
 +{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,   214,   288,   140,   285, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
  {   WIDGETS_END},
  };
  
-@@ -1216,9 +1216,14 @@
+@@ -1242,9 +1242,14 @@
  			this->DrawFaceStringLabel(SCMFW_WIDGET_JACKET,                STR_FACE_JACKET,      GetCompanyManagerFaceBits(this->face, CMFV_JACKET,          this->ge), false);
  			this->DrawFaceStringLabel(SCMFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetCompanyManagerFaceBits(this->face, CMFV_COLLAR,          this->ge), false);
  		}
@@ -799,7 +799,7 @@ Index: src/company_gui.cpp
  	}
  
  	virtual void OnClick(Point pt, int widget)
-@@ -1357,7 +1362,7 @@
+@@ -1383,7 +1388,7 @@
  
  /** normal/simple company manager face selection window description */
  static const WindowDesc _select_company_manager_face_desc(
@@ -808,7 +808,7 @@ Index: src/company_gui.cpp
  	WC_COMPANY_MANAGER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
  	_select_company_manager_face_widgets, _nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
-@@ -1365,7 +1370,7 @@
+@@ -1391,7 +1396,7 @@
  
  /** advanced company manager face selection window description */
  static const WindowDesc _select_company_manager_face_adv_desc(
@@ -819,9 +819,9 @@ Index: src/company_gui.cpp
  	_select_company_manager_face_adv_widgets, _nested_select_company_manager_face_adv_widgets, lengthof(_nested_select_company_manager_face_adv_widgets)
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 16366)
+--- src/saveload/misc_sl.cpp	(revision 17832)
 +++ src/saveload/misc_sl.cpp	(working copy)
-@@ -45,7 +45,8 @@
+@@ -51,7 +51,8 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
  
  	ViewPort *vp = w->viewport;
@@ -831,7 +831,7 @@ Index: src/saveload/misc_sl.cpp
  	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
  	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
  
-@@ -53,7 +54,6 @@
+@@ -59,7 +60,6 @@
  	MarkWholeScreenDirty();
  }
  
@@ -841,9 +841,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 16366)
+--- src/roadveh_cmd.cpp	(revision 17832)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -467,14 +467,14 @@
+@@ -510,14 +510,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -868,9 +868,9 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 16366)
+--- src/zoom_type.h	(revision 17832)
 +++ src/zoom_type.h	(working copy)
-@@ -9,8 +9,10 @@
+@@ -16,8 +16,10 @@
  
  enum ZoomLevel {
  	/* Our possible zoom-levels */
@@ -883,7 +883,7 @@ Index: src/zoom_type.h
  	ZOOM_LVL_OUT_2X,
  	ZOOM_LVL_OUT_4X,
  	ZOOM_LVL_OUT_8X,
-@@ -32,7 +34,7 @@
+@@ -39,7 +41,7 @@
  
  	ZOOM_LVL_DETAIL   = ZOOM_LVL_OUT_2X, ///< All zoomlevels below or equal to this, will result in details on the screen, like road-work, ...
  
@@ -894,9 +894,9 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 16366)
+--- src/vehicle.cpp	(revision 17832)
 +++ src/vehicle.cpp	(working copy)
-@@ -741,9 +741,12 @@
+@@ -735,9 +735,12 @@
  	SpriteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
@@ -911,7 +911,7 @@ Index: src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -780,11 +783,11 @@
+@@ -774,11 +777,11 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -928,7 +928,7 @@ Index: src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -804,8 +807,8 @@
+@@ -798,8 +801,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -941,9 +941,9 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 16366)
+--- src/viewport.cpp	(revision 17832)
 +++ src/viewport.cpp	(working copy)
-@@ -114,7 +114,7 @@
+@@ -130,7 +130,7 @@
  /** Data structure storing rendering information */
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -952,7 +952,7 @@ Index: src/viewport.cpp
  	StringSpriteToDrawVector string_sprites_to_draw;
  	TileSpriteToDrawVector tile_sprites_to_draw;
  	ParentSpriteToDrawVector parent_sprites_to_draw;
-@@ -281,17 +281,17 @@
+@@ -297,17 +297,17 @@
  	int i;
  	int left, top, width, height;
  
@@ -976,7 +976,7 @@ Index: src/viewport.cpp
  	old_left -= x;
  	old_top -= y;
  
-@@ -364,9 +364,8 @@
+@@ -380,9 +380,8 @@
  				return pt;
  	}
  
@@ -988,7 +988,7 @@ Index: src/viewport.cpp
  	a = y - x;
  	b = y + x;
  
-@@ -568,10 +567,13 @@
+@@ -588,10 +587,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
  
@@ -1006,7 +1006,7 @@ Index: src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
-@@ -611,7 +613,7 @@
+@@ -631,7 +633,7 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1014,8 +1014,8 @@ Index: src/viewport.cpp
 +//		pal = PALETTE_TO_TRANSPARENT;
  	}
  
- 	if (_vd.combine_sprites == 2) {
-@@ -626,31 +628,37 @@
+ 	if (_vd.combine_sprites == SPRITE_COMBINE_ACTIVE) {
+@@ -646,31 +648,37 @@
  
  	/* Compute screen extents of sprite */
  	if (image == SPR_EMPTY_BOUNDING_BOX) {
@@ -1069,7 +1069,7 @@ Index: src/viewport.cpp
  		return;
  	}
  
-@@ -711,7 +719,6 @@
+@@ -755,7 +763,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1077,7 +1077,7 @@ Index: src/viewport.cpp
  	}
  
  	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
-@@ -720,8 +727,8 @@
+@@ -764,8 +771,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -1088,7 +1088,7 @@ Index: src/viewport.cpp
  	cs->next = -1;
  
  	/* Append the sprite to the active ChildSprite list.
-@@ -935,25 +942,28 @@
+@@ -979,25 +986,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -1128,7 +1128,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -961,7 +971,7 @@
+@@ -1005,7 +1015,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -1137,7 +1137,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -990,24 +1000,17 @@
+@@ -1034,24 +1044,17 @@
  					tt = GetTileType(tile);
  				}
  			}
@@ -1172,7 +1172,7 @@ Index: src/viewport.cpp
  			y_cur += 0x10;
  			x_cur -= 0x10;
  		} while (--width_cur);
-@@ -1017,7 +1020,7 @@
+@@ -1061,7 +1064,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1181,7 +1181,7 @@ Index: src/viewport.cpp
  }
  
  
-@@ -1029,18 +1032,44 @@
+@@ -1073,16 +1076,42 @@
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES) || _game_mode == GM_MENU)
  		return;
  
@@ -1202,9 +1202,9 @@ Index: src/viewport.cpp
 +				if (bottom > t->sign.top &&
 +						top	< t->sign.top + 12 &&
 +						right > t->sign.left &&
-+						left	< t->sign.left + t->sign.width_1) {
++						left	< t->sign.left + t->sign.width_normal) {
 +					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
 +						t->index, t->population);
 +				}
 +			}
@@ -1214,9 +1214,9 @@ Index: src/viewport.cpp
 +				if (bottom	 > t->sign.top &&
 +						top	 < t->sign.top + 12 &&
 +						right  > t->sign.left &&
-+						left	 < t->sign.left + t->sign.width_1) {
++						left	 < t->sign.left + t->sign.width_normal) {
 +					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
++						_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
 +						t->index, t->population);
 +				}
 +			}
@@ -1227,27 +1227,9 @@ Index: src/viewport.cpp
 -						top    < t->sign.top + 12 &&
 +						top	 < t->sign.top + 12 &&
  						right  > t->sign.left &&
--						left   < t->sign.left + t->sign.width_1) {
-+						left	 < t->sign.left + t->sign.width_1) {
+ 						left   < t->sign.left + t->sign.width_normal) {
  					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
- 						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
- 						t->index, t->population);
-@@ -1053,10 +1082,10 @@
- 			bottom += 2;
- 
- 			FOR_ALL_TOWNS(t) {
--				if (bottom > t->sign.top &&
--						top    < t->sign.top + 24 &&
--						right  > t->sign.left &&
--						left   < t->sign.left + t->sign.width_1 * 2) {
-+				if (bottom  > t->sign.top &&
-+						top   < t->sign.top + 24 &&
-+						right > t->sign.left &&
-+						left	< t->sign.left + t->sign.width_1*2) {
- 					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
- 						_settings_client.gui.population_in_label ? STR_TOWN_LABEL_POP : STR_TOWN_LABEL,
- 						t->index, t->population);
-@@ -1070,10 +1099,10 @@
+@@ -1114,8 +1143,8 @@
  			bottom += ScaleByZoom(1, dpi->zoom) + 1;
  
  			FOR_ALL_TOWNS(t) {
@@ -1256,22 +1238,15 @@ Index: src/viewport.cpp
 +				if (bottom	 > t->sign.top &&
 +						top	 < t->sign.top + ScaleByZoom(12, dpi->zoom) &&
  						right  > t->sign.left &&
--						left   < t->sign.left + ScaleByZoom(t->sign.width_2, dpi->zoom)) {
-+						left	 < t->sign.left + ScaleByZoom(t->sign.width_2, dpi->zoom)) {
- 					AddStringToDraw(t->sign.left + 5, t->sign.top + 1, STR_TOWN_LABEL_TINY_BLACK, t->index, 0);
- 					AddStringToDraw(t->sign.left + 1, t->sign.top - 3, STR_TOWN_LABEL_TINY_WHITE, t->index, 0);
- 				}
-@@ -1099,18 +1128,46 @@
- 	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES) || _game_mode == GM_MENU)
- 		return;
+ 						left   < t->sign.left + ScaleByZoom(t->sign.width_small, dpi->zoom)) {
+ 					AddStringToDraw(t->sign.left + 5, t->sign.top + 1, STR_VIEWPORT_TOWN_TINY_BLACK, t->index, 0);
+@@ -1155,11 +1184,44 @@
+ 	int bottom = top + dpi->height;
+ 	const BaseStation *st;
  
--	left = dpi->left;
--	top = dpi->top;
--	right = left + dpi->width;
--	bottom = top + dpi->height;
 +	DEBUG(sprite, 1, "dpi l %d  w%d t %d  h%d", dpi->left, dpi->width, dpi->top, dpi->height );
 +	DEBUG(sprite, 1, "virt l %d  t%d ", _vd.vp->virtual_left, _vd.vp->virtual_top);
- 
++
 +	left = ScaleByZoom(_vd.vp->virtual_left + dpi->left + 32, dpi->zoom) - 32;
 +	top =  ScaleByZoom(_vd.vp->virtual_top + dpi->top + 16, dpi->zoom) - 16;
 +	right = left + ScaleByZoom(dpi->width, dpi->zoom);
@@ -1286,8 +1261,8 @@ Index: src/viewport.cpp
 +				if (bottom > st->sign.top &&
 +						top	 < st->sign.top + 12 &&
 +						right  > st->sign.left &&
-+						left	 < st->sign.left + st->sign.width_1) {
-+					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
++						left	 < st->sign.left + st->sign.width_normal) {
++					AddStation(st, false, st->sign.width_normal);
 +				}
 +			}
 +			break;
@@ -1296,39 +1271,33 @@ Index: src/viewport.cpp
 +				if (bottom > st->sign.top &&
 +						top	 < st->sign.top + 12 &&
 +						right  > st->sign.left &&
-+						left	 < st->sign.left + st->sign.width_1) {
-+					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
++						left	 < st->sign.left + st->sign.width_normal) {
++					AddStation(st, false, st->sign.width_normal);
 +				}
 +			}
 +			break;
 +
  		case ZOOM_LVL_NORMAL:
- 			FOR_ALL_STATIONS(st) {
+ 			FOR_ALL_BASE_STATIONS(st) {
 +				DEBUG(sprite, 1, "sign l %d  t%d ", st->sign.left, st->sign.top );			
  				if (bottom > st->sign.top &&
 -						top    < st->sign.top + 12 &&
 +						top	 < st->sign.top + 12 &&
  						right  > st->sign.left &&
--						left   < st->sign.left + st->sign.width_1) {
-+						left	 < st->sign.left + st->sign.width_1) {
- 					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
- 				}
- 			}
-@@ -1120,10 +1177,11 @@
+ 						left   < st->sign.left + st->sign.width_normal) {
+ 					AddStation(st, false, st->sign.width_normal);
+@@ -1171,8 +1233,9 @@
  			right += 2;
  			bottom += 2;
- 			FOR_ALL_STATIONS(st) {
+ 			FOR_ALL_BASE_STATIONS(st) {
 +				DEBUG(sprite, 1, "sign l %d  t%d ", st->sign.left, st->sign.top );
  				if (bottom > st->sign.top &&
 -						top    < st->sign.top + 24 &&
 +						top	 < st->sign.top + 24 &&
  						right  > st->sign.left &&
--						left   < st->sign.left + st->sign.width_1 * 2) {
-+						left	 < st->sign.left + st->sign.width_1*2) {
- 					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
- 				}
- 			}
-@@ -1169,6 +1227,26 @@
+ 						left   < st->sign.left + st->sign.width_normal * 2) {
+ 					AddStation(st, false, st->sign.width_normal);
+@@ -1220,6 +1283,26 @@
  	bottom = top + dpi->height;
  
  	switch (dpi->zoom) {
@@ -1337,8 +1306,8 @@ Index: src/viewport.cpp
 +				if (bottom > si->sign.top &&
 +						top    < si->sign.top + 12 &&
 +						right  > si->sign.left &&
-+						left   < si->sign.left + si->sign.width_1) {
-+					AddSign(si, STR_SIGN_WHITE, si->sign.width_1);
++						left   < si->sign.left + si->sign.width_normal) {
++					AddSign(si, STR_WHITE_SIGN, si->sign.width_normal);
 +				}
 +			}
 +			break;
@@ -1347,59 +1316,40 @@ Index: src/viewport.cpp
 +				if (bottom > si->sign.top &&
 +						top    < si->sign.top + 12 &&
 +						right  > si->sign.left &&
-+						left   < si->sign.left + si->sign.width_1) {
-+					AddSign(si, STR_SIGN_WHITE, si->sign.width_1);
++						left   < si->sign.left + si->sign.width_normal) {
++					AddSign(si, STR_WHITE_SIGN, si->sign.width_normal);
 +				}
 +			}
 +			break;
  		case ZOOM_LVL_NORMAL:
  			FOR_ALL_SIGNS(si) {
  				if (bottom > si->sign.top &&
-@@ -1233,6 +1311,26 @@
- 	bottom = top + dpi->height;
+@@ -1263,6 +1346,7 @@
+ 	}
+ }
  
- 	switch (dpi->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			FOR_ALL_WAYPOINTS(wp) {
-+				if (bottom > wp->sign.top &&
-+						top    < wp->sign.top + 12 &&
-+						right  > wp->sign.left &&
-+						left   < wp->sign.left + wp->sign.width_1) {
-+					AddWaypoint(wp, STR_WAYPOINT_VIEWPORT, wp->sign.width_1);
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			FOR_ALL_WAYPOINTS(wp) {
-+				if (bottom > wp->sign.top &&
-+						top    < wp->sign.top + 12 &&
-+						right  > wp->sign.left &&
-+						left   < wp->sign.left + wp->sign.width_1) {
-+					AddWaypoint(wp, STR_WAYPOINT_VIEWPORT, wp->sign.width_1);
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			FOR_ALL_WAYPOINTS(wp) {
- 				if (bottom > wp->sign.top &&
-@@ -1301,7 +1399,15 @@
++
+ /**
+  * Update the position of the viewport sign.
+  * @param center the (preferred) center of the viewport sign
+@@ -1310,7 +1394,15 @@
+ {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
- 		Point pt = RemapCoords(ts->x, ts->y, ts->z);
--		DrawSprite(ts->image, ts->pal, pt.x, pt.y, ts->sub);
-+		int left = UnScaleByZoom(pt.x,_vd.vp->zoom);
-+		int top =  UnScaleByZoom(pt.y,_vd.vp->zoom);
+-		DrawSprite(ts->image, ts->pal, ts->x, ts->y, ts->sub);
++//		Point pt = RemapCoords(ts->x, ts->y, ts->z);
++		int left = UnScaleByZoom(ts->x,_vd.vp->zoom);
++		int top =  UnScaleByZoom(ts->y,_vd.vp->zoom);
 +
 +
 +		left -= _vd.vp->virtual_left;
 +		top  -= _vd.vp->virtual_top;
 +
 +		DrawSprite(ts->image, ts->pal, left, top, ts->sub);
-+
  	}
  }
  
-@@ -1365,16 +1471,22 @@
+@@ -1374,16 +1466,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -1425,7 +1375,7 @@ Index: src/viewport.cpp
  		}
  	}
  }
-@@ -1385,14 +1497,32 @@
+@@ -1394,14 +1492,32 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -1462,7 +1412,7 @@ Index: src/viewport.cpp
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
  		        pt3.x - pt1.x, pt3.y - pt1.y,
-@@ -1409,23 +1539,20 @@
+@@ -1418,20 +1534,19 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -1476,43 +1426,28 @@ Index: src/viewport.cpp
 -
  	const StringSpriteToDraw *ssend = sstdv->End();
  	for (const StringSpriteToDraw *ss = sstdv->Begin(); ss != ssend; ++ss) {
- 		TextColour colour;
+ 		TextColour colour = TC_BLACK;
+ 		bool small = HasBit(ss->width, 15);
+ 		int w = GB(ss->width, 0, 15);
+-		int x = UnScaleByZoom(ss->x, zoom);
+-		int y = UnScaleByZoom(ss->y, zoom);
++		//int x = UnScaleByZoom(ss->x, zoom);
++		//int y = UnScaleByZoom(ss->y, zoom);
++
 +		int x = UnScaleByZoom(ss->x + 32, zoom) - _vd.vp->virtual_left - 32;
 +		int y = UnScaleByZoom(ss->y + 16, zoom) - _vd.vp->virtual_top - 16;
+ 		int bottom = y + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL);
  
- 		if (ss->width != 0) {
- 			/* Do not draw signs nor station names if they are set invisible */
- 			if (IsInvisibilitySet(TO_SIGNS) && ss->string != STR_SIGN_WHITE) continue;
- 
--			int x = UnScaleByZoom(ss->x, zoom) - 1;
--			int y = UnScaleByZoom(ss->y, zoom) - 1;
-+
- 			int bottom = y + 11;
- 			int w = ss->width;
- 
-@@ -1440,7 +1567,7 @@
- 		 * or if we are drawing a general text sign (STR_SIGN_WHITE) */
- 			if (!IsTransparencySet(TO_SIGNS) || ss->string == STR_SIGN_WHITE) {
- 				DrawFrameRect(
--					x, y, x + w, bottom, (Colours)ss->colour,
-+					x - 1, y - 1, x + w, bottom, (Colours)ss->colour,
- 					IsTransparencySet(TO_SIGNS) ? FR_TRANSPARENT : FR_NONE
- 				);
- 			}
-@@ -1465,39 +1592,50 @@
+ 		SetDParam(0, ss->params[0]);
+@@ -1464,7 +1579,6 @@
  			GetString(buffer, ss->string, lastof(buffer));
  			w = GetStringBoundingBox(buffer).width;
  		}
 -
--		DrawString(
--			UnScaleByZoom(ss->x, zoom), UnScaleByZoom(ss->x, zoom) + w - 1, UnScaleByZoom(ss->y, zoom) - (ss->width & 0x8000 ? 2 : 0),
--			ss->string, colour, SA_CENTER
--		);
-+		DrawString(x, x + w - 1, y - (ss->width & 0x8000 ? 2 : 0), ss->string,
-+				   colour, SA_CENTER);
+ 		DrawString(x, x + w - 1, y, ss->string, colour, SA_CENTER);
  	}
  }
- 
+@@ -1472,28 +1586,42 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -1533,7 +1468,7 @@ Index: src/viewport.cpp
  	_vd.dpi.zoom = vp->zoom;
 -	int mask = ScaleByZoom(-1, vp->zoom);
 -
- 	_vd.combine_sprites = 0;
+ 	_vd.combine_sprites = SPRITE_COMBINE_NONE;
 -
 -	_vd.dpi.width = (right - left) & mask;
 -	_vd.dpi.height = (bottom - top) & mask;
@@ -1567,7 +1502,7 @@ Index: src/viewport.cpp
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
  	ViewportAddSigns(&_vd.dpi);
-@@ -1532,7 +1670,8 @@
+@@ -1527,7 +1655,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1577,7 +1512,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1543,12 +1682,7 @@
+@@ -1538,12 +1667,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1591,7 +1526,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1640,8 +1774,8 @@
+@@ -1639,8 +1763,8 @@
  		}
  
  		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
@@ -1601,7 +1536,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1656,26 +1790,32 @@
+@@ -1655,26 +1779,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1648,7 +1583,7 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1814,11 +1954,38 @@
+@@ -1814,11 +1944,38 @@
  	const Town *t;
  
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
@@ -1663,7 +1598,7 @@ Index: src/viewport.cpp
 +				if (y >= t->sign.top &&
 +						y < t->sign.top + 12 &&
 +						x >= t->sign.left &&
-+						x < t->sign.left + t->sign.width_1) {
++						x < t->sign.left + t->sign.width_normal) {
 +					ShowTownViewWindow(t->index);
 +					return true;
 +				}
@@ -1676,7 +1611,7 @@ Index: src/viewport.cpp
 +				if (y >= t->sign.top &&
 +						y < t->sign.top + 12 &&
 +						x >= t->sign.left &&
-+						x < t->sign.left + t->sign.width_1) {
++						x < t->sign.left + t->sign.width_normal) {
 +					ShowTownViewWindow(t->index);
 +					return true;
 +				}
@@ -1690,7 +1625,7 @@ Index: src/viewport.cpp
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
  						y < t->sign.top + 12 &&
-@@ -1831,8 +1998,8 @@
+@@ -1831,8 +1988,8 @@
  			break;
  
  		case ZOOM_LVL_OUT_2X:
@@ -1701,7 +1636,7 @@ Index: src/viewport.cpp
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
  						y < t->sign.top + 24 &&
-@@ -1846,8 +2013,8 @@
+@@ -1846,8 +2003,8 @@
  
  		case ZOOM_LVL_OUT_4X:
  		case ZOOM_LVL_OUT_8X:
@@ -1712,8 +1647,8 @@ Index: src/viewport.cpp
  
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
-@@ -1874,6 +2041,32 @@
- 	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES) || IsInvisibilitySet(TO_SIGNS)) return false;
+@@ -1892,6 +2049,32 @@
+ 	bool ret = false;
  
  	switch (vp->zoom) {
 +		case ZOOM_LVL_IN_4X:
@@ -1723,7 +1658,7 @@ Index: src/viewport.cpp
 +				if (y >= st->sign.top &&
 +						y < st->sign.top + 12 &&
 +						x >= st->sign.left &&
-+						x < st->sign.left + st->sign.width_1) {
++						x < st->sign.left + st->sign.width_normal) {
 +					ShowStationViewWindow(st->index);
 +					return true;
 +				}
@@ -1736,7 +1671,7 @@ Index: src/viewport.cpp
 +				if (y >= st->sign.top &&
 +						y < st->sign.top + 12 &&
 +						x >= st->sign.left &&
-+						x < st->sign.left + st->sign.width_1) {
++						x < st->sign.left + st->sign.width_normal) {
 +					ShowStationViewWindow(st->index);
 +					return true;
 +				}
@@ -1745,7 +1680,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1933,6 +2126,32 @@
+@@ -1951,6 +2134,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || IsInvisibilitySet(TO_SIGNS) || _current_company == COMPANY_SPECTATOR) return false;
  
  	switch (vp->zoom) {
@@ -1756,7 +1691,7 @@ Index: src/viewport.cpp
 +				if (y >= si->sign.top &&
 +						y <  si->sign.top + 12 &&
 +						x >= si->sign.left &&
-+						x <  si->sign.left + si->sign.width_1) {
++						x <  si->sign.left + si->sign.width_normal) {
 +					ShowRenameSignWindow(si);
 +					return true;
 +				}
@@ -1769,7 +1704,7 @@ Index: src/viewport.cpp
 +				if (y >= si->sign.top &&
 +						y <  si->sign.top + 12 &&
 +						x >= si->sign.left &&
-+						x <  si->sign.left + si->sign.width_1) {
++						x <  si->sign.left + si->sign.width_normal) {
 +					ShowRenameSignWindow(si);
 +					return true;
 +				}
@@ -1778,40 +1713,15 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1991,6 +2210,32 @@
- 	if (!HasBit(_display_opt, DO_WAYPOINTS) || IsInvisibilitySet(TO_SIGNS)) return false;
+@@ -2002,6 +2211,7 @@
+ }
  
- 	switch (vp->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_WAYPOINTS(wp) {
-+				if (y >= wp->sign.top &&
-+						y < wp->sign.top + 12 &&
-+						x >= wp->sign.left &&
-+						x < wp->sign.left + wp->sign.width_1) {
-+					ShowWaypointWindow(wp);
-+					return true;
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_WAYPOINTS(wp) {
-+				if (y >= wp->sign.top &&
-+						y < wp->sign.top + 12 &&
-+						x >= wp->sign.left &&
-+						x < wp->sign.left + wp->sign.width_1) {
-+					ShowWaypointWindow(wp);
-+					return true;
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			x = x - vp->left + vp->virtual_left;
- 			y = y - vp->top  + vp->virtual_top;
-@@ -2951,3 +3196,6 @@
+ 
++
+ static bool CheckClickOnLandscape(const ViewPort *vp, int x, int y)
+ {
+ 	Point pt = TranslateXYToTileCoord(vp, x, y);
+@@ -2921,3 +3131,6 @@
  {
  	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
  }
@@ -1820,9 +1730,9 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 16366)
+--- src/blitter/32bpp_optimized.cpp	(revision 17832)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
-@@ -3,6 +3,7 @@
+@@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
  
  #include "../stdafx.h"
@@ -1830,7 +1740,7 @@ Index: src/blitter/32bpp_optimized.cpp
  #include "../zoom_func.h"
  #include "../gfx_func.h"
  #include "../core/math_func.hpp"
-@@ -25,6 +26,7 @@
+@@ -31,6 +32,7 @@
  
  	/* src_px : each line begins with uint32 n = 'number of bytes in this line',
  	 *          then n times is the Colour struct for this line */
@@ -1838,7 +1748,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	const Colour *src_px = (const Colour *)(src->data + src->offset[zoom][0]);
  	/* src_n  : each line begins with uint32 n = 'number of bytes in this line',
  	 *          then interleaved stream of 'm' and 'n' channels. 'm' is remap,
-@@ -42,7 +44,8 @@
+@@ -48,7 +50,8 @@
  
  	/* store so we don't have to access it via bp everytime (compiler assumes pointer aliasing) */
  	const byte *remap = bp->remap;
@@ -1848,31 +1758,33 @@ Index: src/blitter/32bpp_optimized.cpp
  	for (int y = 0; y < bp->height; y++) {
  		/* next dst line begins here */
  		uint32 *dst_ln = dst + bp->pitch;
-@@ -113,7 +116,10 @@
- 								*dst = *src_px;
+@@ -119,7 +122,11 @@
+ 								*dst = src_px->data;
  							} else {
  								uint r = remap[m];
 -								if (r != 0) *dst = this->LookupColourInPalette(r);
 +								if (r != 0) {
 +									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
-+									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++//									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++   									*dst = ComposeColourZeph(this->LookupColourInPalette(r), *dst);
 +								}
  							}
  							dst++;
  							src_px++;
-@@ -126,7 +132,10 @@
+@@ -132,7 +139,11 @@
  								*dst = ComposeColourRGBANoCheck(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
  							} else {
  								uint r = remap[m];
 -								if (r != 0) *dst = ComposeColourPANoCheck(this->LookupColourInPalette(r), src_px->a, *dst);
 +								if (r != 0) {
 +									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
-+									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++//									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++									*dst = ComposeColourZeph(this->LookupColourInPalette(r), *dst);
 +								}
  							}
  							dst++;
  							src_px++;
-@@ -134,12 +143,47 @@
+@@ -140,12 +151,47 @@
  						} while (--n != 0);
  					}
  					break;
@@ -1922,7 +1834,7 @@ Index: src/blitter/32bpp_optimized.cpp
  					/* Make the current colour a bit more black, so it looks like this image is transparent */
  					src_n += n;
  					if (src_px->a == 255) {
-@@ -155,8 +199,8 @@
+@@ -161,8 +207,8 @@
  							src_px++;
  						} while (--n != 0);
  					}
@@ -1932,7 +1844,7 @@ Index: src/blitter/32bpp_optimized.cpp
  				default:
  					if (src_px->a == 255) {
  						/* faster than memcpy(), n is usually low */
-@@ -175,7 +219,6 @@
+@@ -183,7 +229,6 @@
  					break;
  			}
  		}
@@ -1940,7 +1852,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		dst = dst_ln;
  		src_px = src_px_ln;
  		src_n  = src_n_ln;
-@@ -191,11 +234,13 @@
+@@ -199,11 +244,13 @@
   */
  void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom)
  {
@@ -1958,7 +1870,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	}
  }
  
-@@ -208,16 +253,18 @@
+@@ -216,16 +263,18 @@
   */
  static const SpriteLoader::Sprite *ResizeSprite(const SpriteLoader::Sprite *sprite_src, ZoomLevel zoom)
  {
@@ -1985,7 +1897,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	sprite->height = UnScaleByZoom(sprite_src->height, zoom);
  	sprite->width  = UnScaleByZoom(sprite_src->width,  zoom);
  	sprite->x_offs = UnScaleByZoom(sprite_src->x_offs, zoom);
-@@ -262,11 +309,15 @@
+@@ -270,11 +319,15 @@
  	 * it has to be stored in one stream so fewer registers are used -
  	 * x86 has problems with register allocation even with this solution */
  	uint8  *dst_n_orig[ZOOM_LVL_COUNT];
@@ -2003,7 +1915,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		const SpriteLoader::Sprite *src_orig = ResizeSprite(sprite, z);
  
  		uint size = src_orig->height * src_orig->width;
-@@ -308,15 +359,20 @@
+@@ -316,15 +369,20 @@
  					*dst_n = src->m;
  					if (src->m != 0) {
  						/* Pre-convert the mapping channel to a RGB value */
@@ -2032,7 +1944,7 @@ Index: src/blitter/32bpp_optimized.cpp
  					dst_px++;
  					dst_n++;
  				} else if (len == 1) {
-@@ -345,12 +401,10 @@
+@@ -353,12 +411,10 @@
  		lengths[z][0] = (byte *)dst_px_ln - (byte *)dst_px_orig[z]; // all are aligned to 4B boundary
  		lengths[z][1] = (byte *)dst_n_ln  - (byte *)dst_n_orig[z];
  
@@ -2046,7 +1958,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		len += lengths[z][0] + lengths[z][1];
  	}
  
-@@ -360,10 +414,10 @@
+@@ -368,19 +424,252 @@
  	dest_sprite->width  = sprite->width;
  	dest_sprite->x_offs = sprite->x_offs;
  	dest_sprite->y_offs = sprite->y_offs;
@@ -2055,15 +1967,23 @@ Index: src/blitter/32bpp_optimized.cpp
  	SpriteData *dst = (SpriteData *)dest_sprite->data;
  
 -	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
-+	for (ZoomLevel z = ZOOM_LVL_BEGIN; z <= ZOOM_LVL_BEGIN; z++) {
- 		dst->offset[z][0] = z == ZOOM_LVL_BEGIN ? 0 : lengths[z - 1][1] + dst->offset[z - 1][1];
- 		dst->offset[z][1] = lengths[z][0] + dst->offset[z][0];
+-		dst->offset[z][0] = z == ZOOM_LVL_BEGIN ? 0 : lengths[z - 1][1] + dst->offset[z - 1][1];
+-		dst->offset[z][1] = lengths[z][0] + dst->offset[z][0];
++	ZoomLevel z = ZOOM_LVL_BEGIN;
++	dst->offset[z][0] = 0;
++	dst->offset[z][1] = lengths[z][0] + dst->offset[z][0];
  
-@@ -373,6 +427,239 @@
- 		free(dst_px_orig[z]);
- 		free(dst_n_orig[z]);
- 	}
--
+-		memcpy(dst->data + dst->offset[z][0], dst_px_orig[z], lengths[z][0]);
+-		memcpy(dst->data + dst->offset[z][1], dst_n_orig[z],  lengths[z][1]);
++	memcpy(dst->data + dst->offset[z][0], dst_px_orig[z], lengths[z][0]);
++	memcpy(dst->data + dst->offset[z][1], dst_n_orig[z],  lengths[z][1]);
+ 
+-		free(dst_px_orig[z]);
+-		free(dst_n_orig[z]);
+-	}
++	free(dst_px_orig[z]);
++	free(dst_n_orig[z]);
+ 
 +// and some more v11 stuff 	
 +//	if (avg_r < avg_g) Swap(avg_r, avg_g);
 +//	if (avg_g < avg_b) Swap(avg_g, avg_b);
@@ -2302,9 +2222,9 @@ Index: src/blitter/32bpp_optimized.cpp
 +}
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 16366)
+--- src/blitter/base.hpp	(revision 17832)
 +++ src/blitter/base.hpp	(working copy)
-@@ -13,6 +13,8 @@
+@@ -20,6 +20,8 @@
  	BM_NORMAL,
  	BM_COLOUR_REMAP,
  	BM_TRANSPARENT,
@@ -2313,7 +2233,7 @@ Index: src/blitter/base.hpp
  };
  
  /**
-@@ -32,6 +34,8 @@
+@@ -39,6 +41,8 @@
  
  		void *dst;               ///< Destination buffer
  		int pitch;               ///< The pitch of the destination buffer
@@ -2324,9 +2244,9 @@ Index: src/blitter/base.hpp
  	enum PaletteAnimation {
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 16366)
+--- src/blitter/32bpp_optimized.hpp	(revision 17832)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
-@@ -17,6 +17,12 @@
+@@ -24,6 +24,12 @@
  
  	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
  	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
@@ -2341,9 +2261,9 @@ Index: src/blitter/32bpp_optimized.hpp
  
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 16366)
+--- src/blitter/32bpp_base.hpp	(revision 17832)
 +++ src/blitter/32bpp_base.hpp	(working copy)
-@@ -7,6 +7,7 @@
+@@ -14,6 +14,7 @@
  
  #include "base.hpp"
  #include "../core/bitmath_func.hpp"
@@ -2351,7 +2271,7 @@ Index: src/blitter/32bpp_base.hpp
  
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -96,6 +97,152 @@
+@@ -103,6 +104,265 @@
  		return ComposeColourPANoCheck(colour, a, current);
  	}
  
@@ -2425,6 +2345,119 @@ Index: src/blitter/32bpp_base.hpp
 +	return ComposeColour(0xff,r,g,b);		
 +}
 +
++/**
++	* Blend a colour based on Zephyris' algorithm
++	*/
++static inline uint ComposeColourZeph(uint colour, uint current)
++{
++	int r, g, bl, cr, cg, cb;
++    int r1, g1, b1;
++    int red, green, blue;
++    int h, s, l, u, v, w, a, b;
++    bool rmax = false, gmax = false, bmax = false;
++
++    s = 175;
++	if (colour == current) {
++		return colour;
++	}
++    /* blend colour (cc) */
++	r  = GB(colour,  16, 8);
++	g  = GB(colour,  8,  8);
++	bl  = GB(colour,  0,  8);
++    
++    r1 = r;
++    g1 = g;
++    b1 = bl;
++    
++    if ((r > g) && (r > bl)){
++        rmax =  true;
++    } else if (g > bl){
++        gmax = true;
++    } else bmax = true;    
++
++	if (r < g) Swap(r,g);
++	if (g < bl) Swap(g,bl);
++	if (r < g) Swap(r,g);    
++    h = 0;
++    if (r-bl){
++        if (rmax) h = ((43*(((g1-b1) << 8) / (r-bl))) >> 8) ;
++        if (gmax) h = ((43*(((b1-r1) << 8) / (r-bl))) >> 8) + 85;
++        if (bmax) h = ((43*(((r1-g1) << 8) / (r-bl))) >> 8) + 170;
++    } else {
++        s = 0;
++    }
++    if (h < 0) h += 256; 
++    
++	/* original colour */	
++	cr = GB(current, 16, 8);
++	cg = GB(current, 8,  8);
++	cb = GB(current, 0,  8);
++	if (cr < cg) Swap(cr,cg);
++	if (cg < cb) Swap(cg,cb);
++	if (cr < cg) Swap(cr,cg);
++    /* the algoritm assumes hsl as input,
++     * h and s determined by  cc, l by original 
++     * sprite
++     */
++    l = (cr + cb) / 2;
++
++   
++    if (s == 0) {
++        red = l;
++        green = l;
++        blue = l;
++    } else {
++      if (l < 128) {
++         a = l + ((l * s)>>8);
++      } else {
++         a = l + s - ((l * s)>>8);
++      }
++      if (a >= 256) a = 255;
++      b = (l << 1) - a;
++      if (b >= 256) b = 255;
++      u = h + 85;
++      if (u > 255) {
++         u = u - 256;
++      }
++ 
++      v = h;
++ 
++      w = h - 85;
++      if (w < 0) {
++         w = w + 256;
++      } 
++
++      if (u < 46) {
++         red = (b + (((a - b) * (6 * u)) >> 8) );
++      } else if (u < 128) {
++         red = a;
++      } else if (u < 171) {
++         red = (b + (((a - b) * ((171 - u) * 6) ) >> 8));
++      } else {
++         red = b;
++      }
++      if ( v < 46) {
++         green = (b + (((a - b) * 6 * v) >> 8));
++      } else if (v < 128) {
++         green = a;
++      } else if (v < 171) {
++         green=( b + (((a - b) * (171 - v) * 6) >> 8));
++      } else {
++         green = b;
++      }
++      if (w < 46) {
++         blue=(b + (((a - b) * 6 * w) >> 8));
++      } else if (w < 128) {
++         blue = a;
++      } else if (w < 171) {
++         blue = (b + (((a - b) * (171 - w) * 6) >> 8));
++      } else {
++         blue = b;
++      }
++   }
++
++	return ComposeColour(0xff, red, green, blue);
++}
 +
 +/**
 +	* Blend a colour based on Pixel value and the current pixel value.
@@ -2506,9 +2539,9 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 16366)
+--- src/blitter/32bpp_anim.cpp	(revision 17832)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
-@@ -135,6 +135,7 @@
+@@ -141,6 +141,7 @@
  
  					/* Make the current colour a bit more black, so it looks like this image is transparent */
  					src_n += n;
@@ -2516,7 +2549,7 @@ Index: src/blitter/32bpp_anim.cpp
  					if (src_px->a == 255) {
  						src_px += n;
  						do {
-@@ -152,6 +153,7 @@
+@@ -158,6 +159,7 @@
  							src_px++;
  						} while (--n != 0);
  					}
@@ -2526,9 +2559,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 16366)
+--- src/gfx.cpp	(revision 17832)
 +++ src/gfx.cpp	(working copy)
-@@ -225,16 +225,17 @@
+@@ -228,16 +228,17 @@
  
  	static const byte colour = 255;
  
@@ -2555,7 +2588,7 @@ Index: src/gfx.cpp
  }
  
  /**
-@@ -845,7 +846,7 @@
+@@ -961,7 +962,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
  			if (x + 26 >= dpi->left) {
@@ -2564,7 +2597,7 @@ Index: src/gfx.cpp
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -885,8 +886,15 @@
+@@ -1015,8 +1016,15 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -2581,7 +2614,7 @@ Index: src/gfx.cpp
  	} else if (pal != PAL_NONE) {
  		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH), ST_NORMAL), x, y, BM_COLOUR_REMAP, sub);
-@@ -917,15 +925,18 @@
+@@ -1047,15 +1055,18 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2606,7 +2639,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -939,42 +950,45 @@
+@@ -1069,42 +1080,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2664,7 +2697,7 @@ Index: src/gfx.cpp
  
  	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
  }
-@@ -1385,7 +1399,10 @@
+@@ -1517,7 +1531,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2678,9 +2711,9 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/newgrf_commons.h
 ===================================================================
---- src/newgrf_commons.h	(revision 16366)
+--- src/newgrf_commons.h	(revision 17832)
 +++ src/newgrf_commons.h	(working copy)
-@@ -113,7 +113,7 @@
+@@ -120,7 +120,7 @@
   */
  static inline SpriteID SpriteLayoutPaletteTransform(SpriteID image, SpriteID pal, SpriteID default_pal)
  {
@@ -2691,9 +2724,9 @@ Index: src/newgrf_commons.h
  		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 16366)
+--- src/openttd.cpp	(revision 17832)
 +++ src/openttd.cpp	(working copy)
-@@ -342,7 +342,7 @@
+@@ -361,7 +361,7 @@
  	/* Setup main window */
  	ResetWindowSystem();
  	SetupColoursAndInitialWindow();
@@ -2702,7 +2735,7 @@ Index: src/openttd.cpp
  	/* Load the default opening screen savegame */
  	if (SaveOrLoad("opntitle.dat", SL_LOAD, DATA_DIR) != SL_OK) {
  		GenerateWorld(GW_EMPTY, 64, 64); // if failed loading, make empty world.
-@@ -422,6 +422,10 @@
+@@ -444,6 +444,10 @@
  #endif
  	;
  
