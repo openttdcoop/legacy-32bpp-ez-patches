@@ -1,6 +1,6 @@
 Index: src/sprite.h
 ===================================================================
---- src/sprite.h	(revision 19024)
+--- src/sprite.h	(revision 19167)
 +++ src/sprite.h	(working copy)
 @@ -120,7 +120,7 @@
   */
@@ -13,7 +13,7 @@ Index: src/sprite.h
  		return PAL_NONE;
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 19024)
+--- src/sound.cpp	(revision 19167)
 +++ src/sound.cpp	(working copy)
 @@ -178,7 +178,7 @@
  }
@@ -26,9 +26,9 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/rail_cmd.cpp
 ===================================================================
---- src/rail_cmd.cpp	(revision 19024)
+--- src/rail_cmd.cpp	(revision 19167)
 +++ src/rail_cmd.cpp	(working copy)
-@@ -1629,7 +1629,7 @@
+@@ -1654,7 +1654,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -37,7 +37,7 @@ Index: src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1637,7 +1637,7 @@
+@@ -1662,7 +1662,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -46,7 +46,7 @@ Index: src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1651,7 +1651,7 @@
+@@ -1676,7 +1676,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -55,18 +55,18 @@ Index: src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
-@@ -1659,7 +1659,7 @@
+@@ -1684,7 +1684,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
 -		ti->x + TILE_SIZE - 1, ti->y, 1, 16, 4, ti->z);
-+		ti->x + TILE_SIZE, ti->y, 1, 16, 4, ti->z);
++		ti->x + TILE_SIZE, ti->y, -1, 16, 4, ti->z);
  }
  
  static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 19024)
+--- src/table/sprites.h	(revision 19167)
 +++ src/table/sprites.h	(working copy)
 @@ -1420,7 +1420,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
@@ -85,9 +85,22 @@ Index: src/table/sprites.h
  };
  
  /** Masks needed for sprite operations.
+Index: src/table/settings.h
+===================================================================
+--- src/table/settings.h	(revision 19167)
++++ src/table/settings.h	(working copy)
+@@ -269,7 +269,7 @@
+ 	 SDTG_BOOL("medium_aa",                  S, 0, _freetype.medium_aa,   false,    STR_NULL, NULL),
+ 	 SDTG_BOOL("large_aa",                   S, 0, _freetype.large_aa,    false,    STR_NULL, NULL),
+ #endif
+-	  SDTG_VAR("sprite_cache_size",SLE_UINT, S, 0, _sprite_cache_size,     4, 1, 64, 0, STR_NULL, NULL),
++	  SDTG_VAR("sprite_cache_size",SLE_UINT, S, 0, _sprite_cache_size,     64, 64, 64, 0, STR_NULL, NULL),
+ 	  SDTG_VAR("player_face",    SLE_UINT32, S, 0, _company_manager_face,0,0,0xFFFFFFFF,0, STR_NULL, NULL),
+ 	  SDTG_VAR("transparency_options", SLE_UINT, S, 0, _transparency_opt,  0,0,0x1FF,0, STR_NULL, NULL),
+ 	  SDTG_VAR("transparency_locks", SLE_UINT, S, 0, _transparency_lock,   0,0,0x1FF,0, STR_NULL, NULL),
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 19024)
+--- src/spriteloader/grf.cpp	(revision 19167)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -38,7 +38,7 @@
  	return false;
@@ -100,7 +113,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 19024)
+--- src/spriteloader/spriteloader.hpp	(revision 19167)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -51,8 +51,9 @@
  	/**
@@ -115,7 +128,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 19024)
+--- src/spriteloader/grf.hpp	(revision 19167)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -128,7 +141,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 19024)
+--- src/spriteloader/png.cpp	(revision 19167)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -35,23 +35,31 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -205,7 +218,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 19024)
+--- src/spriteloader/png.hpp	(revision 19167)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -218,7 +231,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 19024)
+--- src/spritecache.cpp	(revision 19167)
 +++ src/spritecache.cpp	(working copy)
 @@ -10,6 +10,8 @@
  /** @file spritecache.cpp Caching of sprites. */
@@ -229,7 +242,7 @@ Index: src/spritecache.cpp
  #include "fileio_func.h"
  #include "spriteloader/grf.hpp"
  #include "gfx_func.h"
-@@ -17,6 +19,8 @@
+@@ -17,17 +19,19 @@
  #include "spriteloader/png.hpp"
  #endif /* WITH_PNG */
  #include "blitter/factory.hpp"
@@ -238,7 +251,11 @@ Index: src/spritecache.cpp
  #include "core/math_func.hpp"
  
  #include "table/sprites.h"
-@@ -27,7 +31,7 @@
+ 
+ /* Default of 4MB spritecache */
+-uint _sprite_cache_size = 4;
++uint _sprite_cache_size = 64;
+ 
  typedef SimpleTinyEnumT<SpriteType, byte> SpriteTypeByte;
  
  struct SpriteCache {
@@ -569,7 +586,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 19024)
+--- src/spritecache.h	(revision 19167)
 +++ src/spritecache.h	(working copy)
 @@ -14,9 +14,8 @@
  
@@ -584,7 +601,7 @@ Index: src/spritecache.h
  	int16 y_offs; ///< Number of pixels to shift the sprite downwards.
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 19024)
+--- src/texteff.cpp	(revision 19167)
 +++ src/texteff.cpp	(working copy)
 @@ -101,6 +101,51 @@
  
@@ -640,7 +657,7 @@ Index: src/texteff.cpp
  
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 19024)
+--- src/window.cpp	(revision 19167)
 +++ src/window.cpp	(working copy)
 @@ -418,6 +418,7 @@
  	}
@@ -679,7 +696,7 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 19024)
+--- src/company_gui.cpp	(revision 19167)
 +++ src/company_gui.cpp	(working copy)
 @@ -961,7 +961,7 @@
  			NWidget(NWID_VERTICAL),
@@ -715,7 +732,7 @@ Index: src/company_gui.cpp
   *
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 19024)
+--- src/saveload/misc_sl.cpp	(revision 19167)
 +++ src/saveload/misc_sl.cpp	(working copy)
 @@ -52,7 +52,10 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
@@ -739,9 +756,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 19024)
+--- src/roadveh_cmd.cpp	(revision 19167)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -450,14 +450,14 @@
+@@ -437,14 +437,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -766,7 +783,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 19024)
+--- src/zoom_type.h	(revision 19167)
 +++ src/zoom_type.h	(working copy)
 @@ -16,8 +16,10 @@
  
@@ -792,7 +809,7 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 19024)
+--- src/vehicle.cpp	(revision 19167)
 +++ src/vehicle.cpp	(working copy)
 @@ -769,9 +769,12 @@
  	PaletteID pal = PAL_NONE;
@@ -839,7 +856,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 19024)
+--- src/viewport.cpp	(revision 19167)
 +++ src/viewport.cpp	(working copy)
 @@ -49,6 +49,7 @@
  #include "table/sprites.h"
@@ -1391,7 +1408,7 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 19024)
+--- src/blitter/32bpp_optimized.cpp	(revision 19167)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -1809,7 +1826,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +			dst_x++;
 +		}
 +		
-+		/* last pixels in row cannot be interpolated */
++		 last pixels in row cannot be interpolated */
 +/*		dst[dst_y + dst_x] = src[src_y_idx + x];
 +		dst_x++;
 +		dst[dst_y + dst_x] = src[src_y_idx + x];
@@ -1830,7 +1847,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +		dst_y += width;
 +		src_y_idx += src_sprite->width;
 +	}
-+	/* last row can not be interpolated */
++	 last row can not be interpolated */
 +/*	uint dst_x = 0;
 +	for (int x = 0; x < src_sprite->width - 1; x++) {
 +		dst[dst_y + dst_x] = src[src_y_idx + x];
@@ -1989,9 +2006,31 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/factory.hpp
+===================================================================
+--- src/blitter/factory.hpp	(revision 19167)
++++ src/blitter/factory.hpp	(working copy)
+@@ -83,7 +83,7 @@
+ #if defined(DEDICATED)
+ 		const char *default_blitter = "null";
+ #else
+-		const char *default_blitter = "8bpp-optimized";
++		const char *default_blitter = "32bpp-optimized";
+ 
+ #if defined(WITH_COCOA)
+ 		/* Some people reported lack of fullscreen support in 8 bpp mode.
+@@ -91,7 +91,7 @@
+ 		if (!QZ_CanDisplay8bpp()) {
+ 			/* The main display can't go to 8 bpp fullscreen mode.
+ 			 * We will have to switch to 32 bpp by default. */
+-			default_blitter = "32bpp-anim";
++			default_blitter = "32bpp-optimized";
+ 		}
+ #endif /* defined(WITH_COCOA) */
+ #endif /* defined(DEDICATED) */
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 19024)
+--- src/blitter/base.hpp	(revision 19167)
 +++ src/blitter/base.hpp	(working copy)
 @@ -19,6 +19,8 @@
  	BM_NORMAL,
@@ -2013,7 +2052,7 @@ Index: src/blitter/base.hpp
  	enum PaletteAnimation {
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 19024)
+--- src/blitter/32bpp_optimized.hpp	(revision 19167)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -24,6 +24,12 @@
  
@@ -2030,7 +2069,7 @@ Index: src/blitter/32bpp_optimized.hpp
  
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 19024)
+--- src/blitter/32bpp_base.hpp	(revision 19167)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -14,8 +14,11 @@
  
@@ -2318,7 +2357,7 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 19024)
+--- src/blitter/32bpp_anim.cpp	(revision 19167)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -140,6 +140,7 @@
  
@@ -2336,9 +2375,22 @@ Index: src/blitter/32bpp_anim.cpp
  					break;
  
  				default:
+Index: src/elrail.cpp
+===================================================================
+--- src/elrail.cpp	(revision 19167)
++++ src/elrail.cpp	(working copy)
+@@ -407,7 +407,7 @@
+ 						continue; // No neighbour, go looking for a better position
+ 					}
+ 
+-					AddSortableSpriteToDraw(pylon_base + pylon_sprites[temp], PAL_NONE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE,
++					AddSortableSpriteToDraw(pylon_base + pylon_sprites[temp], PAL_NONE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE + 5,
+ 						elevation, IsTransparencySet(TO_CATENARY), -1, -1);
+ 
+ 					break; // We already have drawn a pylon, bail out
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 19024)
+--- src/gfx.cpp	(revision 19167)
 +++ src/gfx.cpp	(working copy)
 @@ -231,16 +231,17 @@
  
@@ -2488,9 +2540,9 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 19024)
+--- src/openttd.cpp	(revision 19167)
 +++ src/openttd.cpp	(working copy)
-@@ -365,7 +365,7 @@
+@@ -364,7 +364,7 @@
  	/* Setup main window */
  	ResetWindowSystem();
  	SetupColoursAndInitialWindow();
@@ -2499,7 +2551,7 @@ Index: src/openttd.cpp
  	/* Load the default opening screen savegame */
  	if (SaveOrLoad("opntitle.dat", SL_LOAD, DATA_DIR) != SL_OK) {
  		GenerateWorld(GWM_EMPTY, 64, 64); // if failed loading, make empty world.
-@@ -449,6 +449,10 @@
+@@ -452,6 +452,10 @@
  #endif
  	;
  
@@ -2510,9 +2562,18 @@ Index: src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
+@@ -648,6 +652,8 @@
+ 
+ 	DEBUG(misc, 1, "Loading blitter...");
+ 	if (blitter == NULL && _ini_blitter != NULL) blitter = strdup(_ini_blitter);
++	DEBUG(misc, 1, "Force 32bpp-optimized blitter, needed for extra zoom patch");
++	blitter = strdup("32bpp-optimized");
+ 	if (BlitterFactoryBase::SelectBlitter(blitter) == NULL)
+ 		StrEmpty(blitter) ?
+ 			usererror("Failed to autoprobe blitter") :
 Index: src/main_gui.cpp
 ===================================================================
---- src/main_gui.cpp	(revision 19024)
+--- src/main_gui.cpp	(revision 19167)
 +++ src/main_gui.cpp	(working copy)
 @@ -38,6 +38,7 @@
  
