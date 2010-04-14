@@ -1,8 +1,8 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 16316)
+--- src/sound.cpp	(revision 16366)
 +++ src/sound.cpp	(working copy)
-@@ -156,7 +156,7 @@
+@@ -146,7 +146,7 @@
  }
  
  
@@ -13,7 +13,7 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 16316)
+--- src/table/sprites.h	(revision 16366)
 +++ src/table/sprites.h	(working copy)
 @@ -1411,7 +1411,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
@@ -34,7 +34,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 16316)
+--- src/spriteloader/grf.cpp	(revision 16366)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -32,7 +32,7 @@
  	return false;
@@ -47,7 +47,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 16316)
+--- src/spriteloader/spriteloader.hpp	(revision 16366)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -43,8 +43,9 @@
  	/**
@@ -62,7 +62,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 16316)
+--- src/spriteloader/grf.hpp	(revision 16366)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -75,7 +75,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 16316)
+--- src/spriteloader/png.cpp	(revision 16366)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -30,21 +30,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -150,7 +150,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 16316)
+--- src/spriteloader/png.hpp	(revision 16366)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -163,7 +163,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 16316)
+--- src/spritecache.cpp	(revision 16366)
 +++ src/spritecache.cpp	(working copy)
 @@ -4,6 +4,8 @@
  
@@ -514,7 +514,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 16316)
+--- src/spritecache.h	(revision 16366)
 +++ src/spritecache.h	(working copy)
 @@ -7,11 +7,14 @@
  
@@ -534,7 +534,7 @@ Index: src/spritecache.h
  
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 16316)
+--- src/texteff.cpp	(revision 16366)
 +++ src/texteff.cpp	(working copy)
 @@ -162,6 +162,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
@@ -574,7 +574,7 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 16316)
+--- src/window.cpp	(revision 16366)
 +++ src/window.cpp	(working copy)
 @@ -421,6 +421,7 @@
  	}
@@ -613,18 +613,28 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 16316)
+--- src/company_gui.cpp	(revision 16366)
 +++ src/company_gui.cpp	(working copy)
-@@ -24,7 +24,7 @@
- #include "widgets/dropdown_type.h"
- #include "tilehighlight_func.h"
- #include "settings_type.h"
--
-+#include "zoom_type.h"
- #include "table/strings.h"
+@@ -863,7 +863,7 @@
+ 		NWidget(NWID_HORIZONTAL),
+ 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119), SetPadding(2, 0, 2, 0),
++				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279), SetPadding(2, 0, 2, 0),
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+ 			EndContainer(),
+@@ -880,24 +880,24 @@
+ 		EndContainer(),
+ 	EndContainer(),
+ 	NWidget(NWID_HORIZONTAL),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(154, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(154, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
+ 	EndContainer(),
+ };
  
- enum {
-@@ -888,15 +888,15 @@
  /** Widget description for the normal/simple company manager face selection dialog */
  static const Widget _select_company_manager_face_widgets[] = {
  {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,          STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
@@ -637,23 +647,43 @@ Index: src/company_gui.cpp
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+-{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
 +{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   292,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
 +{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   307,    14,   311, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   154,   312,   323, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   155,   307,   312,   323, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    75,    86, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   277,   288, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
- {      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
++{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   307,    14,   310, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   153,   311,   322, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   154,   307,   311,   322, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   155,   166, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   167,   178, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,    96,   107, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
  {   WIDGETS_END},
  };
-@@ -1010,53 +1010,53 @@
+ 
+@@ -911,7 +911,7 @@
+ 		NWidget(NWID_HORIZONTAL),
+ 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119), SetPadding(2, 0, 2, 0),
++				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279), SetPadding(2, 0, 2, 0),
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_RANDOM, STR_FACE_NEW_FACE_TOOLTIP),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 9),
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_LOAD), SetMinimalSize(92, 12), SetDataTip(STR_FACE_LOAD, STR_FACE_LOAD_TIP),
+@@ -1003,62 +1003,62 @@
+ 		EndContainer(),
+ 	EndContainer(),
+ 	NWidget(NWID_HORIZONTAL),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
+-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(125, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(169, 12), SetDataTip(STR_QUERY_CANCEL, STR_FACE_CANCEL_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(169, 12), SetDataTip(STR_QUERY_OK, STR_FACE_OK_TOOLTIP),
+ 	EndContainer(),
+ };
  
  /** Widget description for the advanced company manager face selection dialog */
  static const Widget _select_company_manager_face_adv_widgets[] = {
--{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
+ {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
 -{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   204,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
 -{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 -{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   219,    14,   207, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
@@ -700,73 +730,76 @@ Index: src/company_gui.cpp
 -{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
 -{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
-+{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,      0,   10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
-+{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   313,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   313,   327,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   327,    14,   311, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   163,   312,   323, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   164,   327,   312,   323, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    32,    43, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    32,    43, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   257,   268, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   323,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
-+{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   273,   284, STR_NULL},                           // SCMFW_WIDGET_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   285,   296, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   297,   308, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    46,    57, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    60,    71, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    72,    83, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   110,   121, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
- { WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
- {      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,    96,   170,    60,   205, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
+-{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,    96,   170,    60,   205, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
++{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   322,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
++{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   323,   337,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
++{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   337,    14,   367, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   168,   368,   379, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   169,   337,   368,   379, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   112,   123, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   112,   123, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   335,    96,   107, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   318,   329, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   330,   341, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   342,   353, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   126,   137, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   126,   137, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   140,   151, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   152,   163, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   190,   201, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   190,   201, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   190,   201, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   238,   249, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   238,   249, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   238,   249, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   178,   189, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   178,   189, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   178,   189, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   226,   237, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   226,   237, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   226,   237, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   214,   225, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   214,   225, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   214,   225, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   166,   177, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   166,   177, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   166,   177, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   250,   261, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   250,   261, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   250,   261, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   262,   273, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   262,   273, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   262,   273, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   274,   285, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   274,   285, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   274,   285, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   202,   213, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   202,   213, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   202,   213, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
++{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,   214,   288,   140,   285, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
  {   WIDGETS_END},
-@@ -1216,9 +1216,15 @@
+ };
+ 
+@@ -1216,9 +1216,14 @@
  			this->DrawFaceStringLabel(SCMFW_WIDGET_JACKET,                STR_FACE_JACKET,      GetCompanyManagerFaceBits(this->face, CMFV_JACKET,          this->ge), false);
  			this->DrawFaceStringLabel(SCMFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetCompanyManagerFaceBits(this->face, CMFV_COLLAR,          this->ge), false);
  		}
+-
 +		DrawPixelInfo bk, *old_dpi;
 +		old_dpi = _cur_dpi;
 +		_cur_dpi = &bk;
 +		*_cur_dpi = *old_dpi;
 +		_cur_dpi->zoom = ZOOM_LVL_IN_2X;
- 
  		/* Draw the company manager face picture */
- 		DrawCompanyManagerFace(this->face, GetCompany((CompanyID)this->window_number)->colour, this->widget[SCMFM_WIDGET_FACE].left, this->widget[SCMFM_WIDGET_FACE].top);
+ 		DrawCompanyManagerFace(this->face, Company::Get((CompanyID)this->window_number)->colour, this->widget[SCMFM_WIDGET_FACE].left, this->widget[SCMFM_WIDGET_FACE].top);
 +		_cur_dpi = old_dpi;
  	}
  
  	virtual void OnClick(Point pt, int widget)
-@@ -1357,7 +1363,7 @@
+@@ -1357,7 +1362,7 @@
  
  /** normal/simple company manager face selection window description */
  static const WindowDesc _select_company_manager_face_desc(
@@ -775,18 +808,18 @@ Index: src/company_gui.cpp
  	WC_COMPANY_MANAGER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
  	_select_company_manager_face_widgets, _nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
-@@ -1365,7 +1371,7 @@
+@@ -1365,7 +1370,7 @@
  
  /** advanced company manager face selection window description */
  static const WindowDesc _select_company_manager_face_adv_desc(
 -	WDP_AUTO, WDP_AUTO, 220, 220, 220, 220,
-+	WDP_AUTO, WDP_AUTO, 327, 324, 327, 324,
++	WDP_AUTO, WDP_AUTO, 337, 379, 337, 379,
  	WC_COMPANY_MANAGER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
  	_select_company_manager_face_adv_widgets, _nested_select_company_manager_face_adv_widgets, lengthof(_nested_select_company_manager_face_adv_widgets)
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 16316)
+--- src/saveload/misc_sl.cpp	(revision 16366)
 +++ src/saveload/misc_sl.cpp	(working copy)
 @@ -45,7 +45,8 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
@@ -808,9 +841,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 16316)
+--- src/roadveh_cmd.cpp	(revision 16366)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -480,14 +480,14 @@
+@@ -467,14 +467,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -835,7 +868,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 16316)
+--- src/zoom_type.h	(revision 16366)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -861,7 +894,7 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 16316)
+--- src/vehicle.cpp	(revision 16366)
 +++ src/vehicle.cpp	(working copy)
 @@ -741,9 +741,12 @@
  	SpriteID pal = PAL_NONE;
@@ -908,7 +941,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 16316)
+--- src/viewport.cpp	(revision 16366)
 +++ src/viewport.cpp	(working copy)
 @@ -114,7 +114,7 @@
  /** Data structure storing rendering information */
@@ -1787,7 +1820,7 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 16316)
+--- src/blitter/32bpp_optimized.cpp	(revision 16366)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -3,6 +3,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -1810,21 +1843,19 @@ Index: src/blitter/32bpp_optimized.cpp
  	/* store so we don't have to access it via bp everytime (compiler assumes pointer aliasing) */
  	const byte *remap = bp->remap;
 -
-+	uint r = remap[bp->m];
-+	uint bc = this->LookupColourInPalette(r);
++//	uint r = remap[bp->m];
++//	uint bc = this->LookupColourInPalette(r);
  	for (int y = 0; y < bp->height; y++) {
  		/* next dst line begins here */
  		uint32 *dst_ln = dst + bp->pitch;
-@@ -112,8 +115,11 @@
- 							if (m == 0) {
+@@ -113,7 +116,10 @@
  								*dst = *src_px;
  							} else {
--								uint r = remap[m];
+ 								uint r = remap[m];
 -								if (r != 0) *dst = this->LookupColourInPalette(r);
-+//								uint r = remap[m];
 +								if (r != 0) {
 +									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
-+									*dst = ComposeColourBlend(bc, *dst, bp->hue);
++									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
 +								}
  							}
  							dst++;
@@ -1836,7 +1867,7 @@ Index: src/blitter/32bpp_optimized.cpp
 -								if (r != 0) *dst = ComposeColourPANoCheck(this->LookupColourInPalette(r), src_px->a, *dst);
 +								if (r != 0) {
 +									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
-+									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst, 0);
++									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
 +								}
  							}
  							dst++;
@@ -1954,15 +1985,16 @@ Index: src/blitter/32bpp_optimized.cpp
  	sprite->height = UnScaleByZoom(sprite_src->height, zoom);
  	sprite->width  = UnScaleByZoom(sprite_src->width,  zoom);
  	sprite->x_offs = UnScaleByZoom(sprite_src->x_offs, zoom);
-@@ -262,11 +309,14 @@
+@@ -262,11 +309,15 @@
  	 * it has to be stored in one stream so fewer registers are used -
  	 * x86 has problems with register allocation even with this solution */
  	uint8  *dst_n_orig[ZOOM_LVL_COUNT];
 -
-+	uint    avg_r = 0;
-+	uint    avg_g = 0;
-+	uint    avg_b = 0;
-+	int16	m = 0;
++// commented out some v11 stuff, may be needed again sometime
++//	uint    avg_r = 0;
++//	uint    avg_g = 0;
++//	uint    avg_b = 0;
++//	int16	m = 0;
  	/* lengths of streams */
  	uint32 lengths[ZOOM_LVL_COUNT][2];
  
@@ -1971,7 +2003,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		const SpriteLoader::Sprite *src_orig = ResizeSprite(sprite, z);
  
  		uint size = src_orig->height * src_orig->width;
-@@ -308,15 +358,19 @@
+@@ -308,15 +359,20 @@
  					*dst_n = src->m;
  					if (src->m != 0) {
  						/* Pre-convert the mapping channel to a RGB value */
@@ -1987,10 +2019,11 @@ Index: src/blitter/32bpp_optimized.cpp
 +//						dst_px->r = GB(colour, 16, 8);
 +//						dst_px->g = GB(colour, 8,  8);
 +//						dst_px->b = GB(colour, 0,  8);
-+						avg_r = (avg_r + src->r) >> 1;
-+						avg_g = (avg_g + src->g) >> 1;
-+						avg_b = (avg_b + src->b) >> 1;
-+						m = src->m;
++/* v11 stuff commented out for now */
++//						avg_r = (avg_r + src->r) >> 1;
++//						avg_g = (avg_g + src->g) >> 1;
++//						avg_b = (avg_b + src->b) >> 1;
++//						m = src->m;
  					}
 +					dst_px->r = src->r;
 +					dst_px->g = src->g;
@@ -1999,14 +2032,12 @@ Index: src/blitter/32bpp_optimized.cpp
  					dst_px++;
  					dst_n++;
  				} else if (len == 1) {
-@@ -345,12 +399,12 @@
+@@ -345,12 +401,10 @@
  		lengths[z][0] = (byte *)dst_px_ln - (byte *)dst_px_orig[z]; // all are aligned to 4B boundary
  		lengths[z][1] = (byte *)dst_n_ln  - (byte *)dst_n_orig[z];
  
 -		free(src_orig->data);
 -		free((void *)src_orig);
-+//		free(src_orig->data);
-+//		free((void *)src_orig);
  	}
  
  	uint len = 0; // total length of data
@@ -2020,7 +2051,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	dest_sprite->x_offs = sprite->x_offs;
  	dest_sprite->y_offs = sprite->y_offs;
 -
-+	dest_sprite->m 		= m;
++//	dest_sprite->m 		= m;
  	SpriteData *dst = (SpriteData *)dest_sprite->data;
  
 -	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
@@ -2028,19 +2059,20 @@ Index: src/blitter/32bpp_optimized.cpp
  		dst->offset[z][0] = z == ZOOM_LVL_BEGIN ? 0 : lengths[z - 1][1] + dst->offset[z - 1][1];
  		dst->offset[z][1] = lengths[z][0] + dst->offset[z][0];
  
-@@ -373,6 +427,238 @@
+@@ -373,6 +427,239 @@
  		free(dst_px_orig[z]);
  		free(dst_n_orig[z]);
  	}
 -
-+	if (avg_r < avg_g) Swap(avg_r, avg_g);
-+	if (avg_g < avg_b) Swap(avg_g, avg_b);
-+	if (avg_r < avg_g) Swap(avg_r, avg_g);
-+	if (avg_r != avg_b){
-+		dest_sprite->hue = 256 * (avg_g - avg_b) / (avg_r - avg_b);
-+	} else {
-+		dest_sprite->hue = 0;
-+	}		
++// and some more v11 stuff 	
++//	if (avg_r < avg_g) Swap(avg_r, avg_g);
++//	if (avg_g < avg_b) Swap(avg_g, avg_b);
++//	if (avg_r < avg_g) Swap(avg_r, avg_g);
++//	if (avg_r != avg_b){
++//		dest_sprite->hue = 256 * (avg_g - avg_b) / (avg_r - avg_b);
++//	} else {
++//		dest_sprite->hue = 0;
++//	}		
  	return dest_sprite;
  }
 +
@@ -2270,7 +2302,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +}
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 16316)
+--- src/blitter/base.hpp	(revision 16366)
 +++ src/blitter/base.hpp	(working copy)
 @@ -13,6 +13,8 @@
  	BM_NORMAL,
@@ -2292,7 +2324,7 @@ Index: src/blitter/base.hpp
  	enum PaletteAnimation {
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 16316)
+--- src/blitter/32bpp_optimized.hpp	(revision 16366)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -17,6 +17,12 @@
  
@@ -2309,7 +2341,7 @@ Index: src/blitter/32bpp_optimized.hpp
  
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 16316)
+--- src/blitter/32bpp_base.hpp	(revision 16366)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -7,6 +7,7 @@
  
@@ -2319,14 +2351,86 @@ Index: src/blitter/32bpp_base.hpp
  
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -96,6 +97,80 @@
+@@ -96,6 +97,152 @@
  		return ComposeColourPANoCheck(colour, a, current);
  	}
  
 +/**
 +	* Blend a colour based on Pixel value and the current pixel value.
 +	*/
-+	static inline uint ComposeColourBlend(uint colour, uint current, uint hue)
++static inline uint ComposeColourBlend(uint colour, uint current)
++{
++	int r, g, b, cr, cg, cb;
++	if (colour == current) {
++		return colour;
++	}
++	r  = GB(colour,  16, 8);
++	g  = GB(colour,  8,  8);
++	b  = GB(colour,  0,  8);
++		
++	cr = GB(current, 16, 8);
++	cg = GB(current, 8,  8);
++	cb = GB(current, 0,  8);
++	// if the original is a grey tone, don't recolour  
++	if ( (abs(cg - cr) < 5) && ( abs(cb - cr) < 5)){
++		return current;
++	}
++	if (cr < cg) Swap(cr,cg);
++	if (cg < cb) Swap(cg,cb);
++	if (cr < cg) Swap(cr,cg);
++	if (r>g) {
++		if(r>b) {
++			r = cr;
++			if(b>g) {
++				b = cg;
++				g = cb;
++			}	
++			else {
++				g = cg;
++				b = cb;
++			}
++		}	
++		else {
++			b = cr;
++			r = cg;
++			g = cb;
++		}
++	}	
++	else {
++		if(r>b) {
++			g = cr;
++			r = cg;
++			b = cb;
++		}
++		else {
++			if(b>g) {
++				b = cr;
++				g = cg;
++				r = cb;
++			}
++			else {
++				if ((r != g) && (r != b)){
++					g = cr;
++					b = cg;
++					r = cb;
++				} else {		// fallback if target col is grey
++						g = (cr + cb) >> 1;
++						b = (cr + cb) >> 1;
++						r = (cr + cb) >> 1;
++				}	
++			}
++		}
++	}
++		
++	return ComposeColour(0xff,r,g,b);		
++}
++
++
++/**
++	* Blend a colour based on Pixel value and the current pixel value.
++	* not used, only for v11 experiments
++	*/
++	static inline uint ComposeColourBlendHue(uint colour, uint current, uint hue)
 +	{
 +		int r, g, b, cr, cg, cb;
 +
@@ -2402,7 +2506,7 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 16316)
+--- src/blitter/32bpp_anim.cpp	(revision 16366)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -135,6 +135,7 @@
  
@@ -2422,7 +2526,7 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 16316)
+--- src/gfx.cpp	(revision 16366)
 +++ src/gfx.cpp	(working copy)
 @@ -225,16 +225,17 @@
  
@@ -2574,7 +2678,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/newgrf_commons.h
 ===================================================================
---- src/newgrf_commons.h	(revision 16316)
+--- src/newgrf_commons.h	(revision 16366)
 +++ src/newgrf_commons.h	(working copy)
 @@ -113,7 +113,7 @@
   */
@@ -2587,7 +2691,7 @@ Index: src/newgrf_commons.h
  		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 16316)
+--- src/openttd.cpp	(revision 16366)
 +++ src/openttd.cpp	(working copy)
 @@ -342,7 +342,7 @@
  	/* Setup main window */
