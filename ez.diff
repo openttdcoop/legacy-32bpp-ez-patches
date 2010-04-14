@@ -1,8 +1,21 @@
+Index: src/sprite.h
+===================================================================
+--- src/sprite.h	(revision 19024)
++++ src/sprite.h	(working copy)
+@@ -120,7 +120,7 @@
+  */
+ static inline PaletteID SpriteLayoutPaletteTransform(SpriteID image, PaletteID pal, PaletteID default_pal)
+ {
+-	if (HasBit(image, PALETTE_MODIFIER_TRANSPARENT) || HasBit(image, PALETTE_MODIFIER_COLOUR)) {
++	if (/*HasBit(image, PALETTE_MODIFIER_TRANSPARENT) || */HasBit(image, PALETTE_MODIFIER_COLOUR)) {
+ 		return (pal != 0 ? pal : default_pal);
+ 	} else {
+ 		return PAL_NONE;
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 18760)
+--- src/sound.cpp	(revision 19024)
 +++ src/sound.cpp	(working copy)
-@@ -179,7 +179,7 @@
+@@ -178,7 +178,7 @@
  }
  
  
@@ -11,13 +24,53 @@ Index: src/sound.cpp
  assert_compile(lengthof(_vol_factor_by_zoom) == ZOOM_LVL_COUNT);
  
  static const byte _sound_base_vol[] = {
+Index: src/rail_cmd.cpp
+===================================================================
+--- src/rail_cmd.cpp	(revision 19024)
++++ src/rail_cmd.cpp	(working copy)
+@@ -1629,7 +1629,7 @@
+ 	RailFenceOffset rfo = RFO_FLAT_X;
+ 	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
+ 	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
+-		ti->x, ti->y + 1, 16, 1, 4, ti->z);
++		ti->x, ti->y, 16, 1, 4, ti->z);
+ }
+ 
+ static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
+@@ -1637,7 +1637,7 @@
+ 	RailFenceOffset rfo = RFO_FLAT_X;
+ 	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
+ 	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
+-		ti->x, ti->y + TILE_SIZE - 1, 16, 1, 4, ti->z);
++		ti->x, ti->y + TILE_SIZE, 16, -1, 4, ti->z);
+ }
+ 
+ static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
+@@ -1651,7 +1651,7 @@
+ 	RailFenceOffset rfo = RFO_FLAT_Y;
+ 	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
+ 	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
+-		ti->x + 1, ti->y, 1, 16, 4, ti->z);
++		ti->x, ti->y, -6, 16, 4, ti->z);
+ }
+ 
+ static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
+@@ -1659,7 +1659,7 @@
+ 	RailFenceOffset rfo = RFO_FLAT_Y;
+ 	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
+ 	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
+-		ti->x + TILE_SIZE - 1, ti->y, 1, 16, 4, ti->z);
++		ti->x + TILE_SIZE, ti->y, 1, 16, 4, ti->z);
+ }
+ 
+ static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 18760)
+--- src/table/sprites.h	(revision 19024)
 +++ src/table/sprites.h	(working copy)
-@@ -1421,7 +1421,7 @@
+@@ -1420,7 +1420,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
- 	OFFSET_BIT = 29,
+ 	CUSTOM_BIT = 29,
  	OPAQUE_BIT = 28,
 -
 +	SHADOW_BIT = 27,
@@ -34,7 +87,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 18760)
+--- src/spriteloader/grf.cpp	(revision 19024)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -38,7 +38,7 @@
  	return false;
@@ -47,9 +100,9 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 18760)
+--- src/spriteloader/spriteloader.hpp	(revision 19024)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
-@@ -50,8 +50,9 @@
+@@ -51,8 +51,9 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
  	 */
@@ -62,7 +115,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 18760)
+--- src/spriteloader/grf.hpp	(revision 19024)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -75,9 +128,9 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 18760)
+--- src/spriteloader/png.cpp	(revision 19024)
 +++ src/spriteloader/png.cpp	(working copy)
-@@ -36,21 +36,29 @@
+@@ -35,23 +35,31 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
  }
  
@@ -86,8 +139,10 @@ Index: src/spriteloader/png.cpp
  {
  	char png_file[MAX_PATH];
  
--	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d%s.png", filename, id, mask ? "m" : "");
-+	snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d_%s%d%s.png", filename, id, "z",zoom,mask ? "m" : "");
+ 	/* Add path separator after 'sprites' if not present */
+ 	const char *sep = (filename[0] == PATHSEPCHAR) ? "" : PATHSEP;
+-	snprintf(png_file, sizeof(png_file), "sprites%s%s" PATHSEP "%d%s.png", sep, filename, id, mask ? "m" : "");
++	snprintf(png_file, sizeof(png_file), "sprites%s%s" PATHSEP "%d_%s%d%s.png", sep, filename, id, "z",zoom,mask ? "m" : "");
  	if (FioCheckFileExists(png_file)) {
  		FioOpenFile(PNG_SLOT, png_file);
  		return true;
@@ -95,7 +150,7 @@ Index: src/spriteloader/png.cpp
 -
 +	/* if failed, try to find it in the trunk tars, only for default zoom */
 +	if ( zoom == ZOOM_LVL_NORMAL) {
-+		snprintf(png_file, sizeof(png_file), "sprites" PATHSEP "%s" PATHSEP "%d%s.png", filename, id, mask ? "m" : "");
++		snprintf(png_file, sizeof(png_file), "sprites%s%s" PATHSEP "%d%s.png", sep, filename, id, mask ? "m" : "");
 +		if (FioCheckFileExists(png_file)) {
 +			FioOpenFile(PNG_SLOT, png_file);
 +			return true;
@@ -111,7 +166,7 @@ Index: src/spriteloader/png.cpp
  {
  	png_byte header[8];
  	png_structp png_ptr;
-@@ -59,7 +67,7 @@
+@@ -60,7 +68,7 @@
  	uint i, pixelsize;
  	SpriteLoader::CommonPixel *dst;
  
@@ -120,7 +175,7 @@ Index: src/spriteloader/png.cpp
  
  	/* Check the header */
  	FioReadBlock(header, 8);
-@@ -149,9 +157,7 @@
+@@ -150,9 +158,7 @@
  		for (uint x = 0; x < png_get_image_width(png_ptr, info_ptr); x++) {
  			if (mask) {
  				if (row_pointer[x * sizeof(uint8)] != 0) {
@@ -131,7 +186,7 @@ Index: src/spriteloader/png.cpp
  					/* Alpha channel is used from the original image (to allow transparency in remap colours) */
  					dst[x].m = row_pointer[x * sizeof(uint8)];
  				}
-@@ -170,11 +176,13 @@
+@@ -171,11 +177,13 @@
  	return true;
  }
  
@@ -150,7 +205,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 18760)
+--- src/spriteloader/png.hpp	(revision 19024)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -163,18 +218,18 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 18760)
+--- src/spritecache.cpp	(revision 19024)
 +++ src/spritecache.cpp	(working copy)
-@@ -11,6 +11,8 @@
+@@ -10,6 +10,8 @@
+ /** @file spritecache.cpp Caching of sprites. */
  
  #include "stdafx.h"
- #include "gfx_type.h"
 +#include "gfx_func.h"
 +#include "table/sprites.h"
  #include "fileio_func.h"
  #include "spriteloader/grf.hpp"
  #include "gfx_func.h"
-@@ -18,6 +20,8 @@
+@@ -17,6 +19,8 @@
  #include "spriteloader/png.hpp"
  #endif /* WITH_PNG */
  #include "blitter/factory.hpp"
@@ -183,7 +238,7 @@ Index: src/spritecache.cpp
  #include "core/math_func.hpp"
  
  #include "table/sprites.h"
-@@ -28,7 +32,7 @@
+@@ -27,7 +31,7 @@
  typedef SimpleTinyEnumT<SpriteType, byte> SpriteTypeByte;
  
  struct SpriteCache {
@@ -192,7 +247,7 @@ Index: src/spritecache.cpp
  	size_t file_pos;
  	uint32 id;
  	uint16 file_slot;
-@@ -62,6 +66,10 @@
+@@ -61,6 +65,10 @@
  
  		_spritecache = ReallocT(_spritecache, items);
  
@@ -203,7 +258,7 @@ Index: src/spritecache.cpp
  		/* Reset the new items and update the count */
  		memset(_spritecache + _spritecache_items, 0, (items - _spritecache_items) * sizeof(*_spritecache));
  		_spritecache_items = items;
-@@ -148,6 +156,13 @@
+@@ -147,6 +155,13 @@
  	uint8 file_slot = sc->file_slot;
  	size_t file_pos = sc->file_pos;
  
@@ -217,7 +272,7 @@ Index: src/spritecache.cpp
  	assert(IsMapgenSpriteID(id) == (sprite_type == ST_MAPGEN));
  	assert(sc->type == sprite_type);
  
-@@ -157,12 +172,28 @@
+@@ -156,12 +171,28 @@
  #ifdef WITH_PNG
  		/* Try loading 32bpp graphics in case we are 32bpp output */
  		SpriteLoaderPNG sprite_loader;
@@ -251,7 +306,7 @@ Index: src/spritecache.cpp
  		}
  		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
  #else
-@@ -190,8 +221,7 @@
+@@ -189,8 +220,7 @@
  		static const int RECOLOUR_SPRITE_SIZE = 257;
  		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num));
  
@@ -261,7 +316,7 @@ Index: src/spritecache.cpp
  		if (_palette_remap_grf[sc->file_slot]) {
  			byte *dest_tmp = AllocaM(byte, max(RECOLOUR_SPRITE_SIZE, num));
  
-@@ -207,7 +237,7 @@
+@@ -206,7 +236,7 @@
  			FioReadBlock(dest, num);
  		}
  
@@ -270,7 +325,7 @@ Index: src/spritecache.cpp
  	}
  
  	/* Ugly hack to work around the problem that the old landscape
-@@ -227,7 +257,7 @@
+@@ -226,7 +256,7 @@
  
  		num = width * height;
  		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
@@ -279,7 +334,7 @@ Index: src/spritecache.cpp
  		sprite->height = height;
  		sprite->width  = width;
  		sprite->x_offs = FioReadWord();
-@@ -249,21 +279,44 @@
+@@ -248,21 +278,44 @@
  
  		sc->type = sprite_type;
  
@@ -331,7 +386,7 @@ Index: src/spritecache.cpp
  }
  
  
-@@ -289,7 +342,12 @@
+@@ -288,7 +341,12 @@
  	SpriteCache *sc = AllocateSpriteCache(load_index);
  	sc->file_slot = file_slot;
  	sc->file_pos = file_pos;
@@ -345,7 +400,7 @@ Index: src/spritecache.cpp
  	sc->lru = 0;
  	sc->id = file_sprite_id;
  	sc->type = type;
-@@ -303,10 +361,12 @@
+@@ -302,10 +360,12 @@
  {
  	SpriteCache *scnew = AllocateSpriteCache(new_spr); // may reallocate: so put it first
  	SpriteCache *scold = GetSpriteCache(old_spr);
@@ -359,7 +414,7 @@ Index: src/spritecache.cpp
  	scnew->id = scold->id;
  	scnew->type = scold->type;
  	scnew->warned = false;
-@@ -345,6 +405,7 @@
+@@ -344,6 +404,7 @@
  
  void IncreaseSpriteLRU()
  {
@@ -367,7 +422,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -353,7 +414,8 @@
+@@ -352,7 +413,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -377,7 +432,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -376,6 +438,7 @@
+@@ -375,6 +437,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -385,7 +440,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=" PRINTF_SIZE, GetSpriteCacheUsage());
  
-@@ -392,11 +455,16 @@
+@@ -391,11 +454,16 @@
  			if (next->size == 0) break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -406,7 +461,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -418,16 +486,21 @@
+@@ -417,16 +485,21 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock *s;
@@ -433,7 +488,7 @@ Index: src/spritecache.cpp
  		}
  	}
  
-@@ -435,19 +508,24 @@
+@@ -434,19 +507,24 @@
  	 * This shouldn't really happen, unless all sprites are locked. */
  	if (best == UINT_MAX) error("Out of sprite memory");
  
@@ -468,7 +523,7 @@ Index: src/spritecache.cpp
  	}
  }
  
-@@ -458,7 +536,7 @@
+@@ -457,7 +535,7 @@
  	/* Align this to correct boundary. This also makes sure at least one
  	 * bit is not used, so we can use it for other things. */
  	mem_req = Align(mem_req, S_FREE_MASK + 1);
@@ -477,7 +532,7 @@ Index: src/spritecache.cpp
  	for (;;) {
  		MemBlock *s;
  
-@@ -535,6 +613,7 @@
+@@ -534,6 +612,7 @@
  {
  	assert(IsMapgenSpriteID(sprite) == (type == ST_MAPGEN));
  	assert(type < ST_INVALID);
@@ -485,7 +540,7 @@ Index: src/spritecache.cpp
  
  	if (!SpriteExists(sprite)) {
  		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", sprite);
-@@ -550,7 +629,8 @@
+@@ -549,7 +628,8 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
@@ -495,7 +550,7 @@ Index: src/spritecache.cpp
  
  	/* Load the sprite, if it is not loaded, yet */
  	if (p == NULL) p = ReadSprite(sc, sprite, type);
-@@ -562,7 +642,7 @@
+@@ -561,7 +641,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -504,7 +559,7 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -573,7 +653,6 @@
+@@ -572,7 +652,6 @@
  	free(_spritecache);
  	_spritecache_items = 0;
  	_spritecache = NULL;
@@ -514,7 +569,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 18760)
+--- src/spritecache.h	(revision 19024)
 +++ src/spritecache.h	(working copy)
 @@ -14,9 +14,8 @@
  
@@ -529,9 +584,9 @@ Index: src/spritecache.h
  	int16 y_offs; ///< Number of pixels to shift the sprite downwards.
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 18760)
+--- src/texteff.cpp	(revision 19024)
 +++ src/texteff.cpp	(working copy)
-@@ -105,6 +105,51 @@
+@@ -101,6 +101,51 @@
  
  void DrawTextEffects(DrawPixelInfo *dpi)
  {
@@ -585,9 +640,9 @@ Index: src/texteff.cpp
  
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 18760)
+--- src/window.cpp	(revision 19024)
 +++ src/window.cpp	(working copy)
-@@ -425,6 +425,7 @@
+@@ -418,6 +418,7 @@
  	}
  }
  
@@ -595,7 +650,7 @@ Index: src/window.cpp
  /**
   * Generate repaint events for the visible part of window w within the rectangle.
   *
-@@ -488,6 +489,8 @@
+@@ -481,6 +482,8 @@
  	w->OnPaint();
  }
  
@@ -604,7 +659,7 @@ Index: src/window.cpp
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -499,7 +502,8 @@
+@@ -492,7 +495,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -614,7 +669,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -511,6 +515,7 @@
+@@ -504,6 +508,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
@@ -624,9 +679,9 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 18760)
+--- src/company_gui.cpp	(revision 19024)
 +++ src/company_gui.cpp	(working copy)
-@@ -959,7 +959,7 @@
+@@ -961,7 +961,7 @@
  			NWidget(NWID_VERTICAL),
  				NWidget(NWID_HORIZONTAL),
  					NWidget(NWID_SPACER), SetFill(1, 0),
@@ -635,7 +690,7 @@ Index: src/company_gui.cpp
  					NWidget(NWID_SPACER), SetFill(1, 0),
  				EndContainer(),
  				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
-@@ -1386,7 +1386,14 @@
+@@ -1388,7 +1388,14 @@
  				break;
  
  			case SCMFM_WIDGET_FACE:
@@ -650,7 +705,7 @@ Index: src/company_gui.cpp
  				break;
  		}
  	}
-@@ -1543,6 +1550,7 @@
+@@ -1545,6 +1552,7 @@
  	_nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
  );
  
@@ -660,7 +715,7 @@ Index: src/company_gui.cpp
   *
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 18760)
+--- src/saveload/misc_sl.cpp	(revision 19024)
 +++ src/saveload/misc_sl.cpp	(working copy)
 @@ -52,7 +52,10 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
@@ -684,9 +739,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 18760)
+--- src/roadveh_cmd.cpp	(revision 19024)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -447,14 +447,14 @@
+@@ -450,14 +450,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -711,7 +766,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 18760)
+--- src/zoom_type.h	(revision 19024)
 +++ src/zoom_type.h	(working copy)
 @@ -16,8 +16,10 @@
  
@@ -737,10 +792,10 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 18760)
+--- src/vehicle.cpp	(revision 19024)
 +++ src/vehicle.cpp	(working copy)
-@@ -767,9 +767,12 @@
- 	SpriteID pal = PAL_NONE;
+@@ -769,9 +769,12 @@
+ 	PaletteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
 -
@@ -754,7 +809,7 @@ Index: src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -806,11 +809,11 @@
+@@ -808,11 +811,11 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -771,7 +826,7 @@ Index: src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -830,8 +833,8 @@
+@@ -832,8 +835,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -784,9 +839,9 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 18760)
+--- src/viewport.cpp	(revision 19024)
 +++ src/viewport.cpp	(working copy)
-@@ -51,6 +51,7 @@
+@@ -49,6 +49,7 @@
  #include "table/sprites.h"
  #include "table/strings.h"
  
@@ -794,7 +849,7 @@ Index: src/viewport.cpp
  PlaceProc *_place_proc;
  Point _tile_fract_coords;
  
-@@ -129,7 +130,7 @@
+@@ -127,7 +128,7 @@
  /** Data structure storing rendering information */
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -803,7 +858,7 @@ Index: src/viewport.cpp
  	StringSpriteToDrawVector string_sprites_to_draw;
  	TileSpriteToDrawVector tile_sprites_to_draw;
  	ParentSpriteToDrawVector parent_sprites_to_draw;
-@@ -296,17 +297,17 @@
+@@ -294,17 +295,17 @@
  	int i;
  	int left, top, width, height;
  
@@ -827,7 +882,7 @@ Index: src/viewport.cpp
  	old_left -= x;
  	old_top -= y;
  
-@@ -379,9 +380,8 @@
+@@ -377,9 +378,8 @@
  				return pt;
  	}
  
@@ -839,7 +894,7 @@ Index: src/viewport.cpp
  	a = y - x;
  	b = y + x;
  
-@@ -604,10 +604,13 @@
+@@ -602,10 +602,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
  
@@ -857,7 +912,7 @@ Index: src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
-@@ -647,7 +650,7 @@
+@@ -645,7 +648,7 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -866,7 +921,7 @@ Index: src/viewport.cpp
  	}
  
  	if (_vd.combine_sprites == SPRITE_COMBINE_ACTIVE) {
-@@ -662,31 +665,37 @@
+@@ -660,31 +663,37 @@
  
  	/* Compute screen extents of sprite */
  	if (image == SPR_EMPTY_BOUNDING_BOX) {
@@ -920,7 +975,7 @@ Index: src/viewport.cpp
  		return;
  	}
  
-@@ -771,7 +780,6 @@
+@@ -769,7 +778,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -928,7 +983,7 @@ Index: src/viewport.cpp
  	}
  
  	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
-@@ -780,8 +788,8 @@
+@@ -778,8 +786,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -939,7 +994,7 @@ Index: src/viewport.cpp
  	cs->next = -1;
  
  	/* Append the sprite to the active ChildSprite list.
-@@ -995,25 +1003,28 @@
+@@ -993,25 +1001,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -979,7 +1034,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -1021,7 +1032,7 @@
+@@ -1019,7 +1030,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -988,7 +1043,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -1050,24 +1061,17 @@
+@@ -1048,24 +1059,17 @@
  					tt = GetTileType(tile);
  				}
  			}
@@ -1023,7 +1078,7 @@ Index: src/viewport.cpp
  			y_cur += 0x10;
  			x_cur -= 0x10;
  		} while (--width_cur);
-@@ -1077,7 +1081,7 @@
+@@ -1075,7 +1079,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1032,7 +1087,7 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1102,12 +1106,19 @@
+@@ -1100,12 +1104,19 @@
  	int sign_height     = ScaleByZoom(VPSM_TOP + FONT_HEIGHT_NORMAL + VPSM_BOTTOM, dpi->zoom);
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
  
@@ -1053,7 +1108,7 @@ Index: src/viewport.cpp
  
  	if (!small) {
  		AddStringToDraw(sign->center - sign_half_width, sign->top, string_normal, params_1, params_2, colour, sign->width_normal);
-@@ -1170,6 +1181,7 @@
+@@ -1168,6 +1179,7 @@
  	}
  }
  
@@ -1061,7 +1116,7 @@ Index: src/viewport.cpp
  /**
   * Update the position of the viewport sign.
   * @param center the (preferred) center of the viewport sign
-@@ -1218,7 +1230,15 @@
+@@ -1216,7 +1228,15 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -1078,7 +1133,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1282,16 +1302,22 @@
+@@ -1280,16 +1300,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -1104,7 +1159,7 @@ Index: src/viewport.cpp
  		}
  	}
  }
-@@ -1302,14 +1328,32 @@
+@@ -1300,14 +1326,32 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -1141,7 +1196,7 @@ Index: src/viewport.cpp
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
  		        pt3.x - pt1.x, pt3.y - pt1.y,
-@@ -1326,20 +1370,17 @@
+@@ -1324,20 +1368,17 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -1166,7 +1221,7 @@ Index: src/viewport.cpp
  		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1366,7 +1407,6 @@
+@@ -1364,7 +1405,6 @@
  				);
  			}
  		}
@@ -1174,7 +1229,7 @@ Index: src/viewport.cpp
  		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_CENTER);
  	}
  }
-@@ -1374,28 +1414,42 @@
+@@ -1372,28 +1412,42 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -1229,7 +1284,7 @@ Index: src/viewport.cpp
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
  	ViewportAddSigns(&_vd.dpi);
-@@ -1429,7 +1483,8 @@
+@@ -1427,7 +1481,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1239,7 +1294,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1440,12 +1495,7 @@
+@@ -1438,12 +1493,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1253,7 +1308,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1541,8 +1591,8 @@
+@@ -1539,8 +1589,8 @@
  		}
  
  		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
@@ -1263,7 +1318,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1557,26 +1607,32 @@
+@@ -1555,26 +1605,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1310,16 +1365,16 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1737,6 +1793,8 @@
+@@ -1735,6 +1791,8 @@
  static bool CheckClickOnTown(const ViewPort *vp, int x, int y)
  {
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
-+	x = ScaleByZoom(x - vp->left + vp->virtual_left, vp->zoom);
-+	y = ScaleByZoom(y - vp->top + vp->virtual_top, vp->zoom);
++//	x = ScaleByZoom(x - vp->left + vp->virtual_left, vp->zoom);
++//	y = ScaleByZoom(y - vp->top + vp->virtual_top, vp->zoom);
  
  	const Town *t;
  	FOR_ALL_TOWNS(t) {
-@@ -1792,6 +1850,7 @@
+@@ -1790,6 +1848,7 @@
  }
  
  
@@ -1327,7 +1382,7 @@ Index: src/viewport.cpp
  static bool CheckClickOnLandscape(const ViewPort *vp, int x, int y)
  {
  	Point pt = TranslateXYToTileCoord(vp, x, y);
-@@ -2711,3 +2770,6 @@
+@@ -2726,3 +2785,6 @@
  {
  	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
  }
@@ -1336,7 +1391,7 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 18760)
+--- src/blitter/32bpp_optimized.cpp	(revision 19024)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -1344,9 +1399,9 @@ Index: src/blitter/32bpp_optimized.cpp
  #include "../stdafx.h"
 +#include "../core/alloc_func.hpp"
  #include "../zoom_func.h"
- #include "../gfx_func.h"
  #include "../core/math_func.hpp"
-@@ -31,6 +32,7 @@
+ #include "32bpp_optimized.hpp"
+@@ -30,6 +31,7 @@
  
  	/* src_px : each line begins with uint32 n = 'number of bytes in this line',
  	 *          then n times is the Colour struct for this line */
@@ -1354,7 +1409,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	const Colour *src_px = (const Colour *)(src->data + src->offset[zoom][0]);
  	/* src_n  : each line begins with uint32 n = 'number of bytes in this line',
  	 *          then interleaved stream of 'm' and 'n' channels. 'm' is remap,
-@@ -48,7 +50,8 @@
+@@ -47,7 +49,8 @@
  
  	/* store so we don't have to access it via bp everytime (compiler assumes pointer aliasing) */
  	const byte *remap = bp->remap;
@@ -1364,7 +1419,7 @@ Index: src/blitter/32bpp_optimized.cpp
  	for (int y = 0; y < bp->height; y++) {
  		/* next dst line begins here */
  		uint32 *dst_ln = dst + bp->pitch;
-@@ -119,7 +122,11 @@
+@@ -118,7 +121,11 @@
  								*dst = src_px->data;
  							} else {
  								uint r = remap[m];
@@ -1377,7 +1432,7 @@ Index: src/blitter/32bpp_optimized.cpp
  							}
  							dst++;
  							src_px++;
-@@ -132,7 +139,11 @@
+@@ -131,7 +138,11 @@
  								*dst = ComposeColourRGBANoCheck(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
  							} else {
  								uint r = remap[m];
@@ -1390,7 +1445,7 @@ Index: src/blitter/32bpp_optimized.cpp
  							}
  							dst++;
  							src_px++;
-@@ -140,12 +151,47 @@
+@@ -139,12 +150,47 @@
  						} while (--n != 0);
  					}
  					break;
@@ -1440,7 +1495,7 @@ Index: src/blitter/32bpp_optimized.cpp
  					/* Make the current colour a bit more black, so it looks like this image is transparent */
  					src_n += n;
  					if (src_px->a == 255) {
-@@ -161,8 +207,8 @@
+@@ -160,8 +206,8 @@
  							src_px++;
  						} while (--n != 0);
  					}
@@ -1450,7 +1505,7 @@ Index: src/blitter/32bpp_optimized.cpp
  				default:
  					if (src_px->a == 255) {
  						/* faster than memcpy(), n is usually low */
-@@ -183,7 +229,6 @@
+@@ -182,7 +228,6 @@
  					break;
  			}
  		}
@@ -1458,7 +1513,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		dst = dst_ln;
  		src_px = src_px_ln;
  		src_n  = src_n_ln;
-@@ -199,61 +244,26 @@
+@@ -198,61 +243,26 @@
   */
  void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom)
  {
@@ -1528,7 +1583,7 @@ Index: src/blitter/32bpp_optimized.cpp
  }
  
  Sprite *Blitter_32bppOptimized::Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator)
-@@ -274,7 +284,7 @@
+@@ -273,7 +283,7 @@
  	/* lengths of streams */
  	uint32 lengths[ZOOM_LVL_COUNT][2];
  
@@ -1537,7 +1592,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		const SpriteLoader::Sprite *src_orig = ResizeSprite(sprite, z);
  
  		uint size = src_orig->height * src_orig->width;
-@@ -314,17 +324,11 @@
+@@ -313,17 +323,11 @@
  				if (a != 0) {
  					dst_px->a = a;
  					*dst_n = src->m;
@@ -1560,7 +1615,7 @@ Index: src/blitter/32bpp_optimized.cpp
  					dst_px++;
  					dst_n++;
  				} else if (len == 1) {
-@@ -353,12 +357,10 @@
+@@ -352,12 +356,10 @@
  		lengths[z][0] = (byte *)dst_px_ln - (byte *)dst_px_orig[z]; // all are aligned to 4B boundary
  		lengths[z][1] = (byte *)dst_n_ln  - (byte *)dst_n_orig[z];
  
@@ -1574,7 +1629,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		len += lengths[z][0] + lengths[z][1];
  	}
  
-@@ -371,16 +373,351 @@
+@@ -370,16 +372,351 @@
  
  	SpriteData *dst = (SpriteData *)dest_sprite->data;
  
@@ -1934,9 +1989,31 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/base.hpp
+===================================================================
+--- src/blitter/base.hpp	(revision 19024)
++++ src/blitter/base.hpp	(working copy)
+@@ -19,6 +19,8 @@
+ 	BM_NORMAL,
+ 	BM_COLOUR_REMAP,
+ 	BM_TRANSPARENT,
++   BM_COLOUR_OPAQUE,
++   BM_SHADOW
+ };
+ 
+ /**
+@@ -38,6 +40,8 @@
+ 
+ 		void *dst;               ///< Destination buffer
+ 		int pitch;               ///< The pitch of the destination buffer
++		uint hue;
++		uint m;
+ 	};
+ 
+ 	enum PaletteAnimation {
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 18760)
+--- src/blitter/32bpp_optimized.hpp	(revision 19024)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
 @@ -24,6 +24,12 @@
  
@@ -1951,37 +2028,16 @@ Index: src/blitter/32bpp_optimized.hpp
  
  	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
  
-Index: src/blitter/base.hpp
-===================================================================
---- src/blitter/base.hpp	(revision 18760)
-+++ src/blitter/base.hpp	(working copy)
-@@ -20,6 +20,8 @@
- 	BM_NORMAL,
- 	BM_COLOUR_REMAP,
- 	BM_TRANSPARENT,
-+   BM_COLOUR_OPAQUE,
-+   BM_SHADOW
- };
- 
- /**
-@@ -39,6 +41,8 @@
- 
- 		void *dst;               ///< Destination buffer
- 		int pitch;               ///< The pitch of the destination buffer
-+		uint hue;
-+		uint m;
- 	};
- 
- 	enum PaletteAnimation {
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 18760)
+--- src/blitter/32bpp_base.hpp	(revision 19024)
 +++ src/blitter/32bpp_base.hpp	(working copy)
-@@ -14,7 +14,10 @@
+@@ -14,8 +14,11 @@
  
  #include "base.hpp"
  #include "../core/bitmath_func.hpp"
 +#include "../core/math_func.hpp"
+ #include "../gfx_func.h"
  
 +extern int _sat, _li;
 +
@@ -2262,9 +2318,9 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 18760)
+--- src/blitter/32bpp_anim.cpp	(revision 19024)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
-@@ -141,6 +141,7 @@
+@@ -140,6 +140,7 @@
  
  					/* Make the current colour a bit more black, so it looks like this image is transparent */
  					src_n += n;
@@ -2272,7 +2328,7 @@ Index: src/blitter/32bpp_anim.cpp
  					if (src_px->a == 255) {
  						src_px += n;
  						do {
-@@ -158,6 +159,7 @@
+@@ -157,6 +158,7 @@
  							src_px++;
  						} while (--n != 0);
  					}
@@ -2282,9 +2338,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 18760)
+--- src/gfx.cpp	(revision 19024)
 +++ src/gfx.cpp	(working copy)
-@@ -230,16 +230,17 @@
+@@ -231,16 +231,17 @@
  
  	static const byte colour = 255;
  
@@ -2311,7 +2367,7 @@ Index: src/gfx.cpp
  }
  
  /**
-@@ -976,7 +977,7 @@
+@@ -977,7 +978,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
  			if (x + _max_char_width >= dpi->left) {
@@ -2320,8 +2376,8 @@ Index: src/gfx.cpp
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -1030,8 +1031,15 @@
- void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
+@@ -1031,8 +1032,15 @@
+ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
 -		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
@@ -2337,7 +2393,7 @@ Index: src/gfx.cpp
  	} else if (pal != PAL_NONE) {
  		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH), ST_NORMAL), x, y, BM_COLOUR_REMAP, sub);
-@@ -1062,15 +1070,16 @@
+@@ -1063,15 +1071,16 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2360,7 +2416,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -1084,42 +1093,45 @@
+@@ -1085,42 +1094,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2418,7 +2474,7 @@ Index: src/gfx.cpp
  
  	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
  }
-@@ -1544,7 +1556,10 @@
+@@ -1545,7 +1557,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2430,24 +2486,11 @@ Index: src/gfx.cpp
  	if (left < 0) left = 0;
  	if (top < 0) top = 0;
  	if (right > _screen.width) right = _screen.width;
-Index: src/newgrf_commons.h
-===================================================================
---- src/newgrf_commons.h	(revision 18760)
-+++ src/newgrf_commons.h	(working copy)
-@@ -120,7 +120,7 @@
-  */
- static inline SpriteID SpriteLayoutPaletteTransform(SpriteID image, SpriteID pal, SpriteID default_pal)
- {
--	if (HasBit(image, PALETTE_MODIFIER_TRANSPARENT) || HasBit(image, PALETTE_MODIFIER_COLOUR)) {
-+	if (/*HasBit(image, PALETTE_MODIFIER_TRANSPARENT) || */ HasBit(image, PALETTE_MODIFIER_COLOUR)) {
- 		return (pal != 0 ? pal : default_pal);
- 	} else {
- 		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 18760)
+--- src/openttd.cpp	(revision 19024)
 +++ src/openttd.cpp	(working copy)
-@@ -361,7 +361,7 @@
+@@ -365,7 +365,7 @@
  	/* Setup main window */
  	ResetWindowSystem();
  	SetupColoursAndInitialWindow();
@@ -2455,8 +2498,8 @@ Index: src/openttd.cpp
 +    
  	/* Load the default opening screen savegame */
  	if (SaveOrLoad("opntitle.dat", SL_LOAD, DATA_DIR) != SL_OK) {
- 		GenerateWorld(GW_EMPTY, 64, 64); // if failed loading, make empty world.
-@@ -445,6 +445,10 @@
+ 		GenerateWorld(GWM_EMPTY, 64, 64); // if failed loading, make empty world.
+@@ -449,6 +449,10 @@
  #endif
  	;
  
@@ -2469,9 +2512,9 @@ Index: src/openttd.cpp
  	while ((i = MyGetOpt(&mgo)) != -1) {
 Index: src/main_gui.cpp
 ===================================================================
---- src/main_gui.cpp	(revision 18760)
+--- src/main_gui.cpp	(revision 19024)
 +++ src/main_gui.cpp	(working copy)
-@@ -39,6 +39,7 @@
+@@ -38,6 +38,7 @@
  
  #include "table/sprites.h"
  #include "table/strings.h"
@@ -2479,7 +2522,7 @@ Index: src/main_gui.cpp
  
  static int _rename_id = 1;
  static int _rename_what = -1;
-@@ -204,6 +205,9 @@
+@@ -203,6 +204,9 @@
  	_nested_main_window_widgets, lengthof(_nested_main_window_widgets)
  );
  
@@ -2489,7 +2532,7 @@ Index: src/main_gui.cpp
  struct MainWindow : Window
  {
  	MainWindow() : Window()
-@@ -353,7 +357,18 @@
+@@ -352,7 +356,18 @@
  				}
  				break;
  #endif
