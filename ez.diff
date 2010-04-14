@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 13638)
+--- src/sound.cpp	(revision 13693)
 +++ src/sound.cpp	(working copy)
 @@ -166,7 +166,7 @@
  }
@@ -13,7 +13,7 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/station_cmd.cpp
 ===================================================================
---- src/station_cmd.cpp	(revision 13638)
+--- src/station_cmd.cpp	(revision 13693)
 +++ src/station_cmd.cpp	(working copy)
 @@ -2235,12 +2235,10 @@
  		}
@@ -34,7 +34,7 @@ Index: src/station_cmd.cpp
  		}
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 13638)
+--- src/table/sprites.h	(revision 13693)
 +++ src/table/sprites.h	(working copy)
 @@ -1450,7 +1450,7 @@
  	RECOLOR_BIT = 30,           ///< toggles recoloring in the sprite
@@ -45,17 +45,17 @@ Index: src/table/sprites.h
  	PALETTE_WIDTH = 24,         ///< number of bits of the sprite containing the recolor palette
  	SPRITE_WIDTH = 24,          ///< number of bits for the sprite number
  };
-@@ -1477,6 +1477,7 @@
- 	PALETTE_MODIFIER_GREYOUT        = TRANSPARENT_BIT,
- 	///Set when a colortable mode is used. @see GfxFillRect
- 	USE_COLORTABLE                  = RECOLOR_BIT,
+@@ -1471,6 +1471,7 @@
+ 	PALETTE_MODIFIER_TRANSPARENT  = TRANSPARENT_BIT,
+ 	///this bit is set when a recoloring process is in action
+ 	PALETTE_MODIFIER_COLOR        = RECOLOR_BIT,
 +  	PALETTE_MODIFIER_SHADOW        = SHADOW_BIT,
  };
  
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 13638)
+--- src/spriteloader/grf.cpp	(revision 13693)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -9,7 +9,7 @@
  #include "../core/alloc_func.hpp"
@@ -68,7 +68,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 13638)
+--- src/spriteloader/spriteloader.hpp	(revision 13693)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -26,8 +26,8 @@
  	/**
@@ -82,7 +82,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 13638)
+--- src/spriteloader/grf.hpp	(revision 13693)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -95,7 +95,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 13638)
+--- src/spriteloader/png.cpp	(revision 13693)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -30,21 +30,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -170,7 +170,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 13638)
+--- src/spriteloader/png.hpp	(revision 13693)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -183,7 +183,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 13638)
+--- src/spritecache.cpp	(revision 13693)
 +++ src/spritecache.cpp	(working copy)
 @@ -7,6 +7,8 @@
  #include "variables.h"
@@ -209,10 +209,10 @@ Index: src/spritecache.cpp
  struct SpriteCache {
 -	void *ptr;
 +	void *ptr[ZOOM_LVL_END];
- 	uint32 id;
  	size_t file_pos;
+ 	uint32 id;
  	uint16 file_slot;
-@@ -51,6 +53,10 @@
+@@ -52,6 +54,10 @@
  
  		_spritecache = ReallocT(_spritecache, items);
  
@@ -223,7 +223,7 @@ Index: src/spritecache.cpp
  		/* Reset the new items and update the count */
  		memset(_spritecache + _spritecache_items, 0, (items - _spritecache_items) * sizeof(*_spritecache));
  		_spritecache_items = items;
-@@ -124,8 +130,11 @@
+@@ -125,8 +131,11 @@
  {
  	uint8 file_slot = sc->file_slot;
  	size_t file_pos = sc->file_pos;
@@ -236,7 +236,7 @@ Index: src/spritecache.cpp
  
  	if (!SpriteExists(id)) {
  		DEBUG(sprite, 1, "Tried to load non-existing sprite #%d. Probable cause: Wrong/missing NewGRFs", id);
-@@ -140,14 +149,30 @@
+@@ -141,15 +150,31 @@
  #ifdef WITH_PNG
  		/* Try loading 32bpp graphics in case we are 32bpp output */
  		SpriteLoaderPNG sprite_loader;
@@ -265,20 +265,22 @@ Index: src/spritecache.cpp
 +			}
 +			sc->ptr[zoom] = BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
  			free(sprite.data);
-+			return sc->ptr[zoom];
-+		}
+-
++			
+ 			sc->real_sprite = true;
  
 -			return sc->ptr;
--		}
++			return sc->ptr[zoom];
+ 		}
  		/* If the PNG couldn't be loaded, fall back to 8bpp grfs */
  #else
- 		static bool show_once = true;
-@@ -175,10 +200,10 @@
+@@ -178,11 +203,11 @@
  
  		byte *dest = (byte *)AllocSprite(num);
  
 -		sc->ptr = dest;
 +		sc->ptr[zoom] = dest;
+ 		sc->real_sprite = false;
  		FioReadBlock(dest, num);
  
 -		return sc->ptr;
@@ -286,7 +288,7 @@ Index: src/spritecache.cpp
  	}
  	/* Ugly hack to work around the problem that the old landscape
  	 *  generator assumes that those sprites are stored uncompressed in
-@@ -197,7 +222,7 @@
+@@ -201,7 +226,7 @@
  
  		num = width * height;
  		sprite = (Sprite *)AllocSprite(sizeof(*sprite) + num);
@@ -295,16 +297,16 @@ Index: src/spritecache.cpp
  		sprite->height = height;
  		sprite->width  = width;
  		sprite->x_offs = FioReadWord();
-@@ -217,7 +242,7 @@
- 			}
- 		}
+@@ -223,7 +248,7 @@
+ 
+ 		sc->real_sprite = false;
  
 -		return sc->ptr;
 +		return sc->ptr[zoom];
  	}
  
- 	if (!real_sprite) {
-@@ -227,14 +252,39 @@
+ 	sc->real_sprite = true;
+@@ -235,14 +260,39 @@
  	}
  
  	SpriteLoaderGrf sprite_loader;
@@ -348,7 +350,7 @@ Index: src/spritecache.cpp
  }
  
  
-@@ -252,7 +302,12 @@
+@@ -260,7 +310,12 @@
  	sc = AllocateSpriteCache(load_index);
  	sc->file_slot = file_slot;
  	sc->file_pos = file_pos;
@@ -361,8 +363,8 @@ Index: src/spritecache.cpp
 +	sc->ptr[ZOOM_LVL_OUT_8X] = NULL;
  	sc->lru = 0;
  	sc->id = file_sprite_id;
- 
-@@ -264,10 +319,12 @@
+ 	sc->real_sprite = false;
+@@ -273,10 +328,12 @@
  {
  	SpriteCache *scnew = AllocateSpriteCache(new_spr); // may reallocate: so put it first
  	SpriteCache *scold = GetSpriteCache(old_spr);
@@ -374,9 +376,9 @@ Index: src/spritecache.cpp
 +	zoom = ZoomLevel(_cur_dpi->zoom);
 +	scnew->ptr[zoom] = NULL;
  	scnew->id = scold->id;
+ 	scnew->real_sprite = scold->real_sprite;
  }
- 
-@@ -294,6 +351,7 @@
+@@ -304,6 +361,7 @@
  
  void IncreaseSpriteLRU()
  {
@@ -384,7 +386,7 @@ Index: src/spritecache.cpp
  	/* Increase all LRU values */
  	if (_sprite_lru_counter > 16384) {
  		SpriteID i;
-@@ -302,7 +360,8 @@
+@@ -312,7 +370,8 @@
  
  		for (i = 0; i != _spritecache_items; i++) {
  			SpriteCache *sc = GetSpriteCache(i);
@@ -394,7 +396,7 @@ Index: src/spritecache.cpp
  				if (sc->lru >= 0) {
  					sc->lru = -1;
  				} else if (sc->lru != -32768) {
-@@ -325,6 +384,7 @@
+@@ -335,6 +394,7 @@
  static void CompactSpriteCache()
  {
  	MemBlock *s;
@@ -402,7 +404,7 @@ Index: src/spritecache.cpp
  
  	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
  
-@@ -341,11 +401,16 @@
+@@ -351,11 +411,16 @@
  			if (next->size == 0) break;
  
  			/* Locate the sprite belonging to the next pointer. */
@@ -423,7 +425,7 @@ Index: src/spritecache.cpp
  			/* Swap this and the next block */
  			temp = *s;
  			memmove(s, next, next->size);
-@@ -367,16 +432,21 @@
+@@ -377,16 +442,21 @@
  	SpriteID i;
  	uint best = UINT_MAX;
  	MemBlock* s;
@@ -450,7 +452,7 @@ Index: src/spritecache.cpp
  		}
  	}
  
-@@ -384,19 +454,24 @@
+@@ -394,19 +464,24 @@
  	 * This shouldn't really happen, unless all sprites are locked. */
  	if (best == (uint)-1) error("Out of sprite memory");
  
@@ -485,7 +487,7 @@ Index: src/spritecache.cpp
  	}
  }
  
-@@ -407,7 +482,7 @@
+@@ -417,7 +492,7 @@
  	/* Align this to an uint32 boundary. This also makes sure that the 2 least
  	 * bits are not used, so we could use those for other things. */
  	mem_req = Align(mem_req, sizeof(uint32));
@@ -494,7 +496,7 @@ Index: src/spritecache.cpp
  	for (;;) {
  		MemBlock* s;
  
-@@ -442,6 +517,7 @@
+@@ -452,6 +527,7 @@
  {
  	SpriteCache *sc;
  	void* p;
@@ -502,7 +504,7 @@ Index: src/spritecache.cpp
  
  	assert(sprite < _spritecache_items);
  
-@@ -450,8 +526,11 @@
+@@ -460,8 +536,11 @@
  	/* Update LRU */
  	sc->lru = ++_sprite_lru_counter;
  
@@ -513,9 +515,9 @@ Index: src/spritecache.cpp
 +	p = sc->ptr[zoom];
 +
  	/* Load the sprite, if it is not loaded, yet */
- 	if (p == NULL) p = ReadSprite(sc, sprite, real_sprite);
+ 	if (p == NULL || sc->real_sprite != real_sprite) p = ReadSprite(sc, sprite, real_sprite);
  
-@@ -462,7 +541,7 @@
+@@ -472,7 +551,7 @@
  void GfxInitSpriteMem()
  {
  	/* initialize sprite cache heap */
@@ -524,7 +526,7 @@ Index: src/spritecache.cpp
  
  	/* A big free block */
  	_spritecache_ptr->size = ((_sprite_cache_size * 1024 * 1024) - sizeof(MemBlock)) | S_FREE_MASK;
-@@ -473,6 +552,5 @@
+@@ -483,6 +562,5 @@
  	free(_spritecache);
  	_spritecache_items = 0;
  	_spritecache = NULL;
@@ -533,7 +535,7 @@ Index: src/spritecache.cpp
  }
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 13638)
+--- src/spritecache.h	(revision 13693)
 +++ src/spritecache.h	(working copy)
 @@ -7,8 +7,9 @@
  
@@ -548,7 +550,7 @@ Index: src/spritecache.h
  	int16 y_offs;
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 13638)
+--- src/texteff.cpp	(revision 13693)
 +++ src/texteff.cpp	(working copy)
 @@ -384,6 +384,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
@@ -588,7 +590,7 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 13638)
+--- src/window.cpp	(revision 13693)
 +++ src/window.cpp	(working copy)
 @@ -245,6 +245,7 @@
  	}
@@ -627,7 +629,7 @@ Index: src/window.cpp
  /**
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 13638)
+--- src/roadveh_cmd.cpp	(revision 13693)
 +++ src/roadveh_cmd.cpp	(working copy)
 @@ -536,14 +536,14 @@
  {
@@ -654,7 +656,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 13638)
+--- src/zoom_type.h	(revision 13693)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -680,7 +682,7 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 13638)
+--- src/vehicle.cpp	(revision 13693)
 +++ src/vehicle.cpp	(working copy)
 @@ -791,9 +791,12 @@
  	SpriteID pal = PAL_NONE;
@@ -727,7 +729,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN|VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 13638)
+--- src/viewport.cpp	(revision 13693)
 +++ src/viewport.cpp	(working copy)
 @@ -121,7 +121,7 @@
  
@@ -1497,9 +1499,19 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
+@@ -2784,7 +3023,8 @@
+ 	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
+ 
+ 	ViewPort *vp = w->viewport;
+-	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
++//	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
++	vp->zoom = ZOOM_LVL_NORMAL;
+ 	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
+ 	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
+ 
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 13638)
+--- src/blitter/32bpp_optimized.cpp	(revision 13693)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -3,6 +3,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -1509,111 +1521,109 @@ Index: src/blitter/32bpp_optimized.cpp
  #include "../zoom_func.h"
  #include "../gfx_func.h"
  #include "../debug.h"
-@@ -16,7 +17,8 @@
- 	uint32 *dst, *dst_line;
+@@ -26,6 +27,7 @@
  
- 	/* Find where to start reading in the source sprite */
--	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top * bp->sprite_width + bp->skip_left) * ScaleByZoom(1, zoom);
-+
-+	src_line = (const SpriteLoader::CommonPixel *)bp->sprite + (bp->skip_top *  bp->sprite_width + bp->skip_left);
- 	dst_line = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
- 
- 	for (int y = 0; y < bp->height; y++) {
-@@ -24,44 +26,70 @@
- 		dst_line += bp->pitch;
- 
- 		src = src_line;
--		src_line += bp->sprite_width * ScaleByZoom(1, zoom);
-+		src_line += bp->sprite_width ;
- 
- 		for (int x = 0; x < bp->width; x++) {
- 			if (src->a == 0) {
- 				/* src->r is 'misused' here to indicate how much more pixels are following with an alpha of 0 */
--				int skip = UnScaleByZoom(src->r, zoom);
- 
-+				int skip = src->r;
-+
-+				if (skip == 0)
-+					continue;
- 				dst += skip;
--				x   += skip - 1;
--				src += ScaleByZoom(1, zoom) * skip;
-+				x	 += skip - 1;
-+				src += skip;
- 				continue;
- 			}
--
-+			/* GeekToo: This switch really has to be taken out of the loops, no need to check it every pixel !
-+			   Will do that when optimizing, for now just prove it works
-+			*/	
- 			switch (mode) {
- 				case BM_COLOUR_REMAP:
- 					/* In case the m-channel is zero, do not remap this pixel in any way */
- 					if (src->m == 0) {
- 						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
- 					} else {
-+						if (bp->remap[src->m] != 0) {
-+							*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
-+							*dst = ComposeColourBlend(this->LookupColourInPalette(bp->remap[src->m]), *dst);
-+						}
-+					}
-+					break;
-+				case BM_COLOUR_OPAQUE:
-+				  	/* In case the m-channel is zero, do not remap this pixel in any way */
-+					if (src->m == 0) {
-+						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
-+					} else {
- 						if (bp->remap[src->m] != 0) *dst = ComposeColourPA(this->LookupColourInPalette(bp->remap[src->m]), src->a, *dst);
+ 	/* src_px : each line begins with uint32 n = 'number of bytes in this line',
+ 	 *          then n times is the Colour struct for this line */
++	zoom = ZOOM_LVL_BEGIN; 
+ 	const Colour *src_px = (const Colour *)(src->data + src->offset[zoom][0]);
+ 	/* src_n  : each line begins with uint32 n = 'number of bytes in this line',
+ 	 *          then interleaved stream of 'm' and 'n' channels. 'm' is remap,
+@@ -114,7 +116,10 @@
+ 								*dst = *src_px;
+ 							} else {
+ 								uint r = remap[m];
+-								if (r != 0) *dst = this->LookupColourInPalette(r);
++								if (r != 0) {
++									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
++									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++								}
+ 							}
+ 							dst++;
+ 							src_px++;
+@@ -127,7 +132,10 @@
+ 								*dst = ComposeColourRGBANoCheck(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
+ 							} else {
+ 								uint r = remap[m];
+-								if (r != 0) *dst = ComposeColourPANoCheck(this->LookupColourInPalette(r), src_px->a, *dst);
++								if (r != 0) {
++									*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
++									*dst = ComposeColourBlend(this->LookupColourInPalette(r), *dst);
++								}
+ 							}
+ 							dst++;
+ 							src_px++;
+@@ -135,13 +143,45 @@
+ 						} while (--n != 0);
  					}
  					break;
 -
++				case BM_COLOUR_OPAQUE:
++					do {
++						uint m = *src_n;
++				  		/* In case the m-channel is zero, do not remap this pixel in any way */
++						if (m == 0) {
++							*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
++						} else {
++							uint r = remap[m];
++							if (r != 0) *dst = ComposeColourPA(this->LookupColourInPalette(r), src_px->a, *dst);
++						}
++						dst++;
++						src_px++;
++						src_n++;
++					} while (--n != 0);
++					break;
  				case BM_TRANSPARENT:
 -					/* TODO -- We make an assumption here that the remap in fact is transparency, not some color.
 -					 *  This is never a problem with the code we produce, but newgrfs can make it fail... or at least:
 -					 *  we produce a result the newgrf maker didn't expect ;) */
-+					/* GeekToo: for 32bpp remap of colours and transparency are not
-+						mutual exclusive. For now, check the remap ptr to check for
-+						remapping, in the future a cleaner solution will be to create
-+						an extra blitter mode
-+					*/
++					/* Make the current color a bit more black, so it looks like this image is transparent */
++					do {
++						uint m = *src_n;
++	  					if (m == 0) {
++							*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a / 2, *dst);
++						} else {
++							if (remap){
++								uint r = remap[m];
++								if (r != 0) *dst = ComposeColourPA(this->LookupColourInPalette(r), src_px->a / 2, *dst);
++							}
++							else {
++								*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a / 2, *dst);
++							}
++						} 
++					
++//						*dst = MakeTransparent(*dst, 192);
++						dst++;
++						src_px++;
++						src_n++;
  
 -					/* Make the current color a bit more black, so it looks like this image is transparent */
--					*dst = MakeTransparent(*dst, 192);
-+  					if (src->m == 0) {
-+						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
-+					} else {
-+						if (bp->remap) {
-+							if (bp->remap[src->m] != 0) *dst =
-+							  ComposeColourPA(this->LookupColourInPalette(bp->remap[src->m]), src->a/2, *dst);
-+						} else
-+	  						*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a/2, *dst);
-+					}
++					} while (--n != 0);
++					break;
++				case BM_SHADOW:
+ 					src_n += n;
+ 					if (src_px->a == 255) {
+ 						src_px += n;
+@@ -156,8 +196,8 @@
+ 							src_px++;
+ 						} while (--n != 0);
+ 					}
++					
  					break;
 -
-+				case BM_SHADOW:
-+					*dst = MakeTransparent(*dst, 150);
-+					break;
  				default:
- 					*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
+ 					if (src_px->a == 255) {
+ 						/* faster than memcpy(), n is usually low */
+@@ -176,7 +216,6 @@
  					break;
  			}
- 			dst++;
--			src += ScaleByZoom(1, zoom);
-+			src++;
  		}
- 	}
- }
-@@ -70,6 +98,8 @@
- {
- 	switch (zoom) {
- 		default: NOT_REACHED();
-+		case ZOOM_LVL_IN_4X:  Draw<mode, ZOOM_LVL_IN_4X>(bp); return;
-+		case ZOOM_LVL_IN_2X:  Draw<mode, ZOOM_LVL_IN_2X>(bp); return;		
- 		case ZOOM_LVL_NORMAL: Draw<mode, ZOOM_LVL_NORMAL>(bp); return;
- 		case ZOOM_LVL_OUT_2X: Draw<mode, ZOOM_LVL_OUT_2X>(bp); return;
- 		case ZOOM_LVL_OUT_4X: Draw<mode, ZOOM_LVL_OUT_4X>(bp); return;
-@@ -79,11 +109,13 @@
- 
+-
+ 		dst = dst_ln;
+ 		src_px = src_px_ln;
+ 		src_n  = src_n_ln;
+@@ -192,11 +231,13 @@
+  */
  void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom)
  {
 -	switch (mode) {
@@ -1630,26 +1640,94 @@ Index: src/blitter/32bpp_optimized.cpp
  	}
  }
  
-@@ -112,21 +144,236 @@
- 				/* Save transparent block length in red channel; max value is 255 the red channel can contain */
- 				if (trans < 255) trans++;
- 				dst->r = trans;
--				dst->g = 0;
--				dst->b = 0;
--				dst->m = 0;
- 			} else {
- 				trans = 0;
--				if (dst->m != 0) {
--					/* Pre-convert the mapping channel to a RGB value */
--					uint color = this->LookupColourInPalette(dst->m);
--					dst->r = GB(color, 16, 8);
--					dst->g = GB(color, 8,  8);
--					dst->b = GB(color, 0,  8);
--				}
- 			}
- 			dst--;
- 		}
+@@ -209,16 +250,18 @@
+  */
+ static const SpriteLoader::Sprite *ResizeSprite(const SpriteLoader::Sprite *sprite_src, ZoomLevel zoom)
+ {
+-	SpriteLoader::Sprite *sprite = MallocT<SpriteLoader::Sprite>(1);
+ 
+-	if (zoom == ZOOM_LVL_NORMAL) {
+-		memcpy(sprite, sprite_src, sizeof(*sprite));
+-		uint size = sprite_src->height * sprite_src->width;
+-		sprite->data = MallocT<SpriteLoader::CommonPixel>(size);
+-		memcpy(sprite->data, sprite_src->data, size * sizeof(SpriteLoader::CommonPixel));
+-		return sprite;
+-	}
++	return sprite_src;
++//	if (zoom == ZOOM_LVL_NORMAL) {
++//		memcpy(sprite, sprite_src, sizeof(*sprite));
++//		uint size = sprite_src->height * sprite_src->width;
++//		sprite->data = MallocT<SpriteLoader::CommonPixel>(size);
++//		memcpy(sprite->data, sprite_src->data, size * sizeof(SpriteLoader::CommonPixel));
++//		return sprite_src;
++//	}
+ 
++	SpriteLoader::Sprite *sprite = MallocT<SpriteLoader::Sprite>(1);
++	
+ 	sprite->height = UnScaleByZoom(sprite_src->height, zoom);
+ 	sprite->width  = UnScaleByZoom(sprite_src->width,  zoom);
+ 	sprite->x_offs = UnScaleByZoom(sprite_src->x_offs, zoom);
+@@ -267,7 +310,7 @@
+ 	/* lengths of streams */
+ 	uint32 lengths[ZOOM_LVL_COUNT][2];
+ 
+-	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
++	for (ZoomLevel z = ZOOM_LVL_BEGIN; z <= ZOOM_LVL_BEGIN; z++) {
+ 		const SpriteLoader::Sprite *src_orig = ResizeSprite(sprite, z);
+ 
+ 		uint size = src_orig->height * src_orig->width;
+@@ -307,17 +350,17 @@
+ 				if (a != 0) {
+ 					dst_px->a = a;
+ 					*dst_n = src->m;
+-					if (src->m != 0) {
++//					if (src->m != 0) {
+ 						/* Pre-convert the mapping channel to a RGB value */
+-						uint32 colour = this->LookupColourInPalette(src->m);
+-						dst_px->r = GB(colour, 16, 8);
+-						dst_px->g = GB(colour, 8,  8);
+-						dst_px->b = GB(colour, 0,  8);
+-					} else {
++//						uint32 colour = this->LookupColourInPalette(src->m);
++//						dst_px->r = GB(colour, 16, 8);
++//						dst_px->g = GB(colour, 8,  8);
++//						dst_px->b = GB(colour, 0,  8);
++//					} else {
+ 						dst_px->r = src->r;
+ 						dst_px->g = src->g;
+ 						dst_px->b = src->b;
+-					}
++//					}
+ 					dst_px++;
+ 					dst_n++;
+ 				} else if (len == 1) {
+@@ -346,12 +389,12 @@
+ 		lengths[z][0] = (byte *)dst_px_ln - (byte *)dst_px_orig[z]; // all are aligned to 4B boundary
+ 		lengths[z][1] = (byte *)dst_n_ln  - (byte *)dst_n_orig[z];
+ 
+-		free(src_orig->data);
+-		free((void *)src_orig);
++//		free(src_orig->data);
++//		free((void *)src_orig);
  	}
+ 
+ 	uint len = 0; // total length of data
+-	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
++	for (ZoomLevel z = ZOOM_LVL_BEGIN; z <= ZOOM_LVL_BEGIN; z++) {
+ 		len += lengths[z][0] + lengths[z][1];
+ 	}
+ 
+@@ -364,7 +407,7 @@
+ 
+ 	SpriteData *dst = (SpriteData *)dest_sprite->data;
+ 
+-	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
++	for (ZoomLevel z = ZOOM_LVL_BEGIN; z <= ZOOM_LVL_BEGIN; z++) {
+ 		dst->offset[z][0] = z == ZOOM_LVL_BEGIN ? 0 : lengths[z - 1][1] + dst->offset[z - 1][1];
+ 		dst->offset[z][1] = lengths[z][0] + dst->offset[z][0];
+ 
+@@ -377,3 +420,228 @@
+ 
  	return dest_sprite;
  }
 +
@@ -1879,7 +1957,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +}
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 13638)
+--- src/blitter/base.hpp	(revision 13693)
 +++ src/blitter/base.hpp	(working copy)
 @@ -13,6 +13,8 @@
  	BM_NORMAL,
@@ -1892,29 +1970,24 @@ Index: src/blitter/base.hpp
  /**
 Index: src/blitter/32bpp_optimized.hpp
 ===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 13638)
+--- src/blitter/32bpp_optimized.hpp	(revision 13693)
 +++ src/blitter/32bpp_optimized.hpp	(working copy)
-@@ -10,9 +10,14 @@
+@@ -17,6 +17,12 @@
  
- class Blitter_32bppOptimized : public Blitter_32bppSimple {
- public:
--	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
--	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
--
-+	/* virtual */ 	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-+	/* virtual */ 	Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
-+						void RescaleSpriteHalfSize(const SpriteLoader::Sprite *src_sprite, 
-+																	SpriteLoader::Sprite *dest_sprite,
-+																	bool						 prevent_alpha_bleeding);
-+						void RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
-+																	  SpriteLoader::Sprite *dest_sprite);                                               
-+						void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+ 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+ 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
++					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
++															SpriteLoader::Sprite 		*dest_sprite,
++															bool						 		prevent_alpha_bleeding);
++					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
++															 SpriteLoader::Sprite 			*dest_sprite);                                               
++					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+ 
  	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
  
- 	template <BlitterMode mode, ZoomLevel zoom> void Draw(Blitter::BlitterParams *bp);
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 13638)
+--- src/blitter/32bpp_base.hpp	(revision 13693)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -7,6 +7,7 @@
  
@@ -1924,8 +1997,8 @@ Index: src/blitter/32bpp_base.hpp
  
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -86,6 +87,79 @@
- 												(b * a + cb * (256 - a)) / 256);
+@@ -102,6 +103,72 @@
+ 		return ComposeColourPANoCheck(colour, a, current);
  	}
  
 +/**
@@ -1933,7 +2006,7 @@ Index: src/blitter/32bpp_base.hpp
 +	*/
 +	static inline uint ComposeColourBlend(uint colour, uint current)
 +	{
-+		uint r, g, b, cr, cg, cb, lm, ls, max_m, min_m, max_s, min_s, mid_s;
++		uint r, g, b, cr, cg, cb;
 +
 +		if (colour == current) {
 +			return colour;
@@ -1947,56 +2020,49 @@ Index: src/blitter/32bpp_base.hpp
 +		cg = GB(current, 8,  8);
 +		cb = GB(current, 0,  8);
 +
-+		if (cr < cg)
-+			Swap(cr,cg);
-+		if (cg < cb)
-+			Swap(cg,cb);
-+		if (cr < cg)
-+			Swap(cr,cg);
-+		if (r>g)
-+			if(r>b)
-+				if(b>g)
-+					mid_s=3;
-+				else
-+					mid_s=2;
-+			else
-+					mid_s=1;
-+		else
-+			if(r>b)
-+				mid_s=1;
-+			else
-+				if(b>g)
-+					mid_s=2;
-+				else
-+					mid_s=3;	
-+							
-+								
-+		
-+		max_s = max(max(cr,cg),cb);
-+		min_s = min(min(cr,cg),cb);
-+		max_m = max(max(r,g),b);
-+		min_m = min(min(r,g),b);
-+
-+		lm = r + g + b;  
-+		ls = cr + cg + cb;	 
-+		if (r==max_m)
-+			r=cr;
-+		if (g==max_m)
-+			g=cr;	
-+		if (b==max_m)
-+			b=cr;	
-+		if (r==min_m)
-+			r=cb;
-+		if (g==min_m)
-+			g=cb;	
-+		if (b==min_m)
-+			b=cb;
-+		if(mid_s==1)
-+			r=cg;			
-+		if(mid_s==2)
-+			g=cg;				
-+		if(mid_s==3)
-+			b=cg;				
++		if (cr < cg) Swap(cr,cg);
++		if (cg < cb) Swap(cg,cb);
++		if (cr < cg) Swap(cr,cg);
++		if (r>g) {
++			if(r>b) {
++				r = cr;
++				if(b>g) {
++					b = cg;
++					g = cb;
++				}	
++				else {
++					g = cg;
++					b = cb;
++				}
++			}	
++			else {
++				b = cr;
++				r = cg;
++				g = cb;
++			}
++		}	
++		else {
++			if(r>b) {
++				g = cr;
++				r = cg;
++				b = cb;
++			}
++			else {
++				if(b>g) {
++					b = cr;
++					g = cg;
++					r = cb;
++				}
++				else {
++					if ((r != g) && (r != b)){
++						g = cr;
++						b = cg;
++						r = cb;
++					}
++				}
++			}
++		}
++			
 +  		return ComposeColour(0xff,r,g,b);		
 +	}
 +
@@ -2004,38 +2070,31 @@ Index: src/blitter/32bpp_base.hpp
  	/**
  	* Make a pixel looks like it is transparent.
  	* @param colour the colour already on the screen.
-@@ -94,7 +168,8 @@
- 	*/
- 	static inline uint MakeTransparent(uint colour, uint amount)
- 	{
--		uint r, g, b;
-+		uint r, g, b, a;
-+ 		a = GB(colour, 24, 8);
- 		r = GB(colour, 16, 8);
- 		g = GB(colour, 8,  8);
- 		b = GB(colour, 0,  8);
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 13638)
+--- src/blitter/32bpp_anim.cpp	(revision 13693)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
-@@ -82,8 +82,10 @@
- 					 *  we produce a result the newgrf maker didn't expect ;) */
+@@ -137,6 +137,7 @@
  
  					/* Make the current color a bit more black, so it looks like this image is transparent */
--					*dst = MakeTransparent(*dst, 192);
--					*anim = bp->remap[*anim];
-+//					*dst = MakeTransparent(*dst, 192);
-+     				*dst = ComposeColourRGBA(src->r, src->g, src->b, src->a * 100/256, *dst);
-+//					*anim = bp->remap[*anim];
-+					*anim = src->m;
+ 					src_n += n;
++
+ 					if (src_px->a == 255) {
+ 						src_px += n;
+ 						do {
+@@ -154,6 +155,7 @@
+ 							src_px++;
+ 						} while (--n != 0);
+ 					}
++
  					break;
  
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 13638)
+--- src/gfx.cpp	(revision 13693)
 +++ src/gfx.cpp	(working copy)
-@@ -640,7 +640,7 @@
+@@ -659,7 +659,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
  			if (x + 26 >= dpi->left) {
@@ -2044,7 +2103,7 @@ Index: src/gfx.cpp
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -680,12 +680,21 @@
+@@ -699,12 +699,21 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -2068,7 +2127,7 @@ Index: src/gfx.cpp
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH)), x, y, BM_NORMAL, sub);
  	}
  }
-@@ -712,15 +721,17 @@
+@@ -731,15 +740,17 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2092,7 +2151,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -734,42 +745,45 @@
+@@ -753,42 +764,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2150,7 +2209,7 @@ Index: src/gfx.cpp
  
  	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
  }
-@@ -1147,7 +1161,10 @@
+@@ -1166,7 +1180,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2164,7 +2223,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/player_gui.cpp
 ===================================================================
---- src/player_gui.cpp	(revision 13638)
+--- src/player_gui.cpp	(revision 13693)
 +++ src/player_gui.cpp	(working copy)
 @@ -27,9 +27,9 @@
  #include "string_func.h"
@@ -2345,7 +2404,7 @@ Index: src/player_gui.cpp
  	_select_player_face_adv_widgets,
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 13638)
+--- src/openttd.cpp	(revision 13693)
 +++ src/openttd.cpp	(working copy)
 @@ -409,7 +409,9 @@
  		"f"
@@ -2358,7 +2417,7 @@ Index: src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -1248,6 +1250,7 @@
+@@ -1249,6 +1251,7 @@
  	extern void ResetViewportAfterLoadGame();
  	ResetViewportAfterLoadGame();
  
