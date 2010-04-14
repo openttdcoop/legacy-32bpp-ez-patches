@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 18674)
+--- src/sound.cpp	(revision 18760)
 +++ src/sound.cpp	(working copy)
 @@ -179,7 +179,7 @@
  }
@@ -13,7 +13,7 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 18674)
+--- src/table/sprites.h	(revision 18760)
 +++ src/table/sprites.h	(working copy)
 @@ -1421,7 +1421,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
@@ -34,7 +34,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 18674)
+--- src/spriteloader/grf.cpp	(revision 18760)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -38,7 +38,7 @@
  	return false;
@@ -47,7 +47,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 18674)
+--- src/spriteloader/spriteloader.hpp	(revision 18760)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -50,8 +50,9 @@
  	/**
@@ -62,7 +62,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 18674)
+--- src/spriteloader/grf.hpp	(revision 18760)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -75,7 +75,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 18674)
+--- src/spriteloader/png.cpp	(revision 18760)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -36,21 +36,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -121,7 +121,7 @@ Index: src/spriteloader/png.cpp
  	/* Check the header */
  	FioReadBlock(header, 8);
 @@ -149,9 +157,7 @@
- 		for (uint x = 0; x < info_ptr->width; x++) {
+ 		for (uint x = 0; x < png_get_image_width(png_ptr, info_ptr); x++) {
  			if (mask) {
  				if (row_pointer[x * sizeof(uint8)] != 0) {
 -					dst[x].r = 0;
@@ -150,7 +150,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 18674)
+--- src/spriteloader/png.hpp	(revision 18760)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -163,7 +163,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 18674)
+--- src/spritecache.cpp	(revision 18760)
 +++ src/spritecache.cpp	(working copy)
 @@ -11,6 +11,8 @@
  
@@ -514,7 +514,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 18674)
+--- src/spritecache.h	(revision 18760)
 +++ src/spritecache.h	(working copy)
 @@ -14,9 +14,8 @@
  
@@ -529,7 +529,7 @@ Index: src/spritecache.h
  	int16 y_offs; ///< Number of pixels to shift the sprite downwards.
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 18674)
+--- src/texteff.cpp	(revision 18760)
 +++ src/texteff.cpp	(working copy)
 @@ -105,6 +105,51 @@
  
@@ -585,9 +585,9 @@ Index: src/texteff.cpp
  
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 18674)
+--- src/window.cpp	(revision 18760)
 +++ src/window.cpp	(working copy)
-@@ -410,6 +410,7 @@
+@@ -425,6 +425,7 @@
  	}
  }
  
@@ -595,7 +595,7 @@ Index: src/window.cpp
  /**
   * Generate repaint events for the visible part of window w within the rectangle.
   *
-@@ -473,6 +474,8 @@
+@@ -488,6 +489,8 @@
  	w->OnPaint();
  }
  
@@ -604,7 +604,7 @@ Index: src/window.cpp
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -484,7 +487,8 @@
+@@ -499,7 +502,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -614,7 +614,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -496,6 +500,7 @@
+@@ -511,6 +515,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
@@ -624,7 +624,7 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 18674)
+--- src/company_gui.cpp	(revision 18760)
 +++ src/company_gui.cpp	(working copy)
 @@ -959,7 +959,7 @@
  			NWidget(NWID_VERTICAL),
@@ -660,7 +660,7 @@ Index: src/company_gui.cpp
   *
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 18674)
+--- src/saveload/misc_sl.cpp	(revision 18760)
 +++ src/saveload/misc_sl.cpp	(working copy)
 @@ -52,7 +52,10 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
@@ -684,7 +684,7 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 18674)
+--- src/roadveh_cmd.cpp	(revision 18760)
 +++ src/roadveh_cmd.cpp	(working copy)
 @@ -447,14 +447,14 @@
  {
@@ -711,7 +711,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 18674)
+--- src/zoom_type.h	(revision 18760)
 +++ src/zoom_type.h	(working copy)
 @@ -16,8 +16,10 @@
  
@@ -737,7 +737,7 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 18674)
+--- src/vehicle.cpp	(revision 18760)
 +++ src/vehicle.cpp	(working copy)
 @@ -767,9 +767,12 @@
  	SpriteID pal = PAL_NONE;
@@ -784,7 +784,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 18674)
+--- src/viewport.cpp	(revision 18760)
 +++ src/viewport.cpp	(working copy)
 @@ -51,6 +51,7 @@
  #include "table/sprites.h"
@@ -839,7 +839,7 @@ Index: src/viewport.cpp
  	a = y - x;
  	b = y + x;
  
-@@ -587,10 +587,13 @@
+@@ -604,10 +604,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
  
@@ -857,7 +857,7 @@ Index: src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
-@@ -630,7 +633,7 @@
+@@ -647,7 +650,7 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -866,7 +866,7 @@ Index: src/viewport.cpp
  	}
  
  	if (_vd.combine_sprites == SPRITE_COMBINE_ACTIVE) {
-@@ -645,31 +648,37 @@
+@@ -662,31 +665,37 @@
  
  	/* Compute screen extents of sprite */
  	if (image == SPR_EMPTY_BOUNDING_BOX) {
@@ -920,7 +920,7 @@ Index: src/viewport.cpp
  		return;
  	}
  
-@@ -754,7 +763,6 @@
+@@ -771,7 +780,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -928,7 +928,7 @@ Index: src/viewport.cpp
  	}
  
  	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
-@@ -763,8 +771,8 @@
+@@ -780,8 +788,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -939,7 +939,7 @@ Index: src/viewport.cpp
  	cs->next = -1;
  
  	/* Append the sprite to the active ChildSprite list.
-@@ -978,25 +986,28 @@
+@@ -995,25 +1003,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -979,7 +979,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -1004,7 +1015,7 @@
+@@ -1021,7 +1032,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -988,7 +988,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -1033,24 +1044,17 @@
+@@ -1050,24 +1061,17 @@
  					tt = GetTileType(tile);
  				}
  			}
@@ -1023,7 +1023,7 @@ Index: src/viewport.cpp
  			y_cur += 0x10;
  			x_cur -= 0x10;
  		} while (--width_cur);
-@@ -1060,7 +1064,7 @@
+@@ -1077,7 +1081,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1032,7 +1032,7 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1085,12 +1089,19 @@
+@@ -1102,12 +1106,19 @@
  	int sign_height     = ScaleByZoom(VPSM_TOP + FONT_HEIGHT_NORMAL + VPSM_BOTTOM, dpi->zoom);
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
  
@@ -1053,7 +1053,7 @@ Index: src/viewport.cpp
  
  	if (!small) {
  		AddStringToDraw(sign->center - sign_half_width, sign->top, string_normal, params_1, params_2, colour, sign->width_normal);
-@@ -1153,6 +1164,7 @@
+@@ -1170,6 +1181,7 @@
  	}
  }
  
@@ -1061,7 +1061,7 @@ Index: src/viewport.cpp
  /**
   * Update the position of the viewport sign.
   * @param center the (preferred) center of the viewport sign
-@@ -1201,7 +1213,15 @@
+@@ -1218,7 +1230,15 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -1078,7 +1078,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1265,16 +1285,22 @@
+@@ -1282,16 +1302,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -1104,7 +1104,7 @@ Index: src/viewport.cpp
  		}
  	}
  }
-@@ -1285,14 +1311,32 @@
+@@ -1302,14 +1328,32 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -1141,7 +1141,7 @@ Index: src/viewport.cpp
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
  		        pt3.x - pt1.x, pt3.y - pt1.y,
-@@ -1309,20 +1353,17 @@
+@@ -1326,20 +1370,17 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -1166,7 +1166,7 @@ Index: src/viewport.cpp
  		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1349,7 +1390,6 @@
+@@ -1366,7 +1407,6 @@
  				);
  			}
  		}
@@ -1174,7 +1174,7 @@ Index: src/viewport.cpp
  		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_CENTER);
  	}
  }
-@@ -1357,28 +1397,42 @@
+@@ -1374,28 +1414,42 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -1229,7 +1229,7 @@ Index: src/viewport.cpp
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
  	ViewportAddSigns(&_vd.dpi);
-@@ -1412,7 +1466,8 @@
+@@ -1429,7 +1483,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1239,7 +1239,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1423,12 +1478,7 @@
+@@ -1440,12 +1495,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1253,7 +1253,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1524,8 +1574,8 @@
+@@ -1541,8 +1591,8 @@
  		}
  
  		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
@@ -1263,7 +1263,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1540,26 +1590,32 @@
+@@ -1557,26 +1607,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1310,7 +1310,7 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1720,6 +1776,8 @@
+@@ -1737,6 +1793,8 @@
  static bool CheckClickOnTown(const ViewPort *vp, int x, int y)
  {
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
@@ -1319,7 +1319,7 @@ Index: src/viewport.cpp
  
  	const Town *t;
  	FOR_ALL_TOWNS(t) {
-@@ -1775,6 +1833,7 @@
+@@ -1792,6 +1850,7 @@
  }
  
  
@@ -1327,7 +1327,7 @@ Index: src/viewport.cpp
  static bool CheckClickOnLandscape(const ViewPort *vp, int x, int y)
  {
  	Point pt = TranslateXYToTileCoord(vp, x, y);
-@@ -2694,3 +2753,6 @@
+@@ -2711,3 +2770,6 @@
  {
  	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
  }
@@ -1336,7 +1336,7 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 18674)
+--- src/blitter/32bpp_optimized.cpp	(revision 18760)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -1574,7 +1574,7 @@ Index: src/blitter/32bpp_optimized.cpp
  		len += lengths[z][0] + lengths[z][1];
  	}
  
-@@ -371,16 +373,240 @@
+@@ -371,16 +373,351 @@
  
  	SpriteData *dst = (SpriteData *)dest_sprite->data;
  
@@ -1699,8 +1699,8 @@ Index: src/blitter/32bpp_optimized.cpp
 +	}
 +
 +}
-+
-+void Blitter_32bppOptimized::RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
++/*
++void Blitter_32bppOptimized::RescaleSpriteDoubleSizePrev(const SpriteLoader::Sprite *src_sprite,
 +																			  SpriteLoader::Sprite *dest_sprite)
 +{
 +	int width, height;
@@ -1755,7 +1755,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +		
 +		/* last pixels in row cannot be interpolated */
-+		dst[dst_y + dst_x] = src[src_y_idx + x];
++/*		dst[dst_y + dst_x] = src[src_y_idx + x];
 +		dst_x++;
 +		dst[dst_y + dst_x] = src[src_y_idx + x];
 +		dst_x--;
@@ -1776,7 +1776,7 @@ Index: src/blitter/32bpp_optimized.cpp
 +		src_y_idx += src_sprite->width;
 +	}
 +	/* last row can not be interpolated */
-+	uint dst_x = 0;
++/*	uint dst_x = 0;
 +	for (int x = 0; x < src_sprite->width - 1; x++) {
 +		dst[dst_y + dst_x] = src[src_y_idx + x];
 +		dst_x++;
@@ -1796,6 +1796,117 @@ Index: src/blitter/32bpp_optimized.cpp
 +		dst[dst_y + dst_x].m =  src[src_y_idx + x].m;
 +		dst_y -= width;
 +		dst_x++;
++	}
++}
++
++*/
++
++void Blitter_32bppOptimized::RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
++																			  SpriteLoader::Sprite *dest_sprite)
++{
++	int width, height;
++	SpriteLoader::CommonPixel *dst;
++	SpriteLoader::CommonPixel *src;
++	
++	width = src_sprite->width * 2;
++	height = src_sprite->height * 2;
++
++	dest_sprite->data = CallocT<SpriteLoader::CommonPixel>(height * width);
++	dst = (SpriteLoader::CommonPixel *)dest_sprite->data;
++	src = (SpriteLoader::CommonPixel *)src_sprite->data;
++
++	dest_sprite->width = width;
++	dest_sprite->height = height;
++	dest_sprite->x_offs = src_sprite->x_offs * 2;
++	dest_sprite->y_offs = src_sprite->y_offs * 2;
++	SpriteLoader::CommonPixel B, D, E, H, F;
++	SpriteLoader::CommonPixel E0, E1, E2, E3;
++	uint dst_y = 0;
++	uint src_y_idx = 0;
++	for (int y = 0; y < src_sprite->height ; y++) {
++	   int x;
++
++		uint dst_x = 0;
++		for (x = 0; x < src_sprite->width - 1; x++) {
++			E = src[src_y_idx + x];
++			if(src_y_idx){
++				B = src[src_y_idx + x - src_sprite->width];
++			} else {
++				B = src[src_y_idx + x];
++			}
++			if (x) {
++				D = src[src_y_idx + x - 1];
++			} else {
++				D = src[src_y_idx + x ];
++			}
++			if (x < src_sprite->width - 1){
++				F = src[src_y_idx + x + 1];
++			} else {
++				F = src[src_y_idx + x ];
++			}
++			if (y < src_sprite->height - 1){
++				H = src[src_y_idx + x + src_sprite->width];
++			} else {
++				H = src[src_y_idx + x];
++			}
++			if ((B.r != H.r && D.r != F.r) ||
++				(B.g != H.g && D.g != F.g) ||
++				(B.b != H.b && D.b != F.b) ||
++				(B.a != H.a && D.a != F.a))
++			 {
++				if ((D.r == B.r) &&
++					(D.g == B.g) &&
++					(D.b == B.b) &&
++					(D.a == B.a)) { 
++					E0 = D;
++				} else {
++					E0 = E;
++				}
++				if ((B.r == F.r) &&
++					(B.g == F.g) &&
++					(B.b == F.b) &&
++					(B.a == F.a)) { 
++					E1 = F;
++				} else {
++					E1 = E;
++				}
++				if ((D.r == H.r) &&
++					(D.g == H.g) &&
++					(D.b == H.b) &&
++					(D.a == H.a)) { 
++					E2 = D;
++				} else {
++					E2 = E;
++				}
++				if ((H.r == F.r) &&
++					(H.g == F.g) &&
++					(H.b == F.b) &&
++					(H.a == F.a)) { 
++					E3 = F;
++				} else {
++					E3 = E;
++				}
++			} else {
++				E0 = E;
++				E1 = E;
++				E2 = E;
++				E3 = E;
++			}
++			dst[dst_y + dst_x] = E0;
++			dst_x++;
++			dst[dst_y + dst_x] = E1;
++			dst_x--;
++			dst_y += width;
++			dst[dst_y + dst_x] = E2;
++			dst_x++;
++			dst[dst_y + dst_x] = E3;
++			dst_y -= width;
++			dst_x++;
++		}
++		
++		dst_y += width;
++dst_y += width;
++		src_y_idx += src_sprite->width;
 +	}
 +}
 +
@@ -1823,9 +1934,26 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/32bpp_optimized.hpp
+===================================================================
+--- src/blitter/32bpp_optimized.hpp	(revision 18760)
++++ src/blitter/32bpp_optimized.hpp	(working copy)
+@@ -24,6 +24,12 @@
+ 
+ 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+ 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
++					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
++															SpriteLoader::Sprite 		*dest_sprite,
++															bool						 		prevent_alpha_bleeding);
++					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
++															 SpriteLoader::Sprite 			*dest_sprite);                                               
++					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+ 
+ 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+ 
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 18674)
+--- src/blitter/base.hpp	(revision 18760)
 +++ src/blitter/base.hpp	(working copy)
 @@ -20,6 +20,8 @@
  	BM_NORMAL,
@@ -1845,26 +1973,9 @@ Index: src/blitter/base.hpp
  	};
  
  	enum PaletteAnimation {
-Index: src/blitter/32bpp_optimized.hpp
-===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 18674)
-+++ src/blitter/32bpp_optimized.hpp	(working copy)
-@@ -24,6 +24,12 @@
- 
- 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
- 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
-+					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
-+															SpriteLoader::Sprite 		*dest_sprite,
-+															bool						 		prevent_alpha_bleeding);
-+					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
-+															 SpriteLoader::Sprite 			*dest_sprite);                                               
-+					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
- 
- 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
- 
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 18674)
+--- src/blitter/32bpp_base.hpp	(revision 18760)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -14,7 +14,10 @@
  
@@ -2151,7 +2262,7 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 18674)
+--- src/blitter/32bpp_anim.cpp	(revision 18760)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -141,6 +141,7 @@
  
@@ -2171,7 +2282,7 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 18674)
+--- src/gfx.cpp	(revision 18760)
 +++ src/gfx.cpp	(working copy)
 @@ -230,16 +230,17 @@
  
@@ -2321,7 +2432,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/newgrf_commons.h
 ===================================================================
---- src/newgrf_commons.h	(revision 18674)
+--- src/newgrf_commons.h	(revision 18760)
 +++ src/newgrf_commons.h	(working copy)
 @@ -120,7 +120,7 @@
   */
@@ -2334,7 +2445,7 @@ Index: src/newgrf_commons.h
  		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 18674)
+--- src/openttd.cpp	(revision 18760)
 +++ src/openttd.cpp	(working copy)
 @@ -361,7 +361,7 @@
  	/* Setup main window */
@@ -2358,7 +2469,7 @@ Index: src/openttd.cpp
  	while ((i = MyGetOpt(&mgo)) != -1) {
 Index: src/main_gui.cpp
 ===================================================================
---- src/main_gui.cpp	(revision 18674)
+--- src/main_gui.cpp	(revision 18760)
 +++ src/main_gui.cpp	(working copy)
 @@ -39,6 +39,7 @@
  
