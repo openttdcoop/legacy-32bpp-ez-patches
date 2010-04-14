@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 15770)
+--- src/sound.cpp	(revision 16316)
 +++ src/sound.cpp	(working copy)
 @@ -156,7 +156,7 @@
  }
@@ -13,7 +13,7 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 15770)
+--- src/table/sprites.h	(revision 16316)
 +++ src/table/sprites.h	(working copy)
 @@ -1411,7 +1411,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
@@ -34,7 +34,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 15770)
+--- src/spriteloader/grf.cpp	(revision 16316)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -32,7 +32,7 @@
  	return false;
@@ -47,7 +47,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 15770)
+--- src/spriteloader/spriteloader.hpp	(revision 16316)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -43,8 +43,9 @@
  	/**
@@ -62,7 +62,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 15770)
+--- src/spriteloader/grf.hpp	(revision 16316)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -75,7 +75,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 15770)
+--- src/spriteloader/png.cpp	(revision 16316)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -30,21 +30,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -150,7 +150,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 15770)
+--- src/spriteloader/png.hpp	(revision 16316)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -12,7 +12,7 @@
  	/**
@@ -163,7 +163,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 15770)
+--- src/spritecache.cpp	(revision 16316)
 +++ src/spritecache.cpp	(working copy)
 @@ -4,6 +4,8 @@
  
@@ -383,7 +383,7 @@ Index: src/spritecache.cpp
  	MemBlock *s;
 +	ZoomLevel	zoom;
  
- 	DEBUG(sprite, 3, "Compacting sprite cache, inuse=%d", GetSpriteCacheUsage());
+ 	DEBUG(sprite, 3, "Compacting sprite cache, inuse=" PRINTF_SIZE, GetSpriteCacheUsage());
  
 @@ -376,11 +439,16 @@
  			if (next->size == 0) break;
@@ -414,7 +414,7 @@ Index: src/spritecache.cpp
 +	int16 cur_lru;
 +	ZoomLevel zoom;
  
- 	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache, inuse=%d", GetSpriteCacheUsage());
+ 	DEBUG(sprite, 3, "DeleteEntryFromSpriteCache, inuse=" PRINTF_SIZE, GetSpriteCacheUsage());
  
 -	cur_lru = 0xffff;
 +	cur_lru = -1;
@@ -514,7 +514,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 15770)
+--- src/spritecache.h	(revision 16316)
 +++ src/spritecache.h	(working copy)
 @@ -7,11 +7,14 @@
  
@@ -534,7 +534,7 @@ Index: src/spritecache.h
  
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 15770)
+--- src/texteff.cpp	(revision 16316)
 +++ src/texteff.cpp	(working copy)
 @@ -162,6 +162,35 @@
  void DrawTextEffects(DrawPixelInfo *dpi)
@@ -574,9 +574,9 @@ Index: src/texteff.cpp
  				TextEffect *te = &_text_effect_list[i];
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 15770)
+--- src/window.cpp	(revision 16316)
 +++ src/window.cpp	(working copy)
-@@ -402,6 +402,7 @@
+@@ -421,6 +421,7 @@
  	}
  }
  
@@ -584,7 +584,7 @@ Index: src/window.cpp
  /**
   * Generate repaint events for the visible part of window w within the rectangle.
   *
-@@ -465,6 +466,8 @@
+@@ -484,6 +485,8 @@
  	w->OnPaint();
  }
  
@@ -593,7 +593,7 @@ Index: src/window.cpp
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -476,7 +479,8 @@
+@@ -495,7 +498,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -603,7 +603,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -488,6 +492,7 @@
+@@ -507,6 +511,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
@@ -613,7 +613,7 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 15770)
+--- src/company_gui.cpp	(revision 16316)
 +++ src/company_gui.cpp	(working copy)
 @@ -24,7 +24,7 @@
  #include "widgets/dropdown_type.h"
@@ -624,46 +624,46 @@ Index: src/company_gui.cpp
  #include "table/strings.h"
  
  enum {
-@@ -679,68 +679,69 @@
- 
+@@ -888,15 +888,15 @@
  /** Widget description for the normal/simple company manager face selection dialog */
  static const Widget _select_company_manager_face_widgets[] = {
--{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // SCMFW_WIDGET_CLOSEBOX
--{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   174,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // SCMFW_WIDGET_CAPTION
--{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
--{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   189,    14,   150, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   151,   162, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   189,   151,   162, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // SCMFW_WIDGET_ACCEPT
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // SCMFW_WIDGET_MALE
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // SCMFW_WIDGET_FEMALE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // SCMFW_WIDGET_RANDOM_NEW_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
-+
-+{   WWT_CLOSEBOX,   RESIZE_NONE, COLOUR_GREY,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
-+{    WWT_CAPTION,   RESIZE_NONE, COLOUR_GREY,    11,   292,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE, COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE, COLOUR_GREY,     0,   307,    14,   311, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE, COLOUR_GREY,     0,   154,   312,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE, COLOUR_GREY,    155,  307,   312,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE, COLOUR_GREY,    201,  303,    75,    86, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE, COLOUR_GREY,    201,  303,    87,    98, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE, COLOUR_GREY,     2,    93,   277,   288, STR_7046_NEW_FACE,       STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE, COLOUR_GREY,    201,  303,    16,    27, STR_FACE_ADVANCED,       STR_FACE_ADVANCED_TIP},              // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+ {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,          STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
+-{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   174,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
+-{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
+-{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   189,    14,   150, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   151,   162, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   189,   151,   162, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
+-{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    75,    86, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
+-{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   292,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
++{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
++{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   307,    14,   311, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   154,   312,   323, STR_QUERY_CANCEL,         STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   155,   307,   312,   323, STR_QUERY_OK,             STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    75,    86, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   277,   288, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   303,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+ {      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
  {   WIDGETS_END},
  };
+@@ -1010,53 +1010,53 @@
  
  /** Widget description for the advanced company manager face selection dialog */
  static const Widget _select_company_manager_face_adv_widgets[] = {
--{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // SCMFW_WIDGET_CLOSEBOX
--{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   204,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // SCMFW_WIDGET_CAPTION
+-{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
+-{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   204,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
 -{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
 -{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   219,    14,   207, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   208,   219, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   219,   208,   219, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // SCMFW_WIDGET_ACCEPT
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    32,    43, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // SCMFW_WIDGET_MALE
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    32,    43, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // SCMFW_WIDGET_FEMALE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_RANDOM,              STR_704B_GENERATE_RANDOM_NEW_FACE},  // SCMFW_WIDGET_RANDOM_NEW_FACE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   208,   219, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   219,   208,   219, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
+-{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    32,    43, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
+-{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    32,    43, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   217,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
+-{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   158,   169, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   170,   181, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   182,   193, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
@@ -671,87 +671,86 @@ Index: src/company_gui.cpp
 -{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
 -{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    175,  183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    184,  208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    209,  217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
-+{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_00C5,                STR_018B_CLOSE_WINDOW},              // PFW_WIDGET_CLOSEBOX
-+{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   313,     0,    13, STR_7043_FACE_SELECTION, STR_018C_WINDOW_TITLE_DRAG_THIS},    // PFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   313,   327,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   327,    14,   311, 0x0,                     STR_NULL},                           // PFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   163,   312,   323, STR_012E_CANCEL,         STR_7047_CANCEL_NEW_FACE_SELECTION}, // PFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   164,   327,   312,   323, STR_012F_OK,             STR_7048_ACCEPT_NEW_FACE_SELECTION}, // PFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    32,    43, STR_7044_MALE,           STR_7049_SELECT_MALE_FACES},         // PFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    32,    43, STR_7045_FEMALE,         STR_704A_SELECT_FEMALE_FACES},       // PFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   257,   268, STR_RANDOM,              STR_704B_GENERATE_RANDOM_NEW_FACE},  // PFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   323,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // PFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   273,   284, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // PFW_WIDGET_LOAD
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   285,   296, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // PFW_WIDGET_FACECODE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   297,   308, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // PFW_WIDGET_SAVE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // PFW_WIDGET_ETHNICITY_EUR
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // PFW_WIDGET_ETHNICITY_AFR
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // PFW_WIDGET_HAS_MOUSTACHE_EARRING
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // PFW_WIDGET_HAS_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // PFW_WIDGET_EYECOLOUR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // PFW_WIDGET_CHIN_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // PFW_WIDGET_EYEBROWS_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // PFW_WIDGET_LIPS_MOUSTACHE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // PFW_WIDGET_NOSE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // PFW_WIDGET_HAIR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // PFW_WIDGET_JACKET_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // PFW_WIDGET_COLLAR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // PFW_WIDGET_TIE_EARRING_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // PFW_WIDGET_GLASSES_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
+-{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
+-{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
++{   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,      0,   10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
++{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   313,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
++{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   313,   327,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
++{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   327,    14,   311, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   163,   312,   323, STR_QUERY_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   164,   327,   312,   323, STR_QUERY_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    32,    43, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    32,    43, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   257,   268, STR_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   201,   323,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
++{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   273,   284, STR_NULL},                           // SCMFW_WIDGET_FACE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   285,   296, STR_FACE_LOAD,           STR_FACE_LOAD_TIP},                  // SCMFW_WIDGET_LOAD
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   297,   308, STR_FACE_FACECODE,       STR_FACE_FACECODE_TIP},              // SCMFW_WIDGET_FACECODE
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   202,   262,    46,    57, STR_FACE_SAVE,           STR_FACE_SAVE_TIP},                  // SCMFW_WIDGET_SAVE
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   263,   323,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
++{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    60,    71, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   281,   323,    72,    83, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   110,   121, STR_EMPTY,               STR_FACE_GLASSES_TIP},               // SCMFW_WIDGET_HAS_GLASSES
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TIP},             // SCMFW_WIDGET_EYECOLOUR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TIP},                  // SCMFW_WIDGET_CHIN_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TIP},              // SCMFW_WIDGET_EYEBROWS_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TIP},                  // SCMFW_WIDGET_NOSE_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TIP},                  // SCMFW_WIDGET_HAIR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TIP},                // SCMFW_WIDGET_JACKET_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TIP},                // SCMFW_WIDGET_COLLAR_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    281,  289,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TIP},           // SCMFW_WIDGET_TIE_EARRING_R
++{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,    290,  314,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_L
++{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    315,  323,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES
+ { WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TIP_2},             // SCMFW_WIDGET_GLASSES_R
+ {      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,    96,   170,    60,   205, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
  {   WIDGETS_END},
- };
- 
-@@ -953,9 +954,15 @@
+@@ -1216,9 +1216,15 @@
  			this->DrawFaceStringLabel(SCMFW_WIDGET_JACKET,                STR_FACE_JACKET,      GetCompanyManagerFaceBits(this->face, CMFV_JACKET,          this->ge), false);
  			this->DrawFaceStringLabel(SCMFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetCompanyManagerFaceBits(this->face, CMFV_COLLAR,          this->ge), false);
  		}
@@ -762,12 +761,12 @@ Index: src/company_gui.cpp
 +		_cur_dpi->zoom = ZOOM_LVL_IN_2X;
  
  		/* Draw the company manager face picture */
- 		DrawCompanyManagerFace(this->face, GetCompany((CompanyID)this->window_number)->colour, 2, 16);
+ 		DrawCompanyManagerFace(this->face, GetCompany((CompanyID)this->window_number)->colour, this->widget[SCMFM_WIDGET_FACE].left, this->widget[SCMFM_WIDGET_FACE].top);
 +		_cur_dpi = old_dpi;
  	}
  
  	virtual void OnClick(Point pt, int widget)
-@@ -1094,7 +1101,7 @@
+@@ -1357,7 +1363,7 @@
  
  /** normal/simple company manager face selection window description */
  static const WindowDesc _select_company_manager_face_desc(
@@ -775,8 +774,8 @@ Index: src/company_gui.cpp
 +	WDP_AUTO, WDP_AUTO, 307, 323, 307, 323,
  	WC_COMPANY_MANAGER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
- 	_select_company_manager_face_widgets
-@@ -1102,7 +1109,7 @@
+ 	_select_company_manager_face_widgets, _nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
+@@ -1365,7 +1371,7 @@
  
  /** advanced company manager face selection window description */
  static const WindowDesc _select_company_manager_face_adv_desc(
@@ -784,10 +783,10 @@ Index: src/company_gui.cpp
 +	WDP_AUTO, WDP_AUTO, 327, 324, 327, 324,
  	WC_COMPANY_MANAGER_FACE, WC_NONE,
  	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
- 	_select_company_manager_face_adv_widgets
+ 	_select_company_manager_face_adv_widgets, _nested_select_company_manager_face_adv_widgets, lengthof(_nested_select_company_manager_face_adv_widgets)
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 15770)
+--- src/saveload/misc_sl.cpp	(revision 16316)
 +++ src/saveload/misc_sl.cpp	(working copy)
 @@ -45,7 +45,8 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
@@ -809,9 +808,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 15770)
+--- src/roadveh_cmd.cpp	(revision 16316)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -490,14 +490,14 @@
+@@ -480,14 +480,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -836,7 +835,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 15770)
+--- src/zoom_type.h	(revision 16316)
 +++ src/zoom_type.h	(working copy)
 @@ -9,8 +9,10 @@
  
@@ -862,9 +861,9 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 15770)
+--- src/vehicle.cpp	(revision 16316)
 +++ src/vehicle.cpp	(working copy)
-@@ -760,9 +760,12 @@
+@@ -741,9 +741,12 @@
  	SpriteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
@@ -879,7 +878,7 @@ Index: src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -799,11 +802,11 @@
+@@ -780,11 +783,11 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -896,7 +895,7 @@ Index: src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -823,8 +826,8 @@
+@@ -804,8 +807,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -909,7 +908,7 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 15770)
+--- src/viewport.cpp	(revision 16316)
 +++ src/viewport.cpp	(working copy)
 @@ -114,7 +114,7 @@
  /** Data structure storing rendering information */
@@ -1070,8 +1069,8 @@ Index: src/viewport.cpp
  	_cur_ti = &ti;
  
 -	/* Transform into tile coordinates and round to closest full tile */
--	x = ((_vd.dpi.top >> 1) - (_vd.dpi.left >> 2)) & ~0xF;
--	y = ((_vd.dpi.top >> 1) + (_vd.dpi.left >> 2) - 0x10) & ~0xF;
+-	x = ((_vd.dpi.top >> 1) - (_vd.dpi.left >> 2)) & ~TILE_UNIT_MASK;
+-	y = ((_vd.dpi.top >> 1) + (_vd.dpi.left >> 2) - TILE_SIZE) & ~TILE_UNIT_MASK;
 +	x1 = ScaleByZoomLower(_vd.vp->virtual_left + _vd.dpi.left, _vd.vp->zoom)  ;
 +	y1 = ScaleByZoomLower(_vd.vp->virtual_top + _vd.dpi.top, _vd.vp->zoom)  ;
  
@@ -1255,7 +1254,7 @@ Index: src/viewport.cpp
 +						top	 < st->sign.top + 12 &&
 +						right  > st->sign.left &&
 +						left	 < st->sign.left + st->sign.width_1) {
-+					AddStation(st, STR_305C_0, st->sign.width_1);
++					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
 +				}
 +			}
 +			break;
@@ -1265,7 +1264,7 @@ Index: src/viewport.cpp
 +						top	 < st->sign.top + 12 &&
 +						right  > st->sign.left &&
 +						left	 < st->sign.left + st->sign.width_1) {
-+					AddStation(st, STR_305C_0, st->sign.width_1);
++					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
 +				}
 +			}
 +			break;
@@ -1279,7 +1278,7 @@ Index: src/viewport.cpp
  						right  > st->sign.left &&
 -						left   < st->sign.left + st->sign.width_1) {
 +						left	 < st->sign.left + st->sign.width_1) {
- 					AddStation(st, STR_305C_0, st->sign.width_1);
+ 					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
  				}
  			}
 @@ -1120,10 +1177,11 @@
@@ -1293,7 +1292,7 @@ Index: src/viewport.cpp
  						right  > st->sign.left &&
 -						left   < st->sign.left + st->sign.width_1 * 2) {
 +						left	 < st->sign.left + st->sign.width_1*2) {
- 					AddStation(st, STR_305C_0, st->sign.width_1);
+ 					AddStation(st, STR_STATION_SIGN, st->sign.width_1);
  				}
  			}
 @@ -1169,6 +1227,26 @@
@@ -1306,7 +1305,7 @@ Index: src/viewport.cpp
 +						top    < si->sign.top + 12 &&
 +						right  > si->sign.left &&
 +						left   < si->sign.left + si->sign.width_1) {
-+					AddSign(si, STR_2806, si->sign.width_1);
++					AddSign(si, STR_SIGN_WHITE, si->sign.width_1);
 +				}
 +			}
 +			break;
@@ -1316,7 +1315,7 @@ Index: src/viewport.cpp
 +						top    < si->sign.top + 12 &&
 +						right  > si->sign.left &&
 +						left   < si->sign.left + si->sign.width_1) {
-+					AddSign(si, STR_2806, si->sign.width_1);
++					AddSign(si, STR_SIGN_WHITE, si->sign.width_1);
 +				}
 +			}
 +			break;
@@ -1450,7 +1449,7 @@ Index: src/viewport.cpp
  
  		if (ss->width != 0) {
  			/* Do not draw signs nor station names if they are set invisible */
- 			if (IsInvisibilitySet(TO_SIGNS) && ss->string != STR_2806) continue;
+ 			if (IsInvisibilitySet(TO_SIGNS) && ss->string != STR_SIGN_WHITE) continue;
  
 -			int x = UnScaleByZoom(ss->x, zoom) - 1;
 -			int y = UnScaleByZoom(ss->y, zoom) - 1;
@@ -1459,23 +1458,25 @@ Index: src/viewport.cpp
  			int w = ss->width;
  
 @@ -1440,7 +1567,7 @@
- 		 * or if we are drawing a general text sign (STR_2806) */
- 			if (!IsTransparencySet(TO_SIGNS) || ss->string == STR_2806) {
+ 		 * or if we are drawing a general text sign (STR_SIGN_WHITE) */
+ 			if (!IsTransparencySet(TO_SIGNS) || ss->string == STR_SIGN_WHITE) {
  				DrawFrameRect(
 -					x, y, x + w, bottom, (Colours)ss->colour,
 +					x - 1, y - 1, x + w, bottom, (Colours)ss->colour,
  					IsTransparencySet(TO_SIGNS) ? FR_TRANSPARENT : FR_NONE
  				);
  			}
-@@ -1457,38 +1584,49 @@
- 		} else {
- 			colour = TC_BLACK;
+@@ -1465,39 +1592,50 @@
+ 			GetString(buffer, ss->string, lastof(buffer));
+ 			w = GetStringBoundingBox(buffer).width;
  		}
+-
 -		DrawString(
--			UnScaleByZoom(ss->x, zoom), UnScaleByZoom(ss->y, zoom) - (ss->width & 0x8000 ? 2 : 0),
--			ss->string, colour
+-			UnScaleByZoom(ss->x, zoom), UnScaleByZoom(ss->x, zoom) + w - 1, UnScaleByZoom(ss->y, zoom) - (ss->width & 0x8000 ? 2 : 0),
+-			ss->string, colour, SA_CENTER
 -		);
-+		DrawString(x, y - (ss->width & 0x8000 ? 2 : 0),	ss->string, colour);
++		DrawString(x, x + w - 1, y - (ss->width & 0x8000 ? 2 : 0), ss->string,
++				   colour, SA_CENTER);
  	}
  }
  
@@ -1533,7 +1534,7 @@ Index: src/viewport.cpp
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
  	ViewportAddSigns(&_vd.dpi);
-@@ -1523,7 +1661,8 @@
+@@ -1532,7 +1670,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1543,7 +1544,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1534,12 +1673,7 @@
+@@ -1543,12 +1682,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1557,7 +1558,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1631,8 +1765,8 @@
+@@ -1640,8 +1774,8 @@
  		}
  
  		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
@@ -1567,7 +1568,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1647,26 +1781,32 @@
+@@ -1656,26 +1790,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1614,7 +1615,7 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1770,11 +1910,38 @@
+@@ -1814,11 +1954,38 @@
  	const Town *t;
  
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
@@ -1656,7 +1657,7 @@ Index: src/viewport.cpp
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
  						y < t->sign.top + 12 &&
-@@ -1787,8 +1954,8 @@
+@@ -1831,8 +1998,8 @@
  			break;
  
  		case ZOOM_LVL_OUT_2X:
@@ -1667,7 +1668,7 @@ Index: src/viewport.cpp
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
  						y < t->sign.top + 24 &&
-@@ -1802,8 +1969,8 @@
+@@ -1846,8 +2013,8 @@
  
  		case ZOOM_LVL_OUT_4X:
  		case ZOOM_LVL_OUT_8X:
@@ -1678,7 +1679,7 @@ Index: src/viewport.cpp
  
  			FOR_ALL_TOWNS(t) {
  				if (y >= t->sign.top &&
-@@ -1830,6 +1997,32 @@
+@@ -1874,6 +2041,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_STATION_NAMES) || IsInvisibilitySet(TO_SIGNS)) return false;
  
  	switch (vp->zoom) {
@@ -1711,7 +1712,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1889,6 +2082,32 @@
+@@ -1933,6 +2126,32 @@
  	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || IsInvisibilitySet(TO_SIGNS) || _current_company == COMPANY_SPECTATOR) return false;
  
  	switch (vp->zoom) {
@@ -1744,7 +1745,7 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -1947,6 +2166,32 @@
+@@ -1991,6 +2210,32 @@
  	if (!HasBit(_display_opt, DO_WAYPOINTS) || IsInvisibilitySet(TO_SIGNS)) return false;
  
  	switch (vp->zoom) {
@@ -1777,16 +1778,16 @@ Index: src/viewport.cpp
  		case ZOOM_LVL_NORMAL:
  			x = x - vp->left + vp->virtual_left;
  			y = y - vp->top  + vp->virtual_top;
-@@ -2774,3 +3019,6 @@
+@@ -2951,3 +3196,6 @@
  {
- 	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, VHM_NONE, WC_MAIN_WINDOW, 0);
+ 	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
  }
 +
 +
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 15770)
+--- src/blitter/32bpp_optimized.cpp	(revision 16316)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -3,6 +3,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -2267,26 +2268,9 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
-Index: src/blitter/32bpp_optimized.hpp
-===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 15770)
-+++ src/blitter/32bpp_optimized.hpp	(working copy)
-@@ -17,6 +17,12 @@
- 
- 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
- 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
-+					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
-+															SpriteLoader::Sprite 		*dest_sprite,
-+															bool						 		prevent_alpha_bleeding);
-+					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
-+															 SpriteLoader::Sprite 			*dest_sprite);                                               
-+					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
- 
- 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
- 
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 15770)
+--- src/blitter/base.hpp	(revision 16316)
 +++ src/blitter/base.hpp	(working copy)
 @@ -13,6 +13,8 @@
  	BM_NORMAL,
@@ -2306,9 +2290,26 @@ Index: src/blitter/base.hpp
  	};
  
  	enum PaletteAnimation {
+Index: src/blitter/32bpp_optimized.hpp
+===================================================================
+--- src/blitter/32bpp_optimized.hpp	(revision 16316)
++++ src/blitter/32bpp_optimized.hpp	(working copy)
+@@ -17,6 +17,12 @@
+ 
+ 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+ 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
++					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
++															SpriteLoader::Sprite 		*dest_sprite,
++															bool						 		prevent_alpha_bleeding);
++					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
++															 SpriteLoader::Sprite 			*dest_sprite);                                               
++					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+ 
+ 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+ 
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 15770)
+--- src/blitter/32bpp_base.hpp	(revision 16316)
 +++ src/blitter/32bpp_base.hpp	(working copy)
 @@ -7,6 +7,7 @@
  
@@ -2401,7 +2402,7 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 15770)
+--- src/blitter/32bpp_anim.cpp	(revision 16316)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -135,6 +135,7 @@
  
@@ -2421,9 +2422,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 15770)
+--- src/gfx.cpp	(revision 16316)
 +++ src/gfx.cpp	(working copy)
-@@ -223,16 +223,17 @@
+@@ -225,16 +225,17 @@
  
  	static const byte colour = 255;
  
@@ -2450,7 +2451,7 @@ Index: src/gfx.cpp
  }
  
  /**
-@@ -941,7 +942,7 @@
+@@ -845,7 +846,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
  			if (x + 26 >= dpi->left) {
@@ -2459,7 +2460,7 @@ Index: src/gfx.cpp
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -1001,8 +1002,15 @@
+@@ -885,8 +886,15 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -2476,7 +2477,7 @@ Index: src/gfx.cpp
  	} else if (pal != PAL_NONE) {
  		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH), ST_NORMAL), x, y, BM_COLOUR_REMAP, sub);
-@@ -1033,15 +1041,18 @@
+@@ -917,15 +925,18 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2501,7 +2502,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -1055,42 +1066,45 @@
+@@ -939,42 +950,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2559,7 +2560,7 @@ Index: src/gfx.cpp
  
  	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
  }
-@@ -1488,7 +1502,10 @@
+@@ -1385,7 +1399,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2573,7 +2574,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/newgrf_commons.h
 ===================================================================
---- src/newgrf_commons.h	(revision 15770)
+--- src/newgrf_commons.h	(revision 16316)
 +++ src/newgrf_commons.h	(working copy)
 @@ -113,7 +113,7 @@
   */
@@ -2586,9 +2587,9 @@ Index: src/newgrf_commons.h
  		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 15770)
+--- src/openttd.cpp	(revision 16316)
 +++ src/openttd.cpp	(working copy)
-@@ -341,7 +341,7 @@
+@@ -342,7 +342,7 @@
  	/* Setup main window */
  	ResetWindowSystem();
  	SetupColoursAndInitialWindow();
@@ -2597,7 +2598,7 @@ Index: src/openttd.cpp
  	/* Load the default opening screen savegame */
  	if (SaveOrLoad("opntitle.dat", SL_LOAD, DATA_DIR) != SL_OK) {
  		GenerateWorld(GW_EMPTY, 64, 64); // if failed loading, make empty world.
-@@ -421,6 +421,10 @@
+@@ -422,6 +422,10 @@
  #endif
  	;
  
