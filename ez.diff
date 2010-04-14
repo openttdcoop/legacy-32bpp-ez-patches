@@ -1,6 +1,6 @@
 Index: src/sound.cpp
 ===================================================================
---- src/sound.cpp	(revision 17832)
+--- src/sound.cpp	(revision 18664)
 +++ src/sound.cpp	(working copy)
 @@ -179,7 +179,7 @@
  }
@@ -13,9 +13,9 @@ Index: src/sound.cpp
  static const byte _sound_base_vol[] = {
 Index: src/table/sprites.h
 ===================================================================
---- src/table/sprites.h	(revision 17832)
+--- src/table/sprites.h	(revision 18664)
 +++ src/table/sprites.h	(working copy)
-@@ -1418,7 +1418,7 @@
+@@ -1421,7 +1421,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
  	OFFSET_BIT = 29,
  	OPAQUE_BIT = 28,
@@ -24,7 +24,7 @@ Index: src/table/sprites.h
  	PALETTE_WIDTH = 24,         ///< number of bits of the sprite containing the recolour palette
  	SPRITE_WIDTH = 24,          ///< number of bits for the sprite number
  };
-@@ -1439,6 +1439,7 @@
+@@ -1442,6 +1442,7 @@
  	PALETTE_MODIFIER_TRANSPARENT  = TRANSPARENT_BIT,
  	/** this bit is set when a recolouring process is in action */
  	PALETTE_MODIFIER_COLOUR       = RECOLOUR_BIT,
@@ -34,7 +34,7 @@ Index: src/table/sprites.h
  /** Masks needed for sprite operations.
 Index: src/spriteloader/grf.cpp
 ===================================================================
---- src/spriteloader/grf.cpp	(revision 17832)
+--- src/spriteloader/grf.cpp	(revision 18664)
 +++ src/spriteloader/grf.cpp	(working copy)
 @@ -38,7 +38,7 @@
  	return false;
@@ -47,7 +47,7 @@ Index: src/spriteloader/grf.cpp
  	FioSeekToFile(file_slot, file_pos);
 Index: src/spriteloader/spriteloader.hpp
 ===================================================================
---- src/spriteloader/spriteloader.hpp	(revision 17832)
+--- src/spriteloader/spriteloader.hpp	(revision 18664)
 +++ src/spriteloader/spriteloader.hpp	(working copy)
 @@ -50,8 +50,9 @@
  	/**
@@ -62,7 +62,7 @@ Index: src/spriteloader/spriteloader.hpp
  
 Index: src/spriteloader/grf.hpp
 ===================================================================
---- src/spriteloader/grf.hpp	(revision 17832)
+--- src/spriteloader/grf.hpp	(revision 18664)
 +++ src/spriteloader/grf.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -75,7 +75,7 @@ Index: src/spriteloader/grf.hpp
  #endif /* SPRITELOADER_GRF_HPP */
 Index: src/spriteloader/png.cpp
 ===================================================================
---- src/spriteloader/png.cpp	(revision 17832)
+--- src/spriteloader/png.cpp	(revision 18664)
 +++ src/spriteloader/png.cpp	(working copy)
 @@ -36,21 +36,29 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
@@ -150,7 +150,7 @@ Index: src/spriteloader/png.cpp
  
 Index: src/spriteloader/png.hpp
 ===================================================================
---- src/spriteloader/png.hpp	(revision 17832)
+--- src/spriteloader/png.hpp	(revision 18664)
 +++ src/spriteloader/png.hpp	(working copy)
 @@ -19,7 +19,7 @@
  	/**
@@ -163,7 +163,7 @@ Index: src/spriteloader/png.hpp
  #endif /* SPRITELOADER_PNG_HPP */
 Index: src/spritecache.cpp
 ===================================================================
---- src/spritecache.cpp	(revision 17832)
+--- src/spritecache.cpp	(revision 18664)
 +++ src/spritecache.cpp	(working copy)
 @@ -11,6 +11,8 @@
  
@@ -514,7 +514,7 @@ Index: src/spritecache.cpp
  
 Index: src/spritecache.h
 ===================================================================
---- src/spritecache.h	(revision 17832)
+--- src/spritecache.h	(revision 18664)
 +++ src/spritecache.h	(working copy)
 @@ -14,12 +14,13 @@
  
@@ -534,12 +534,13 @@ Index: src/spritecache.h
  
 Index: src/texteff.cpp
 ===================================================================
---- src/texteff.cpp	(revision 17832)
+--- src/texteff.cpp	(revision 18664)
 +++ src/texteff.cpp	(working copy)
-@@ -165,6 +165,35 @@
+@@ -105,6 +105,51 @@
+ 
  void DrawTextEffects(DrawPixelInfo *dpi)
  {
- 	switch (dpi->zoom) {
++/*	switch (dpi->zoom) {
 +		case ZOOM_LVL_IN_4X:
 +			for (TextEffectID i = 0; i < _num_text_effects; i++) {
 +				TextEffect *te = &_text_effect_list[i];
@@ -569,14 +570,29 @@ Index: src/texteff.cpp
 +			}
 +			break;
 +
- 		case ZOOM_LVL_NORMAL:
- 			for (TextEffectID i = 0; i < _num_text_effects; i++) {
- 				TextEffect *te = &_text_effect_list[i];
++		case ZOOM_LVL_NORMAL:
++			for (TextEffectID i = 0; i < _num_text_effects; i++) {
++				TextEffect *te = &_text_effect_list[i];
++				if (te->string_id != INVALID_STRING_ID &&
++						dpi->left <= te->right &&
++						dpi->top  <= te->bottom &&
++						dpi->left + dpi->width  > te->x &&
++						dpi->top  + dpi->height > te->y) {
++					if (te->mode == TE_RISING || (_settings_client.gui.loading_indicators && !IsTransparencySet(TO_LOADING))) {
++						AddStringToDraw(te->x, te->y, te->string_id, te->params_1, INVALID_STRING_ID);
++					}
++				}
++			}
++			break;
++*/
+ 	/* Don't draw the text effects when zoomed out a lot */
+ 	if (dpi->zoom > ZOOM_LVL_OUT_2X) return;
+ 
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 17832)
+--- src/window.cpp	(revision 18664)
 +++ src/window.cpp	(working copy)
-@@ -502,6 +502,7 @@
+@@ -410,6 +410,7 @@
  	}
  }
  
@@ -584,7 +600,7 @@ Index: src/window.cpp
  /**
   * Generate repaint events for the visible part of window w within the rectangle.
   *
-@@ -565,6 +566,8 @@
+@@ -473,6 +474,8 @@
  	w->OnPaint();
  }
  
@@ -593,7 +609,7 @@ Index: src/window.cpp
  /**
   * From a rectangle that needs redrawing, find the windows that intersect with the rectangle.
   * These windows should be re-painted.
-@@ -576,7 +579,8 @@
+@@ -484,7 +487,8 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -603,7 +619,7 @@ Index: src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -588,6 +592,7 @@
+@@ -496,6 +500,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
@@ -613,225 +629,65 @@ Index: src/window.cpp
  /**
 Index: src/company_gui.cpp
 ===================================================================
---- src/company_gui.cpp	(revision 17832)
+--- src/company_gui.cpp	(revision 18664)
 +++ src/company_gui.cpp	(working copy)
-@@ -889,7 +889,7 @@
- 		NWidget(NWID_HORIZONTAL),
- 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+@@ -959,7 +959,7 @@
  			NWidget(NWID_VERTICAL),
--				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119), SetPadding(2, 0, 2, 0),
-+				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279), SetPadding(2, 0, 2, 0),
- 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP),
+ 				NWidget(NWID_HORIZONTAL),
+ 					NWidget(NWID_SPACER), SetFill(1, 0),
+-					NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119),
++					NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279),
+ 					NWidget(NWID_SPACER), SetFill(1, 0),
+ 				EndContainer(),
  				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
- 			EndContainer(),
-@@ -906,24 +906,24 @@
- 		EndContainer(),
- 	EndContainer(),
- 	NWidget(NWID_HORIZONTAL),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
-+	NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(154, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
-+	NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(154, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
- 	EndContainer(),
- };
+@@ -1300,6 +1300,13 @@
  
- /** Widget description for the normal/simple company manager face selection dialog */
- static const Widget _select_company_manager_face_widgets[] = {
- {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,          STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
--{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   174,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
--{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   189,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
--{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   189,    14,   150, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   151,   162, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   189,   151,   162, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    75,    86, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    87,    98, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   187,    16,    27, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
--{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
-+{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   292,     0,    13, STR_FACE_CAPTION,         STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   307,     0,    13, SPR_LARGE_SMALL_WINDOW,   STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   307,    14,   310, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   153,   311,   322, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   154,   307,   311,   322, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   155,   166, STR_FACE_MALE_BUTTON,     STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,   167,   178, STR_FACE_FEMALE_BUTTON,   STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_FACE_NEW_FACE_BUTTON, STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   305,    96,   107, STR_FACE_ADVANCED,        STR_FACE_ADVANCED_TOOLTIP},              // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
-+{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                      STR_NULL},                           // SCMFW_WIDGET_FACE
- {   WIDGETS_END},
- };
- 
-@@ -937,7 +937,7 @@
- 		NWidget(NWID_HORIZONTAL),
- 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
- 			NWidget(NWID_VERTICAL),
--				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(92, 119), SetPadding(2, 0, 2, 0),
-+				NWidget(WWT_EMPTY, COLOUR_GREY, SCMFM_WIDGET_FACE), SetMinimalSize(210, 279), SetPadding(2, 0, 2, 0),
- 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_RANDOM_NEW_FACE), SetMinimalSize(92, 12), SetDataTip(STR_MAPGEN_RANDOM, STR_FACE_NEW_FACE_TOOLTIP),
- 				NWidget(NWID_SPACER), SetMinimalSize(0, 9),
- 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_LOAD), SetMinimalSize(92, 12), SetDataTip(STR_FACE_LOAD, STR_FACE_LOAD_TOOLTIP),
-@@ -1029,62 +1029,62 @@
- 		EndContainer(),
- 	EndContainer(),
- 	NWidget(NWID_HORIZONTAL),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(95, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
--		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(125, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_CANCEL), SetMinimalSize(169, 12), SetDataTip(STR_BUTTON_CANCEL, STR_FACE_CANCEL_TOOLTIP),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, SCMFW_WIDGET_ACCEPT), SetMinimalSize(169, 12), SetDataTip(STR_BUTTON_OK, STR_FACE_OK_TOOLTIP),
- 	EndContainer(),
- };
- 
- /** Widget description for the advanced company manager face selection dialog */
- static const Widget _select_company_manager_face_adv_widgets[] = {
- {   WWT_CLOSEBOX,   RESIZE_NONE,  COLOUR_GREY,     0,    10,     0,    13, STR_BLACK_CROSS,         STR_TOOLTIP_CLOSE_WINDOW},           // SCMFW_WIDGET_CLOSEBOX
--{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   204,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
--{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   205,   219,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
--{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   219,    14,   207, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,    94,   208,   219, STR_BUTTON_CANCEL,       STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   219,   208,   219, STR_BUTTON_OK,           STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    32,    43, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    32,    43, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   137,   148, STR_MAPGEN_RANDOM,       STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    95,   217,    16,    27, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
--{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,    93,    16,   134, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   158,   169, STR_FACE_LOAD,           STR_FACE_LOAD_TOOLTIP},                  // SCMFW_WIDGET_LOAD
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   170,   181, STR_FACE_FACECODE,       STR_FACE_FACECODE_TOOLTIP},              // SCMFW_WIDGET_FACECODE
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     2,    93,   182,   193, STR_FACE_SAVE,           STR_FACE_SAVE_TOOLTIP},                  // SCMFW_WIDGET_SAVE
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,    96,   156,    46,    57, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
--{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   157,   217,    46,    57, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    60,    71, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TOOLTIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   217,    72,    83, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP},               // SCMFW_WIDGET_HAS_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   110,   121, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   110,   121, STR_EMPTY,               STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   110,   121, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   158,   169, SPR_ARROW_LEFT,          STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   158,   169, STR_EMPTY,               STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   158,   169, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    98,   109, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    98,   109, STR_EMPTY,               STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    98,   109, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   146,   157, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   146,   157, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   146,   157, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   134,   145, SPR_ARROW_LEFT,          STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   134,   145, STR_EMPTY,               STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   134,   145, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,    86,    97, SPR_ARROW_LEFT,          STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,    86,    97, STR_EMPTY,               STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,    86,    97, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   170,   181, SPR_ARROW_LEFT,          STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   170,   181, STR_EMPTY,               STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   170,   181, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   182,   193, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   182,   193, STR_EMPTY,               STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   182,   193, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   194,   205, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   194,   205, STR_EMPTY,               STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   194,   205, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_R
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   175,   183,   122,   133, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_L
--{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   184,   208,   122,   133, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES
--{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   209,   217,   122,   133, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_R
--{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,    96,   170,    60,   205, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
-+{    WWT_CAPTION,   RESIZE_NONE,  COLOUR_GREY,    11,   322,     0,    13, STR_FACE_CAPTION,        STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS}, // SCMFW_WIDGET_CAPTION
-+{     WWT_IMGBTN,   RESIZE_NONE,  COLOUR_GREY,   323,   337,     0,    13, SPR_LARGE_SMALL_WINDOW,  STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL
-+{      WWT_PANEL,   RESIZE_NONE,  COLOUR_GREY,     0,   337,    14,   367, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_SELECT_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,     0,   168,   368,   379, STR_BUTTON_CANCEL,        STR_FACE_CANCEL_TOOLTIP},            // SCMFW_WIDGET_CANCEL
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   169,   337,   368,   379, STR_BUTTON_OK,            STR_FACE_OK_TOOLTIP},                // SCMFW_WIDGET_ACCEPT
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   112,   123, STR_FACE_MALE_BUTTON,    STR_FACE_MALE_TOOLTIP},              // SCMFW_WIDGET_MALE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   112,   123, STR_FACE_FEMALE_BUTTON,  STR_FACE_FEMALE_TOOLTIP},            // SCMFW_WIDGET_FEMALE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   297,   308, STR_MAPGEN_RANDOM,              STR_FACE_NEW_FACE_TOOLTIP},          // SCMFW_WIDGET_RANDOM_NEW_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   213,   335,    96,   107, STR_FACE_SIMPLE,         STR_FACE_SIMPLE_TOOLTIP},                // SCMFW_WIDGET_TOGGLE_LARGE_SMALL_BUTTON
-+{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,     2,   211,    16,   294, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_FACE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   318,   329, STR_FACE_LOAD,           STR_FACE_LOAD_TOOLTIP},                  // SCMFW_WIDGET_LOAD
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   330,   341, STR_FACE_FACECODE,       STR_FACE_FACECODE_TOOLTIP},              // SCMFW_WIDGET_FACECODE
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,    61,   152,   342,   353, STR_FACE_SAVE,           STR_FACE_SAVE_TOOLTIP},                  // SCMFW_WIDGET_SAVE
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   214,   274,   126,   137, STR_FACE_EUROPEAN,       STR_FACE_SELECT_EUROPEAN},           // SCMFW_WIDGET_ETHNICITY_EUR
-+{    WWT_TEXTBTN,   RESIZE_NONE,  COLOUR_GREY,   275,   335,   126,   137, STR_FACE_AFRICAN,        STR_FACE_SELECT_AFRICAN},            // SCMFW_WIDGET_ETHNICITY_AFR
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   140,   151, STR_EMPTY,               STR_FACE_MOUSTACHE_EARRING_TOOLTIP},     // SCMFW_WIDGET_HAS_MOUSTACHE_EARRING
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   335,   152,   163, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP},               // SCMFW_WIDGET_HAS_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   190,   201, SPR_ARROW_LEFT,          STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   190,   201, STR_EMPTY,               STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   190,   201, SPR_ARROW_RIGHT,         STR_FACE_EYECOLOUR_TOOLTIP},             // SCMFW_WIDGET_EYECOLOUR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   238,   249, SPR_ARROW_LEFT,          STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   238,   249, STR_EMPTY,               STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   238,   249, SPR_ARROW_RIGHT,         STR_FACE_CHIN_TOOLTIP},                  // SCMFW_WIDGET_CHIN_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   178,   189, SPR_ARROW_LEFT,          STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   178,   189, STR_EMPTY,               STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   178,   189, SPR_ARROW_RIGHT,         STR_FACE_EYEBROWS_TOOLTIP},              // SCMFW_WIDGET_EYEBROWS_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   226,   237, SPR_ARROW_LEFT,          STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   226,   237, STR_EMPTY,               STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   226,   237, SPR_ARROW_RIGHT,         STR_FACE_LIPS_MOUSTACHE_TOOLTIP},        // SCMFW_WIDGET_LIPS_MOUSTACHE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   214,   225, SPR_ARROW_LEFT,          STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   214,   225, STR_EMPTY,               STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   214,   225, SPR_ARROW_RIGHT,         STR_FACE_NOSE_TOOLTIP},                  // SCMFW_WIDGET_NOSE_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   166,   177, SPR_ARROW_LEFT,          STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   166,   177, STR_EMPTY,               STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   166,   177, SPR_ARROW_RIGHT,         STR_FACE_HAIR_TOOLTIP},                  // SCMFW_WIDGET_HAIR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   250,   261, SPR_ARROW_LEFT,          STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   250,   261, STR_EMPTY,               STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   250,   261, SPR_ARROW_RIGHT,         STR_FACE_JACKET_TOOLTIP},                // SCMFW_WIDGET_JACKET_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   262,   273, SPR_ARROW_LEFT,          STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   262,   273, STR_EMPTY,               STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   262,   273, SPR_ARROW_RIGHT,         STR_FACE_COLLAR_TOOLTIP},                // SCMFW_WIDGET_COLLAR_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   274,   285, SPR_ARROW_LEFT,          STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   274,   285, STR_EMPTY,               STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   274,   285, SPR_ARROW_RIGHT,         STR_FACE_TIE_EARRING_TOOLTIP},           // SCMFW_WIDGET_TIE_EARRING_R
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   293,   301,   202,   213, SPR_ARROW_LEFT,          STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_L
-+{ WWT_PUSHTXTBTN,   RESIZE_NONE,  COLOUR_GREY,   302,   326,   202,   213, STR_EMPTY,               STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES
-+{ WWT_PUSHIMGBTN,   RESIZE_NONE,  COLOUR_GREY,   327,   335,   202,   213, SPR_ARROW_RIGHT,         STR_FACE_GLASSES_TOOLTIP_2},             // SCMFW_WIDGET_GLASSES_R
-+{      WWT_EMPTY,   RESIZE_NONE,  COLOUR_GREY,   214,   288,   140,   285, 0x0,                     STR_NULL},                           // SCMFW_WIDGET_LABELS
- {   WIDGETS_END},
- };
- 
-@@ -1242,9 +1242,14 @@
- 			this->DrawFaceStringLabel(SCMFW_WIDGET_JACKET,                STR_FACE_JACKET,      GetCompanyManagerFaceBits(this->face, CMFV_JACKET,          this->ge), false);
- 			this->DrawFaceStringLabel(SCMFW_WIDGET_COLLAR,                STR_FACE_COLLAR,      GetCompanyManagerFaceBits(this->face, CMFV_COLLAR,          this->ge), false);
- 		}
--
+ 	virtual void DrawWidget(const Rect &r, int widget) const
+ 	{
 +		DrawPixelInfo bk, *old_dpi;
 +		old_dpi = _cur_dpi;
 +		_cur_dpi = &bk;
 +		*_cur_dpi = *old_dpi;
 +		_cur_dpi->zoom = ZOOM_LVL_IN_2X;
- 		/* Draw the company manager face picture */
- 		DrawCompanyManagerFace(this->face, Company::Get((CompanyID)this->window_number)->colour, this->widget[SCMFM_WIDGET_FACE].left, this->widget[SCMFM_WIDGET_FACE].top);
++		/* Draw the company manager face picture */
++
+ 		switch (widget) {
+ 			case SCMFW_WIDGET_HAS_MOUSTACHE_EARRING_TEXT:
+ 			case SCMFW_WIDGET_TIE_EARRING_TEXT: {
+@@ -1389,6 +1396,8 @@
+ 				DrawCompanyManagerFace(this->face, Company::Get((CompanyID)this->window_number)->colour, r.left, r.top);
+ 				break;
+ 		}
++
 +		_cur_dpi = old_dpi;
  	}
  
  	virtual void OnClick(Point pt, int widget)
-@@ -1383,7 +1388,7 @@
+@@ -1543,6 +1552,7 @@
+ 	_nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
+ );
  
- /** normal/simple company manager face selection window description */
- static const WindowDesc _select_company_manager_face_desc(
--	WDP_AUTO, WDP_AUTO, 190, 163, 190, 163,
-+	WDP_AUTO, WDP_AUTO, 307, 323, 307, 323,
- 	WC_COMPANY_MANAGER_FACE, WC_NONE,
- 	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
- 	_select_company_manager_face_widgets, _nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
-@@ -1391,7 +1396,7 @@
- 
- /** advanced company manager face selection window description */
- static const WindowDesc _select_company_manager_face_adv_desc(
--	WDP_AUTO, WDP_AUTO, 220, 220, 220, 220,
-+	WDP_AUTO, WDP_AUTO, 337, 379, 337, 379,
- 	WC_COMPANY_MANAGER_FACE, WC_NONE,
- 	WDF_STD_TOOLTIPS | WDF_STD_BTN | WDF_DEF_WIDGET | WDF_UNCLICK_BUTTONS | WDF_CONSTRUCTION,
- 	_select_company_manager_face_adv_widgets, _nested_select_company_manager_face_adv_widgets, lengthof(_nested_select_company_manager_face_adv_widgets)
++
+ /**
+  * Open the simple/advanced company manager face selection window
+  *
 Index: src/saveload/misc_sl.cpp
 ===================================================================
---- src/saveload/misc_sl.cpp	(revision 17832)
+--- src/saveload/misc_sl.cpp	(revision 18664)
 +++ src/saveload/misc_sl.cpp	(working copy)
-@@ -51,7 +51,8 @@
+@@ -52,7 +52,10 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
  
  	ViewPort *vp = w->viewport;
--	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
-+//	vp->zoom = min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
+-	vp->zoom = (ZoomLevel)min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
++
++//	vp->zoom = (ZoomLevel)min(_saved_scrollpos_zoom, ZOOM_LVL_MAX);
 +	vp->zoom = ZOOM_LVL_NORMAL;
++
  	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
  	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
  
-@@ -59,7 +60,6 @@
+@@ -60,7 +63,6 @@
  	MarkWholeScreenDirty();
  }
  
@@ -841,9 +697,9 @@ Index: src/saveload/misc_sl.cpp
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
 Index: src/roadveh_cmd.cpp
 ===================================================================
---- src/roadveh_cmd.cpp	(revision 17832)
+--- src/roadveh_cmd.cpp	(revision 18664)
 +++ src/roadveh_cmd.cpp	(working copy)
-@@ -510,14 +510,14 @@
+@@ -447,14 +447,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -868,7 +724,7 @@ Index: src/roadveh_cmd.cpp
  
 Index: src/zoom_type.h
 ===================================================================
---- src/zoom_type.h	(revision 17832)
+--- src/zoom_type.h	(revision 18664)
 +++ src/zoom_type.h	(working copy)
 @@ -16,8 +16,10 @@
  
@@ -894,9 +750,9 @@ Index: src/zoom_type.h
  DECLARE_POSTFIX_INCREMENT(ZoomLevel)
 Index: src/vehicle.cpp
 ===================================================================
---- src/vehicle.cpp	(revision 17832)
+--- src/vehicle.cpp	(revision 18664)
 +++ src/vehicle.cpp	(working copy)
-@@ -735,9 +735,12 @@
+@@ -767,9 +767,12 @@
  	SpriteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
@@ -911,7 +767,7 @@ Index: src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -774,11 +777,11 @@
+@@ -806,11 +809,11 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -928,7 +784,7 @@ Index: src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -798,8 +801,8 @@
+@@ -830,8 +833,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -941,9 +797,17 @@ Index: src/vehicle.cpp
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
 Index: src/viewport.cpp
 ===================================================================
---- src/viewport.cpp	(revision 17832)
+--- src/viewport.cpp	(revision 18664)
 +++ src/viewport.cpp	(working copy)
-@@ -130,7 +130,7 @@
+@@ -51,6 +51,7 @@
+ #include "table/sprites.h"
+ #include "table/strings.h"
+ 
++
+ PlaceProc *_place_proc;
+ Point _tile_fract_coords;
+ 
+@@ -129,7 +130,7 @@
  /** Data structure storing rendering information */
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -952,7 +816,7 @@ Index: src/viewport.cpp
  	StringSpriteToDrawVector string_sprites_to_draw;
  	TileSpriteToDrawVector tile_sprites_to_draw;
  	ParentSpriteToDrawVector parent_sprites_to_draw;
-@@ -297,17 +297,17 @@
+@@ -296,17 +297,17 @@
  	int i;
  	int left, top, width, height;
  
@@ -976,7 +840,7 @@ Index: src/viewport.cpp
  	old_left -= x;
  	old_top -= y;
  
-@@ -380,9 +380,8 @@
+@@ -379,9 +380,8 @@
  				return pt;
  	}
  
@@ -988,7 +852,7 @@ Index: src/viewport.cpp
  	a = y - x;
  	b = y + x;
  
-@@ -588,10 +587,13 @@
+@@ -587,10 +587,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
  
@@ -1006,7 +870,7 @@ Index: src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
-@@ -631,7 +633,7 @@
+@@ -630,7 +633,7 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1015,7 +879,7 @@ Index: src/viewport.cpp
  	}
  
  	if (_vd.combine_sprites == SPRITE_COMBINE_ACTIVE) {
-@@ -646,31 +648,37 @@
+@@ -645,31 +648,37 @@
  
  	/* Compute screen extents of sprite */
  	if (image == SPR_EMPTY_BOUNDING_BOX) {
@@ -1069,7 +933,7 @@ Index: src/viewport.cpp
  		return;
  	}
  
-@@ -755,7 +763,6 @@
+@@ -754,7 +763,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1077,7 +941,7 @@ Index: src/viewport.cpp
  	}
  
  	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
-@@ -764,8 +771,8 @@
+@@ -763,8 +771,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -1088,7 +952,7 @@ Index: src/viewport.cpp
  	cs->next = -1;
  
  	/* Append the sprite to the active ChildSprite list.
-@@ -979,25 +986,28 @@
+@@ -978,25 +986,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -1128,7 +992,7 @@ Index: src/viewport.cpp
  
  	direction = false;
  
-@@ -1005,7 +1015,7 @@
+@@ -1004,7 +1015,7 @@
  		int width_cur = width;
  		int x_cur = x;
  		int y_cur = y;
@@ -1137,7 +1001,7 @@ Index: src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -1034,24 +1044,17 @@
+@@ -1033,24 +1044,17 @@
  					tt = GetTileType(tile);
  				}
  			}
@@ -1172,7 +1036,7 @@ Index: src/viewport.cpp
  			y_cur += 0x10;
  			x_cur -= 0x10;
  		} while (--width_cur);
-@@ -1061,7 +1064,7 @@
+@@ -1060,7 +1064,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -1180,151 +1044,29 @@ Index: src/viewport.cpp
 +	} while (nof_sprites_drawn || (pt.y < top));
  }
  
+ /**
+@@ -1085,12 +1089,19 @@
+ 	int sign_height     = ScaleByZoom(VPSM_TOP + FONT_HEIGHT_NORMAL + VPSM_BOTTOM, dpi->zoom);
+ 	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
  
-@@ -1073,16 +1076,42 @@
- 	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES) || _game_mode == GM_MENU)
- 		return;
- 
--	left = dpi->left;
--	top = dpi->top;
--	right = left + dpi->width;
--	bottom = top + dpi->height;
- 
++
 +	left = ScaleByZoom(_vd.vp->virtual_left + dpi->left, dpi->zoom);
 +	top =  ScaleByZoom(_vd.vp->virtual_top + dpi->top, dpi->zoom);
 +	right = left + ScaleByZoom(dpi->width, dpi->zoom);
 +	bottom = top + ScaleByZoom(dpi->height, dpi->zoom);
 +
- 	switch (dpi->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			FOR_ALL_TOWNS(t) {
 +
-+				if (bottom > t->sign.top &&
-+						top	< t->sign.top + 12 &&
-+						right > t->sign.left &&
-+						left	< t->sign.left + t->sign.width_normal) {
-+					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
-+						t->index, t->population);
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			FOR_ALL_TOWNS(t) {
-+				if (bottom	 > t->sign.top &&
-+						top	 < t->sign.top + 12 &&
-+						right  > t->sign.left &&
-+						left	 < t->sign.left + t->sign.width_normal) {
-+					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-+						_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
-+						t->index, t->population);
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			FOR_ALL_TOWNS(t) {
- 				if (bottom > t->sign.top &&
--						top    < t->sign.top + 12 &&
-+						top	 < t->sign.top + 12 &&
- 						right  > t->sign.left &&
- 						left   < t->sign.left + t->sign.width_normal) {
- 					AddStringToDraw(t->sign.left + 1, t->sign.top + 1,
-@@ -1114,8 +1143,8 @@
- 			bottom += ScaleByZoom(1, dpi->zoom) + 1;
+ 	if (bottom < sign->top ||
+ 			top   > sign->top + sign_height ||
+ 			right < sign->center - sign_half_width ||
+ 			left  > sign->center + sign_half_width) {
+ 		return;
+-	}
++	} 
  
- 			FOR_ALL_TOWNS(t) {
--				if (bottom > t->sign.top &&
--						top    < t->sign.top + ScaleByZoom(12, dpi->zoom) &&
-+				if (bottom	 > t->sign.top &&
-+						top	 < t->sign.top + ScaleByZoom(12, dpi->zoom) &&
- 						right  > t->sign.left &&
- 						left   < t->sign.left + ScaleByZoom(t->sign.width_small, dpi->zoom)) {
- 					AddStringToDraw(t->sign.left + 5, t->sign.top + 1, STR_VIEWPORT_TOWN_TINY_BLACK, t->index, 0);
-@@ -1155,11 +1184,44 @@
- 	int bottom = top + dpi->height;
- 	const BaseStation *st;
- 
-+	DEBUG(sprite, 1, "dpi l %d  w%d t %d  h%d", dpi->left, dpi->width, dpi->top, dpi->height );
-+	DEBUG(sprite, 1, "virt l %d  t%d ", _vd.vp->virtual_left, _vd.vp->virtual_top);
-+
-+	left = ScaleByZoom(_vd.vp->virtual_left + dpi->left + 32, dpi->zoom) - 32;
-+	top =  ScaleByZoom(_vd.vp->virtual_top + dpi->top + 16, dpi->zoom) - 16;
-+	right = left + ScaleByZoom(dpi->width, dpi->zoom);
-+	bottom = top + ScaleByZoom(dpi->height, dpi->zoom);
-+
-+	DEBUG(sprite, 1, "left l %d  r%d t %d  b%d", left, right, top, bottom );
-+
- 	switch (dpi->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			FOR_ALL_STATIONS(st) {
-+				DEBUG(sprite, 1, "sign l %d  t%d ", st->sign.left, st->sign.top );
-+				if (bottom > st->sign.top &&
-+						top	 < st->sign.top + 12 &&
-+						right  > st->sign.left &&
-+						left	 < st->sign.left + st->sign.width_normal) {
-+					AddStation(st, false, st->sign.width_normal);
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			FOR_ALL_STATIONS(st) {
-+				if (bottom > st->sign.top &&
-+						top	 < st->sign.top + 12 &&
-+						right  > st->sign.left &&
-+						left	 < st->sign.left + st->sign.width_normal) {
-+					AddStation(st, false, st->sign.width_normal);
-+				}
-+			}
-+			break;
-+
- 		case ZOOM_LVL_NORMAL:
- 			FOR_ALL_BASE_STATIONS(st) {
-+				DEBUG(sprite, 1, "sign l %d  t%d ", st->sign.left, st->sign.top );			
- 				if (bottom > st->sign.top &&
--						top    < st->sign.top + 12 &&
-+						top	 < st->sign.top + 12 &&
- 						right  > st->sign.left &&
- 						left   < st->sign.left + st->sign.width_normal) {
- 					AddStation(st, false, st->sign.width_normal);
-@@ -1171,8 +1233,9 @@
- 			right += 2;
- 			bottom += 2;
- 			FOR_ALL_BASE_STATIONS(st) {
-+				DEBUG(sprite, 1, "sign l %d  t%d ", st->sign.left, st->sign.top );
- 				if (bottom > st->sign.top &&
--						top    < st->sign.top + 24 &&
-+						top	 < st->sign.top + 24 &&
- 						right  > st->sign.left &&
- 						left   < st->sign.left + st->sign.width_normal * 2) {
- 					AddStation(st, false, st->sign.width_normal);
-@@ -1220,6 +1283,26 @@
- 	bottom = top + dpi->height;
- 
- 	switch (dpi->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			FOR_ALL_SIGNS(si) {
-+				if (bottom > si->sign.top &&
-+						top    < si->sign.top + 12 &&
-+						right  > si->sign.left &&
-+						left   < si->sign.left + si->sign.width_normal) {
-+					AddSign(si, STR_WHITE_SIGN, si->sign.width_normal);
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			FOR_ALL_SIGNS(si) {
-+				if (bottom > si->sign.top &&
-+						top    < si->sign.top + 12 &&
-+						right  > si->sign.left &&
-+						left   < si->sign.left + si->sign.width_normal) {
-+					AddSign(si, STR_WHITE_SIGN, si->sign.width_normal);
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			FOR_ALL_SIGNS(si) {
- 				if (bottom > si->sign.top &&
-@@ -1263,6 +1346,7 @@
+ 	if (!small) {
+ 		AddStringToDraw(sign->center - sign_half_width, sign->top, string_normal, params_1, params_2, colour, sign->width_normal);
+@@ -1153,6 +1164,7 @@
  	}
  }
  
@@ -1332,7 +1074,7 @@ Index: src/viewport.cpp
  /**
   * Update the position of the viewport sign.
   * @param center the (preferred) center of the viewport sign
-@@ -1310,7 +1394,15 @@
+@@ -1201,7 +1213,15 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -1349,7 +1091,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1374,16 +1466,22 @@
+@@ -1265,16 +1285,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -1375,7 +1117,7 @@ Index: src/viewport.cpp
  		}
  	}
  }
-@@ -1394,14 +1492,32 @@
+@@ -1285,14 +1311,32 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -1412,7 +1154,7 @@ Index: src/viewport.cpp
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
  		        pt3.x - pt1.x, pt3.y - pt1.y,
-@@ -1418,20 +1534,19 @@
+@@ -1309,20 +1353,19 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -1436,18 +1178,18 @@ Index: src/viewport.cpp
 +
 +		int x = UnScaleByZoom(ss->x + 32, zoom) - _vd.vp->virtual_left - 32;
 +		int y = UnScaleByZoom(ss->y + 16, zoom) - _vd.vp->virtual_top - 16;
- 		int bottom = y + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL);
+ 		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1464,7 +1579,6 @@
- 			GetString(buffer, ss->string, lastof(buffer));
- 			w = GetStringBoundingBox(buffer).width;
+@@ -1349,7 +1392,6 @@
+ 				);
+ 			}
  		}
 -
- 		DrawString(x, x + w - 1, y, ss->string, colour, SA_CENTER);
+ 		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_CENTER);
  	}
  }
-@@ -1472,28 +1586,42 @@
+@@ -1357,28 +1399,42 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -1502,7 +1244,7 @@ Index: src/viewport.cpp
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
  	ViewportAddSigns(&_vd.dpi);
-@@ -1527,7 +1655,8 @@
+@@ -1412,7 +1468,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1512,7 +1254,7 @@ Index: src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1538,12 +1667,7 @@
+@@ -1423,12 +1480,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -1526,7 +1268,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1639,8 +1763,8 @@
+@@ -1524,8 +1576,8 @@
  		}
  
  		ClampViewportToMap(vp, w->viewport->scrollpos_x, w->viewport->scrollpos_y);
@@ -1536,7 +1278,7 @@ Index: src/viewport.cpp
  	}
  }
  
-@@ -1655,26 +1779,32 @@
+@@ -1540,26 +1592,32 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -1583,137 +1325,16 @@ Index: src/viewport.cpp
  }
  
  /**
-@@ -1814,11 +1944,38 @@
- 	const Town *t;
- 
+@@ -1720,6 +1778,8 @@
+ static bool CheckClickOnTown(const ViewPort *vp, int x, int y)
+ {
  	if (!HasBit(_display_opt, DO_SHOW_TOWN_NAMES)) return false;
--
 +	x = ScaleByZoom(x - vp->left + vp->virtual_left, vp->zoom);
 +	y = ScaleByZoom(y - vp->top + vp->virtual_top, vp->zoom);
- 	switch (vp->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+//			x = x - vp->left + vp->virtual_left;
-+//			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_TOWNS(t) {
-+				if (y >= t->sign.top &&
-+						y < t->sign.top + 12 &&
-+						x >= t->sign.left &&
-+						x < t->sign.left + t->sign.width_normal) {
-+					ShowTownViewWindow(t->index);
-+					return true;
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+//			x = x - vp->left + vp->virtual_left;
-+//			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_TOWNS(t) {
-+				if (y >= t->sign.top &&
-+						y < t->sign.top + 12 &&
-+						x >= t->sign.left &&
-+						x < t->sign.left + t->sign.width_normal) {
-+					ShowTownViewWindow(t->index);
-+					return true;
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
--			x = x - vp->left + vp->virtual_left;
--			y = y - vp->top  + vp->virtual_top;
-+//			x = x - vp->left + vp->virtual_left;
-+//			y = y - vp->top  + vp->virtual_top;
- 			FOR_ALL_TOWNS(t) {
- 				if (y >= t->sign.top &&
- 						y < t->sign.top + 12 &&
-@@ -1831,8 +1988,8 @@
- 			break;
  
- 		case ZOOM_LVL_OUT_2X:
--			x = (x - vp->left + 1) * 2 + vp->virtual_left;
--			y = (y - vp->top  + 1) * 2 + vp->virtual_top;
-+//			x = (x - vp->left + 1) * 2 + vp->virtual_left;
-+//			y = (y - vp->top  + 1) * 2 + vp->virtual_top;
- 			FOR_ALL_TOWNS(t) {
- 				if (y >= t->sign.top &&
- 						y < t->sign.top + 24 &&
-@@ -1846,8 +2003,8 @@
- 
- 		case ZOOM_LVL_OUT_4X:
- 		case ZOOM_LVL_OUT_8X:
--			x = ScaleByZoom(x - vp->left + ScaleByZoom(1, vp->zoom) - 1, vp->zoom) + vp->virtual_left;
--			y = ScaleByZoom(y - vp->top  + ScaleByZoom(1, vp->zoom) - 1, vp->zoom) + vp->virtual_top;
-+//			x = ScaleByZoom(x - vp->left + ScaleByZoom(1, vp->zoom) - 1, vp->zoom) + vp->virtual_left;
-+//			y = ScaleByZoom(y - vp->top  + ScaleByZoom(1, vp->zoom) - 1, vp->zoom) + vp->virtual_top;
- 
- 			FOR_ALL_TOWNS(t) {
- 				if (y >= t->sign.top &&
-@@ -1892,6 +2049,32 @@
- 	bool ret = false;
- 
- 	switch (vp->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_STATIONS(st) {
-+				if (y >= st->sign.top &&
-+						y < st->sign.top + 12 &&
-+						x >= st->sign.left &&
-+						x < st->sign.left + st->sign.width_normal) {
-+					ShowStationViewWindow(st->index);
-+					return true;
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_STATIONS(st) {
-+				if (y >= st->sign.top &&
-+						y < st->sign.top + 12 &&
-+						x >= st->sign.left &&
-+						x < st->sign.left + st->sign.width_normal) {
-+					ShowStationViewWindow(st->index);
-+					return true;
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			x = x - vp->left + vp->virtual_left;
- 			y = y - vp->top  + vp->virtual_top;
-@@ -1951,6 +2134,32 @@
- 	if (!HasBit(_display_opt, DO_SHOW_SIGNS) || IsInvisibilitySet(TO_SIGNS) || _current_company == COMPANY_SPECTATOR) return false;
- 
- 	switch (vp->zoom) {
-+		case ZOOM_LVL_IN_4X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_SIGNS(si) {
-+				if (y >= si->sign.top &&
-+						y <  si->sign.top + 12 &&
-+						x >= si->sign.left &&
-+						x <  si->sign.left + si->sign.width_normal) {
-+					ShowRenameSignWindow(si);
-+					return true;
-+				}
-+			}
-+			break;
-+		case ZOOM_LVL_IN_2X:
-+			x = x - vp->left + vp->virtual_left;
-+			y = y - vp->top  + vp->virtual_top;
-+			FOR_ALL_SIGNS(si) {
-+				if (y >= si->sign.top &&
-+						y <  si->sign.top + 12 &&
-+						x >= si->sign.left &&
-+						x <  si->sign.left + si->sign.width_normal) {
-+					ShowRenameSignWindow(si);
-+					return true;
-+				}
-+			}
-+			break;
- 		case ZOOM_LVL_NORMAL:
- 			x = x - vp->left + vp->virtual_left;
- 			y = y - vp->top  + vp->virtual_top;
-@@ -2002,6 +2211,7 @@
+ 	const Town *t;
+ 	FOR_ALL_TOWNS(t) {
+@@ -1775,6 +1835,7 @@
  }
  
  
@@ -1721,7 +1342,7 @@ Index: src/viewport.cpp
  static bool CheckClickOnLandscape(const ViewPort *vp, int x, int y)
  {
  	Point pt = TranslateXYToTileCoord(vp, x, y);
-@@ -2921,3 +3131,6 @@
+@@ -2694,3 +2755,6 @@
  {
  	SetObjectToPlace(SPR_CURSOR_MOUSE, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
  }
@@ -1730,7 +1351,7 @@ Index: src/viewport.cpp
 +
 Index: src/blitter/32bpp_optimized.cpp
 ===================================================================
---- src/blitter/32bpp_optimized.cpp	(revision 17832)
+--- src/blitter/32bpp_optimized.cpp	(revision 18664)
 +++ src/blitter/32bpp_optimized.cpp	(working copy)
 @@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
@@ -2220,9 +1841,26 @@ Index: src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
+Index: src/blitter/32bpp_optimized.hpp
+===================================================================
+--- src/blitter/32bpp_optimized.hpp	(revision 18664)
++++ src/blitter/32bpp_optimized.hpp	(working copy)
+@@ -24,6 +24,12 @@
+ 
+ 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+ 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
++					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
++															SpriteLoader::Sprite 		*dest_sprite,
++															bool						 		prevent_alpha_bleeding);
++					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
++															 SpriteLoader::Sprite 			*dest_sprite);                                               
++					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+ 
+ 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+ 
 Index: src/blitter/base.hpp
 ===================================================================
---- src/blitter/base.hpp	(revision 17832)
+--- src/blitter/base.hpp	(revision 18664)
 +++ src/blitter/base.hpp	(working copy)
 @@ -20,6 +20,8 @@
  	BM_NORMAL,
@@ -2242,36 +1880,22 @@ Index: src/blitter/base.hpp
  	};
  
  	enum PaletteAnimation {
-Index: src/blitter/32bpp_optimized.hpp
-===================================================================
---- src/blitter/32bpp_optimized.hpp	(revision 17832)
-+++ src/blitter/32bpp_optimized.hpp	(working copy)
-@@ -24,6 +24,12 @@
- 
- 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
- 	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, Blitter::AllocatorProc *allocator);
-+					  void RescaleSpriteHalfSize( const SpriteLoader::Sprite *src_sprite, 
-+															SpriteLoader::Sprite 		*dest_sprite,
-+															bool						 		prevent_alpha_bleeding);
-+					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite	*src_sprite,
-+															 SpriteLoader::Sprite 			*dest_sprite);                                               
-+					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
- 
- 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
- 
 Index: src/blitter/32bpp_base.hpp
 ===================================================================
---- src/blitter/32bpp_base.hpp	(revision 17832)
+--- src/blitter/32bpp_base.hpp	(revision 18664)
 +++ src/blitter/32bpp_base.hpp	(working copy)
-@@ -14,6 +14,7 @@
+@@ -14,7 +14,10 @@
  
  #include "base.hpp"
  #include "../core/bitmath_func.hpp"
 +#include "../core/math_func.hpp"
  
++extern int _sat, _li;
++
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -103,6 +104,265 @@
+ 	/* virtual */ uint8 GetScreenDepth() { return 32; }
+@@ -103,6 +106,271 @@
  		return ComposeColourPANoCheck(colour, a, current);
  	}
  
@@ -2345,6 +1969,8 @@ Index: src/blitter/32bpp_base.hpp
 +	return ComposeColour(0xff,r,g,b);		
 +}
 +
++
++
 +/**
 +	* Blend a colour based on Zephyris' algorithm
 +	*/
@@ -2356,7 +1982,9 @@ Index: src/blitter/32bpp_base.hpp
 +    int h, s, l, u, v, w, a, b;
 +    bool rmax = false, gmax = false, bmax = false;
 +
-+    s = 175;
++    s = (175 + _sat);
++	if (s < 0) s = 0;
++	if (s > 255) s = 255;
 +	if (colour == current) {
 +		return colour;
 +	}
@@ -2400,7 +2028,9 @@ Index: src/blitter/32bpp_base.hpp
 +     * sprite
 +     */
 +    l = (cr + cb) / 2;
-+
++    l = (l + _li) % 256;
++	if (l < 0) l = 0;
++	if (l > 255) l = 255;
 +   
 +    if (s == 0) {
 +        red = l;
@@ -2539,7 +2169,7 @@ Index: src/blitter/32bpp_base.hpp
  	 * @param colour the colour already on the screen.
 Index: src/blitter/32bpp_anim.cpp
 ===================================================================
---- src/blitter/32bpp_anim.cpp	(revision 17832)
+--- src/blitter/32bpp_anim.cpp	(revision 18664)
 +++ src/blitter/32bpp_anim.cpp	(working copy)
 @@ -141,6 +141,7 @@
  
@@ -2559,9 +2189,9 @@ Index: src/blitter/32bpp_anim.cpp
  				default:
 Index: src/gfx.cpp
 ===================================================================
---- src/gfx.cpp	(revision 17832)
+--- src/gfx.cpp	(revision 18664)
 +++ src/gfx.cpp	(working copy)
-@@ -228,16 +228,17 @@
+@@ -230,16 +230,17 @@
  
  	static const byte colour = 255;
  
@@ -2588,16 +2218,16 @@ Index: src/gfx.cpp
  }
  
  /**
-@@ -961,7 +962,7 @@
+@@ -976,7 +977,7 @@
  		if (IsPrintable(c)) {
  			if (x >= dpi->left + dpi->width) goto skip_char;
- 			if (x + 26 >= dpi->left) {
+ 			if (x + _max_char_width >= dpi->left) {
 -				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_REMAP);
 +				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_OPAQUE);
  			}
  			x += GetCharacterWidth(size, c);
  		} else if (c == '\n') { // newline = {}
-@@ -1015,8 +1016,15 @@
+@@ -1030,8 +1031,15 @@
  void DrawSprite(SpriteID img, SpriteID pal, int x, int y, const SubSprite *sub)
  {
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -2614,7 +2244,7 @@ Index: src/gfx.cpp
  	} else if (pal != PAL_NONE) {
  		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
  		GfxMainBlitter(GetSprite(GB(img, 0, SPRITE_WIDTH), ST_NORMAL), x, y, BM_COLOUR_REMAP, sub);
-@@ -1047,15 +1055,18 @@
+@@ -1062,15 +1070,18 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -2639,7 +2269,7 @@ Index: src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -1069,42 +1080,45 @@
+@@ -1084,42 +1095,45 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -2697,7 +2327,7 @@ Index: src/gfx.cpp
  
  	BlitterFactoryBase::GetCurrentBlitter()->Draw(&bp, mode, dpi->zoom);
  }
-@@ -1517,7 +1531,10 @@
+@@ -1544,7 +1558,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -2711,7 +2341,7 @@ Index: src/gfx.cpp
  	if (right > _screen.width) right = _screen.width;
 Index: src/newgrf_commons.h
 ===================================================================
---- src/newgrf_commons.h	(revision 17832)
+--- src/newgrf_commons.h	(revision 18664)
 +++ src/newgrf_commons.h	(working copy)
 @@ -120,7 +120,7 @@
   */
@@ -2724,7 +2354,7 @@ Index: src/newgrf_commons.h
  		return PAL_NONE;
 Index: src/openttd.cpp
 ===================================================================
---- src/openttd.cpp	(revision 17832)
+--- src/openttd.cpp	(revision 18664)
 +++ src/openttd.cpp	(working copy)
 @@ -361,7 +361,7 @@
  	/* Setup main window */
@@ -2735,7 +2365,7 @@ Index: src/openttd.cpp
  	/* Load the default opening screen savegame */
  	if (SaveOrLoad("opntitle.dat", SL_LOAD, DATA_DIR) != SL_OK) {
  		GenerateWorld(GW_EMPTY, 64, 64); // if failed loading, make empty world.
-@@ -444,6 +444,10 @@
+@@ -445,6 +445,10 @@
  #endif
  	;
  
@@ -2746,3 +2376,45 @@ Index: src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
+Index: src/main_gui.cpp
+===================================================================
+--- src/main_gui.cpp	(revision 18664)
++++ src/main_gui.cpp	(working copy)
+@@ -39,6 +39,7 @@
+ 
+ #include "table/sprites.h"
+ #include "table/strings.h"
++#include "debug.h"
+ 
+ static int _rename_id = 1;
+ static int _rename_what = -1;
+@@ -204,6 +205,9 @@
+ 	_nested_main_window_widgets, lengthof(_nested_main_window_widgets)
+ );
+ 
++int _sat = 0;
++int _li = 0;
++
+ struct MainWindow : Window
+ {
+ 	MainWindow() : Window()
+@@ -353,7 +357,18 @@
+ 				}
+ 				break;
+ #endif
+-
++			case '3' : _sat = (_sat - 1) % 256;
++				DEBUG(misc, 0, "saturation delta %d ", _sat);
++				break;
++			case '4' : _sat = (_sat + 1) % 256;
++				DEBUG(misc, 0, "saturation delta %d ", _sat);
++				break;
++			case '5' : _li = (_li - 1) % 256;
++				DEBUG(misc, 0, "lightness delta %d ", _li);
++				break;
++			case '6' : _li = (_li + 1) % 256;
++				DEBUG(misc, 0, "lightness delta %d ", _li);
++				break;
+ 			default: return ES_NOT_HANDLED;
+ 		}
+ 		return ES_HANDLED;
