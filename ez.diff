@@ -1,8 +1,8 @@
-Cleanup: whitespace, style and merger errors (svn 19894)
+Codechange:update to trunk svn (20026)
 
-diff -r 9553d6ae91d8 src/blitter/32bpp_base.hpp
---- a/src/blitter/32bpp_base.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/blitter/32bpp_base.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/blitter/32bpp_base.hpp
+--- a/src/blitter/32bpp_base.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/blitter/32bpp_base.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -14,7 +14,12 @@
  
  #include "base.hpp"
@@ -184,9 +184,9 @@ diff -r 9553d6ae91d8 src/blitter/32bpp_base.hpp
  	 * Make a pixel looks like it is transparent.
  	 * @param colour the colour already on the screen.
  	 * @param nom the amount of transparency, nominator, makes colour lighter.
-diff -r 9553d6ae91d8 src/blitter/32bpp_optimized.cpp
---- a/src/blitter/32bpp_optimized.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/blitter/32bpp_optimized.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/blitter/32bpp_optimized.cpp
+--- a/src/blitter/32bpp_optimized.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/blitter/32bpp_optimized.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -10,6 +10,7 @@
  /** @file 32bpp_optimized.cpp Implementation of the optimized 32 bpp blitter. */
  
@@ -794,9 +794,9 @@ diff -r 9553d6ae91d8 src/blitter/32bpp_optimized.cpp
 +		}
 +	}
 +}
-diff -r 9553d6ae91d8 src/blitter/32bpp_optimized.hpp
---- a/src/blitter/32bpp_optimized.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/blitter/32bpp_optimized.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/blitter/32bpp_optimized.hpp
+--- a/src/blitter/32bpp_optimized.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/blitter/32bpp_optimized.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -24,6 +24,12 @@
  
  	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
@@ -810,9 +810,9 @@ diff -r 9553d6ae91d8 src/blitter/32bpp_optimized.hpp
  
  	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
  
-diff -r 9553d6ae91d8 src/blitter/base.hpp
---- a/src/blitter/base.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/blitter/base.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/blitter/base.hpp
+--- a/src/blitter/base.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/blitter/base.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -19,6 +19,8 @@
  	BM_NORMAL,
  	BM_COLOUR_REMAP,
@@ -831,9 +831,9 @@ diff -r 9553d6ae91d8 src/blitter/base.hpp
  	};
  
  	enum PaletteAnimation {
-diff -r 9553d6ae91d8 src/blitter/factory.hpp
---- a/src/blitter/factory.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/blitter/factory.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/blitter/factory.hpp
+--- a/src/blitter/factory.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/blitter/factory.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -83,7 +83,7 @@
  #if defined(DEDICATED)
  		const char *default_blitter = "null";
@@ -852,9 +852,9 @@ diff -r 9553d6ae91d8 src/blitter/factory.hpp
  		}
  #endif /* defined(WITH_COCOA) */
  #endif /* defined(DEDICATED) */
-diff -r 9553d6ae91d8 src/company_gui.cpp
---- a/src/company_gui.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/company_gui.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/company_gui.cpp
+--- a/src/company_gui.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/company_gui.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -959,7 +959,7 @@
  			NWidget(NWID_VERTICAL),
  				NWidget(NWID_HORIZONTAL),
@@ -887,9 +887,9 @@ diff -r 9553d6ae91d8 src/company_gui.cpp
  /**
   * Open the simple/advanced company manager face selection window
   *
-diff -r 9553d6ae91d8 src/elrail.cpp
---- a/src/elrail.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/elrail.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/elrail.cpp
+--- a/src/elrail.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/elrail.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -407,7 +407,7 @@
  						continue; // No neighbour, go looking for a better position
  					}
@@ -899,10 +899,10 @@ diff -r 9553d6ae91d8 src/elrail.cpp
  						elevation, IsTransparencySet(TO_CATENARY), -1, -1);
  
  					break; // We already have drawn a pylon, bail out
-diff -r 9553d6ae91d8 src/gfx.cpp
---- a/src/gfx.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/gfx.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -231,16 +231,17 @@
+diff -r e6e0bebd7198 src/gfx.cpp
+--- a/src/gfx.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/gfx.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -240,16 +240,17 @@
  
  	static const byte colour = 255;
  
@@ -929,16 +929,7 @@ diff -r 9553d6ae91d8 src/gfx.cpp
  }
  
  /**
-@@ -976,7 +977,7 @@
- 		if (IsPrintable(c)) {
- 			if (x >= dpi->left + dpi->width) goto skip_char;
- 			if (x + _max_char_width >= dpi->left) {
--				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_REMAP);
-+				GfxMainBlitter(GetGlyph(size, c), x, y, BM_COLOUR_OPAQUE);
- 			}
- 			x += GetCharacterWidth(size, c);
- 		} else if (c == '\n') { // newline = {}
-@@ -1031,8 +1032,15 @@
+@@ -1035,8 +1036,15 @@
  {
  	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
  	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
@@ -955,7 +946,7 @@ diff -r 9553d6ae91d8 src/gfx.cpp
  	} else if (pal != PAL_NONE) {
  		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
  		GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_COLOUR_REMAP, sub, real_sprite);
-@@ -1063,15 +1071,16 @@
+@@ -1067,15 +1075,16 @@
  	bp.sprite = sprite->data;
  	bp.sprite_width = sprite->width;
  	bp.sprite_height = sprite->height;
@@ -978,7 +969,7 @@ diff -r 9553d6ae91d8 src/gfx.cpp
  
  	bp.dst = dpi->dst_ptr;
  	bp.pitch = dpi->pitch;
-@@ -1085,43 +1094,43 @@
+@@ -1089,43 +1098,43 @@
  
  	y -= dpi->top;
  	/* Check for top overflow */
@@ -1035,7 +1026,7 @@ diff -r 9553d6ae91d8 src/gfx.cpp
  	/* We do not want to catch the mouse. However we also use that spritenumber for unknown (text) sprites. */
  	if (_newgrf_debug_sprite_picker.mode == SPM_REDRAW && sprite_id != SPR_CURSOR_MOUSE) {
  		Blitter *blitter = BlitterFactoryBase::GetCurrentBlitter();
-@@ -1561,7 +1570,10 @@
+@@ -1565,7 +1574,10 @@
  	byte *b;
  	int width;
  	int height;
@@ -1047,9 +1038,9 @@ diff -r 9553d6ae91d8 src/gfx.cpp
  	if (left < 0) left = 0;
  	if (top < 0) top = 0;
  	if (right > _screen.width) right = _screen.width;
-diff -r 9553d6ae91d8 src/main_gui.cpp
---- a/src/main_gui.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/main_gui.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/main_gui.cpp
+--- a/src/main_gui.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/main_gui.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -38,6 +38,7 @@
  
  #include "table/sprites.h"
@@ -1088,9 +1079,9 @@ diff -r 9553d6ae91d8 src/main_gui.cpp
  			default: return ES_NOT_HANDLED;
  		}
  		return ES_HANDLED;
-diff -r 9553d6ae91d8 src/openttd.cpp
---- a/src/openttd.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/openttd.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/openttd.cpp
+--- a/src/openttd.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/openttd.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -451,6 +451,10 @@
  #endif
  	;
@@ -1111,10 +1102,10 @@ diff -r 9553d6ae91d8 src/openttd.cpp
  	if (BlitterFactoryBase::SelectBlitter(blitter) == NULL)
  		StrEmpty(blitter) ?
  			usererror("Failed to autoprobe blitter") :
-diff -r 9553d6ae91d8 src/rail_cmd.cpp
---- a/src/rail_cmd.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/rail_cmd.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -1699,7 +1699,7 @@
+diff -r e6e0bebd7198 src/rail_cmd.cpp
+--- a/src/rail_cmd.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/rail_cmd.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -1704,7 +1704,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1123,7 +1114,7 @@ diff -r 9553d6ae91d8 src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1707,7 +1707,7 @@
+@@ -1712,7 +1712,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1132,7 +1123,7 @@ diff -r 9553d6ae91d8 src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1721,7 +1721,7 @@
+@@ -1726,7 +1726,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1141,7 +1132,7 @@ diff -r 9553d6ae91d8 src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
-@@ -1729,7 +1729,7 @@
+@@ -1734,7 +1734,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1150,7 +1141,7 @@ diff -r 9553d6ae91d8 src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
-@@ -2634,12 +2634,10 @@
+@@ -2639,12 +2639,10 @@
  
  		case RAIL_TILE_DEPOT:
  			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
@@ -1165,12 +1156,12 @@ diff -r 9553d6ae91d8 src/rail_cmd.cpp
 +			} else {
 +				td->rail_speed = 61;
  			}
+ 			td->build_date = Depot::GetByTile(tile)->build_date;
  			break;
- 
-diff -r 9553d6ae91d8 src/road_cmd.cpp
---- a/src/road_cmd.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/road_cmd.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -1195,24 +1195,31 @@
+diff -r e6e0bebd7198 src/road_cmd.cpp
+--- a/src/road_cmd.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/road_cmd.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -1197,24 +1197,31 @@
  			if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
  
  			const RailtypeInfo *rti = GetRailTypeInfo(GetRailType(ti->tile));
@@ -1210,7 +1201,7 @@ diff -r 9553d6ae91d8 src/road_cmd.cpp
  				DrawGroundSprite(road, pal);
  
  				SpriteID rail = GetCustomRailSprite(rti, ti->tile, RTSG_CROSSING) + axis;
-@@ -1224,13 +1231,11 @@
+@@ -1226,13 +1233,11 @@
  			}
  
  			SpriteID image = rti->base_sprites.crossing;
@@ -1225,10 +1216,10 @@ diff -r 9553d6ae91d8 src/road_cmd.cpp
  			if (AlwaysDrawUnpavedRoads(ti->tile, roadside)) {
  				image += 8;
  			} else {
-diff -r 9553d6ae91d8 src/roadveh_cmd.cpp
---- a/src/roadveh_cmd.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/roadveh_cmd.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -447,14 +447,14 @@
+diff -r e6e0bebd7198 src/roadveh_cmd.cpp
+--- a/src/roadveh_cmd.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/roadveh_cmd.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -448,14 +448,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1260,10 +1251,10 @@ diff -r 9553d6ae91d8 src/roadveh_cmd.cpp
  		SetWindowDirty(WC_VEHICLE_DEPOT, front->tile);
  		InvalidateWindowClassesData(WC_ROADVEH_LIST, 0);
  	} else {
-diff -r 9553d6ae91d8 src/saveload/misc_sl.cpp
---- a/src/saveload/misc_sl.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/saveload/misc_sl.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -52,7 +52,7 @@
+diff -r e6e0bebd7198 src/saveload/misc_sl.cpp
+--- a/src/saveload/misc_sl.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/saveload/misc_sl.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -53,7 +53,7 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
  
  	ViewPort *vp = w->viewport;
@@ -1272,7 +1263,7 @@ diff -r 9553d6ae91d8 src/saveload/misc_sl.cpp
  	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
  	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
  
-@@ -60,7 +60,6 @@
+@@ -61,7 +61,6 @@
  	MarkWholeScreenDirty();
  }
  
@@ -1280,9 +1271,9 @@ diff -r 9553d6ae91d8 src/saveload/misc_sl.cpp
  static const SaveLoadGlobVarList _date_desc[] = {
  	SLEG_CONDVAR(_date,                   SLE_FILE_U16 | SLE_VAR_I32,  0,  30),
  	SLEG_CONDVAR(_date,                   SLE_INT32,                  31, SL_MAX_VERSION),
-diff -r 9553d6ae91d8 src/sound.cpp
---- a/src/sound.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/sound.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/sound.cpp
+--- a/src/sound.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/sound.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -16,6 +16,7 @@
  #include "fios.h"
  #include "window_gui.h"
@@ -1313,9 +1304,9 @@ diff -r 9553d6ae91d8 src/sound.cpp
  			int width = (vp->virtual_width == 0 ? 1 : vp->virtual_width);
  			float panning = (float)screen_x / width;
  
-diff -r 9553d6ae91d8 src/sprite.h
---- a/src/sprite.h	Tue May 25 17:45:24 2010 +0000
-+++ b/src/sprite.h	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/sprite.h
+--- a/src/sprite.h	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/sprite.h	Sun Jun 27 17:57:27 2010 +0200
 @@ -120,7 +120,7 @@
   */
  static inline PaletteID SpriteLayoutPaletteTransform(SpriteID image, PaletteID pal, PaletteID default_pal)
@@ -1325,9 +1316,9 @@ diff -r 9553d6ae91d8 src/sprite.h
  		return (pal != 0 ? pal : default_pal);
  	} else {
  		return PAL_NONE;
-diff -r 9553d6ae91d8 src/spritecache.cpp
---- a/src/spritecache.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spritecache.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spritecache.cpp
+--- a/src/spritecache.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spritecache.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -10,6 +10,8 @@
  /** @file spritecache.cpp Caching of sprites. */
  
@@ -1665,9 +1656,9 @@ diff -r 9553d6ae91d8 src/spritecache.cpp
  	_compact_cache_counter = 0;
  }
  
-diff -r 9553d6ae91d8 src/spritecache.h
---- a/src/spritecache.h	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spritecache.h	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spritecache.h
+--- a/src/spritecache.h	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spritecache.h	Sun Jun 27 17:57:27 2010 +0200
 @@ -14,9 +14,8 @@
  
  #include "gfx_type.h"
@@ -1679,9 +1670,9 @@ diff -r 9553d6ae91d8 src/spritecache.h
  	uint16 width; ///< Width of the sprite.
  	int16 x_offs; ///< Number of pixels to shift the sprite to the right.
  	int16 y_offs; ///< Number of pixels to shift the sprite downwards.
-diff -r 9553d6ae91d8 src/spriteloader/grf.cpp
---- a/src/spriteloader/grf.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spriteloader/grf.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spriteloader/grf.cpp
+--- a/src/spriteloader/grf.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spriteloader/grf.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -38,7 +38,7 @@
  	return false;
  }
@@ -1691,9 +1682,9 @@ diff -r 9553d6ae91d8 src/spriteloader/grf.cpp
  {
  	/* Open the right file and go to the correct position */
  	FioSeekToFile(file_slot, file_pos);
-diff -r 9553d6ae91d8 src/spriteloader/grf.hpp
---- a/src/spriteloader/grf.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spriteloader/grf.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spriteloader/grf.hpp
+--- a/src/spriteloader/grf.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spriteloader/grf.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -19,7 +19,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
@@ -1703,9 +1694,9 @@ diff -r 9553d6ae91d8 src/spriteloader/grf.hpp
  };
  
  #endif /* SPRITELOADER_GRF_HPP */
-diff -r 9553d6ae91d8 src/spriteloader/png.cpp
---- a/src/spriteloader/png.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spriteloader/png.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spriteloader/png.cpp
+--- a/src/spriteloader/png.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spriteloader/png.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -35,23 +35,30 @@
  	DEBUG(sprite, 0, "WARNING (libpng): %s - %s", message, (char *)png_get_error_ptr(png_ptr));
  }
@@ -1802,9 +1793,9 @@ diff -r 9553d6ae91d8 src/spriteloader/png.cpp
  	return true;
  }
  
-diff -r 9553d6ae91d8 src/spriteloader/png.hpp
---- a/src/spriteloader/png.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spriteloader/png.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spriteloader/png.hpp
+--- a/src/spriteloader/png.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spriteloader/png.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -19,7 +19,7 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
@@ -1814,9 +1805,9 @@ diff -r 9553d6ae91d8 src/spriteloader/png.hpp
  };
  
  #endif /* SPRITELOADER_PNG_HPP */
-diff -r 9553d6ae91d8 src/spriteloader/spriteloader.hpp
---- a/src/spriteloader/spriteloader.hpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/spriteloader/spriteloader.hpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/spriteloader/spriteloader.hpp
+--- a/src/spriteloader/spriteloader.hpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/spriteloader/spriteloader.hpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -51,7 +51,8 @@
  	/**
  	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
@@ -1827,9 +1818,9 @@ diff -r 9553d6ae91d8 src/spriteloader/spriteloader.hpp
  
  	virtual ~SpriteLoader() { }
  };
-diff -r 9553d6ae91d8 src/table/settings.h
---- a/src/table/settings.h	Tue May 25 17:45:24 2010 +0000
-+++ b/src/table/settings.h	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/table/settings.h
+--- a/src/table/settings.h	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/table/settings.h	Sun Jun 27 17:57:27 2010 +0200
 @@ -273,7 +273,7 @@
  	 SDTG_BOOL("medium_aa",                  S, 0, _freetype.medium_aa,   false,    STR_NULL, NULL),
  	 SDTG_BOOL("large_aa",                   S, 0, _freetype.large_aa,    false,    STR_NULL, NULL),
@@ -1839,9 +1830,9 @@ diff -r 9553d6ae91d8 src/table/settings.h
  	  SDTG_VAR("player_face",    SLE_UINT32, S, 0, _company_manager_face,0,0,0xFFFFFFFF,0, STR_NULL, NULL),
  	  SDTG_VAR("transparency_options", SLE_UINT, S, 0, _transparency_opt,  0,0,0x1FF,0, STR_NULL, NULL),
  	  SDTG_VAR("transparency_locks", SLE_UINT, S, 0, _transparency_lock,   0,0,0x1FF,0, STR_NULL, NULL),
-diff -r 9553d6ae91d8 src/table/sprites.h
---- a/src/table/sprites.h	Tue May 25 17:45:24 2010 +0000
-+++ b/src/table/sprites.h	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/table/sprites.h
+--- a/src/table/sprites.h	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/table/sprites.h	Sun Jun 27 17:57:27 2010 +0200
 @@ -1427,7 +1427,7 @@
  	RECOLOUR_BIT = 30,          ///< toggles recolouring in the sprite
  	CUSTOM_BIT = 29,
@@ -1859,10 +1850,10 @@ diff -r 9553d6ae91d8 src/table/sprites.h
  };
  
  /** Masks needed for sprite operations.
-diff -r 9553d6ae91d8 src/vehicle.cpp
---- a/src/vehicle.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/vehicle.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -825,9 +825,12 @@
+diff -r e6e0bebd7198 src/vehicle.cpp
+--- a/src/vehicle.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/vehicle.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -830,9 +830,12 @@
  	PaletteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
@@ -1877,7 +1868,7 @@ diff -r 9553d6ae91d8 src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -864,11 +867,7 @@
+@@ -869,11 +872,7 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1890,7 +1881,7 @@ diff -r 9553d6ae91d8 src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -888,8 +887,8 @@
+@@ -893,8 +892,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -1901,10 +1892,10 @@ diff -r 9553d6ae91d8 src/vehicle.cpp
  
  	FOR_ALL_VEHICLES(v) {
  		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
-diff -r 9553d6ae91d8 src/vehicle_gui.cpp
---- a/src/vehicle_gui.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/vehicle_gui.cpp	Sun Jun 27 16:14:18 2010 +0200
-@@ -2146,7 +2146,7 @@
+diff -r e6e0bebd7198 src/vehicle_gui.cpp
+--- a/src/vehicle_gui.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/vehicle_gui.cpp	Sun Jun 27 17:57:27 2010 +0200
+@@ -2142,7 +2142,7 @@
  			case VVW_WIDGET_CENTER_MAIN_VIEH: {// center main view
  				const Window *mainwindow = FindWindowById(WC_MAIN_WINDOW, 0);
  				/* code to allow the main window to 'follow' the vehicle if the ctrl key is pressed */
@@ -1913,9 +1904,9 @@ diff -r 9553d6ae91d8 src/vehicle_gui.cpp
  					mainwindow->viewport->follow_vehicle = v->index;
  				} else {
  					ScrollMainWindowTo(v->x_pos, v->y_pos, v->z_pos);
-diff -r 9553d6ae91d8 src/viewport.cpp
---- a/src/viewport.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/viewport.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/viewport.cpp
+--- a/src/viewport.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/viewport.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -127,7 +127,7 @@
  /** Data structure storing rendering information */
  struct ViewportDrawer {
@@ -1932,7 +1923,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
 -	vp->virtual_left = x;
 -	vp->virtual_top = y;
  
- 	/* viewport is bound to its left top corner, so it must be rounded down (UnScaleByZoomLower)
+ 	/* Viewport is bound to its left top corner, so it must be rounded down (UnScaleByZoomLower)
  	 * else glitch described in FS#1412 will happen (offset by 1 pixel with zoom level > NORMAL)
  	 */
 -	old_left = UnScaleByZoomLower(old_left, vp->zoom);
@@ -2150,7 +2141,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  	if (bottom < sign->top ||
  			top   > sign->top + sign_height ||
  			right < sign->center - sign_half_width ||
-@@ -1216,7 +1225,14 @@
+@@ -1214,7 +1223,14 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -2166,7 +2157,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  	}
  }
  
-@@ -1280,16 +1296,22 @@
+@@ -1278,16 +1294,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -2192,7 +2183,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  		}
  	}
  }
-@@ -1300,13 +1322,27 @@
+@@ -1298,13 +1320,27 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -2224,7 +2215,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
-@@ -1324,20 +1360,17 @@
+@@ -1322,20 +1358,17 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -2249,7 +2240,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1364,7 +1397,6 @@
+@@ -1362,7 +1395,6 @@
  				);
  			}
  		}
@@ -2257,7 +2248,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_CENTER);
  	}
  }
-@@ -1372,27 +1404,41 @@
+@@ -1370,27 +1402,41 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -2311,7 +2302,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
-@@ -1427,7 +1473,8 @@
+@@ -1425,7 +1471,8 @@
   * If we do, the sprite memory will overflow. */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2321,7 +2312,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1438,12 +1485,7 @@
+@@ -1436,12 +1483,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -2335,7 +2326,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  	}
  }
  
-@@ -1555,26 +1597,29 @@
+@@ -1553,26 +1595,29 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2381,7 +2372,7 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  }
  
  /**
-@@ -1722,8 +1767,8 @@
+@@ -1720,8 +1765,8 @@
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, vp->zoom);
  	int sign_height = ScaleByZoom(VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM, vp->zoom);
  
@@ -2392,9 +2383,9 @@ diff -r 9553d6ae91d8 src/viewport.cpp
  
  	return
  			y >= sign->top &&
-diff -r 9553d6ae91d8 src/window.cpp
---- a/src/window.cpp	Tue May 25 17:45:24 2010 +0000
-+++ b/src/window.cpp	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/window.cpp
+--- a/src/window.cpp	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/window.cpp	Sun Jun 27 17:57:27 2010 +0200
 @@ -497,7 +497,9 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
@@ -2414,9 +2405,9 @@ diff -r 9553d6ae91d8 src/window.cpp
  }
  
  /**
-diff -r 9553d6ae91d8 src/zoom_type.h
---- a/src/zoom_type.h	Tue May 25 17:45:24 2010 +0000
-+++ b/src/zoom_type.h	Sun Jun 27 16:14:18 2010 +0200
+diff -r e6e0bebd7198 src/zoom_type.h
+--- a/src/zoom_type.h	Sun Jun 27 13:33:14 2010 +0000
++++ b/src/zoom_type.h	Sun Jun 27 17:57:27 2010 +0200
 @@ -16,8 +16,10 @@
  
  enum ZoomLevel {
