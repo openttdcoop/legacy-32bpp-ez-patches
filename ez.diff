@@ -1,4 +1,4 @@
-Codechange: improved diff format, closes #1014, (svn r20725)
+Fix: solve some warnings (hopefully)
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 --- a/src/blitter/32bpp_base.hpp
@@ -1360,7 +1360,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  		_spritecache = ReallocT(_spritecache, items);
  
 +		if (_spritecache == NULL) {
-+			error("Unable to allocate sprite cache of %d items (%d bytes)", items, items * sizeof(*_spritecache));
++			error("Unable to allocate sprite cache of %u items (" PRINTF_SIZE " bytes)", items, items * sizeof(*_spritecache));
 +		}
 +
  		/* Reset the new items and update the count */
@@ -1631,7 +1631,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  	 * bit is not used, so we can use it for other things. */
  	mem_req = Align(mem_req, S_FREE_MASK + 1);
 -
-+	DEBUG(sprite, 3, "AllocSprite, memreq=%d", mem_req);
++	DEBUG(sprite, 3, "AllocSprite, memreq=%u", mem_req);
  	for (;;) {
  		MemBlock *s;
  
