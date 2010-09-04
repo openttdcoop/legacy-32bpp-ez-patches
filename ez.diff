@@ -1,4 +1,4 @@
-Fix: solve another warning
+Fix: size_t to uint32 gave warning on 64bit compiling
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 --- a/src/blitter/32bpp_base.hpp
@@ -1792,8 +1792,8 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
 -	if (!LoadPNG(sprite, filename, (uint32)file_pos, false)) return false;
 -	if (!LoadPNG(sprite, filename, (uint32)file_pos, true)) return false;
 +
-+	if (!LoadPNG(sprite, filename, file_pos, false, zoom)) return false;
-+	if (!LoadPNG(sprite, filename, file_pos, true, zoom)) return false;
++	if (!LoadPNG(sprite, filename, (uint32)file_pos, false, zoom)) return false;
++	if (!LoadPNG(sprite, filename, (uint32)file_pos, true, zoom)) return false;
 +
  	return true;
  }
