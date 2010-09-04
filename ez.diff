@@ -1,4 +1,4 @@
-Fix: solve some warnings (hopefully)
+Fix: solve another warning
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 --- a/src/blitter/32bpp_base.hpp
@@ -1631,7 +1631,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  	 * bit is not used, so we can use it for other things. */
  	mem_req = Align(mem_req, S_FREE_MASK + 1);
 -
-+	DEBUG(sprite, 3, "AllocSprite, memreq=%u", mem_req);
++	DEBUG(sprite, 3, "AllocSprite, memreq=" PRINTF_SIZE, mem_req);
  	for (;;) {
  		MemBlock *s;
  
