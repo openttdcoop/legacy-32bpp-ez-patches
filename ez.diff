@@ -1,4 +1,4 @@
-Codechange: limit number of floating point operations and tests (svn 20725)
+Codechange: optimize CC blend in blitter #1468
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 --- a/src/blitter/32bpp_base.hpp
@@ -16,7 +16,7 @@ diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
  
  class Blitter_32bppBase : public Blitter {
  public:
-@@ -104,6 +109,136 @@
+@@ -104,6 +109,140 @@
  	}
  
  	/**
@@ -32,41 +32,50 @@ diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 +		int r_colour = GB(colour,  16, 8);
 +		int g_colour = GB(colour,  8,  8);
 +		int b_colour = GB(colour,  0,  8);
-+		int max_colour = 0;
-+		int min_colour = 0;
 +		int hue = 0;
++		int saturation = 0;
++		int lightness_colour = 0;
++
 +		/* Find max and min cc */
-+		min_colour = min(min(r_colour, g_colour),b_colour);
++		int min_colour = min(min(r_colour, g_colour),b_colour);
 +		
 +		if ((r_colour > g_colour) && (r_colour > b_colour)) {
-+			max_colour = r_colour;
 +			if (min_colour != r_colour) {
-+				hue = 60 * (g_colour - b_colour) / (max_colour - min_colour) + 360;
++				hue = 60 * (g_colour - b_colour) / (r_colour - min_colour) + 360;
 +				hue %= 360;
++				if ((r_colour + min_colour) <= 256) {
++					saturation = (r_colour - min_colour) * 255 / (r_colour + min_colour);
++				} else {
++					saturation = (r_colour - min_colour) * 255 / (512 - (r_colour + min_colour));
++				}
++			} else {
++				saturation = 0;
++				lightness_colour = r_colour;
 +			}
 +		} else if (g_colour > b_colour){
-+			max_colour = g_colour;
 +			if (min_colour != g_colour) {
-+				hue = 60 * (b_colour - r_colour) / (max_colour - min_colour) + 120;
++				hue = 60 * (b_colour - r_colour) / (g_colour - min_colour) + 120;
++				if ((g_colour + min_colour) <= 256) {
++					saturation = (g_colour - min_colour) * 255 / (g_colour + min_colour);
++				} else {
++					saturation = (g_colour - min_colour) * 255 / (512 - (g_colour + min_colour));
++				}
++			} else {
++				saturation = 0;
++				lightness_colour = g_colour;
 +			}
 +		} else {
-+			max_colour = b_colour;
 +			if (min_colour != b_colour) {
-+				hue = 60 * (r_colour - g_colour) / (max_colour - min_colour) + 240;
++				hue = 60 * (r_colour - g_colour) / (b_colour - min_colour) + 240;
++				if ((b_colour + min_colour) <= 256) {
++					saturation = (b_colour - min_colour) * 255 / (b_colour + min_colour);
++				} else {
++					saturation = (b_colour - min_colour) * 255 / (512 - (b_colour + min_colour));
++				}
++			} else {
++				saturation = 0;
++				lightness_colour = b_colour;
 +			}
-+		}
-+
-+		/* Lightness cc */
-+		float lightness_colour = (max_colour / 255.0 + min_colour / 255.0) / 2;
-+
-+		/* Saturation cc */
-+		float saturation;
-+		if (max_colour == min_colour) {
-+			saturation = 0;
-+		} else if (lightness_colour <= 0.5) {
-+			saturation = (max_colour / 255.0 - min_colour / 255.0) / (2.0 * lightness_colour);
-+		} else {
-+			saturation = (max_colour / 255.0 - min_colour / 255.0) / (2 - 2.0 * lightness_colour);
 +		}
 +
 +		/* Original colour */
@@ -78,75 +87,70 @@ diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 +		int max_current = max(max(r_current, g_current),b_current);
 +
 +		/* Lightness original colour */
-+		float lightness_current = (max_current + min_current) / (2 * 255.0);
++		int lightness_current = (max_current + min_current) / 2;
 +
 +		/* Converting to RGB */
-+		float red, green, blue;
++		unsigned int red, green, blue;
 +
 +		if (saturation == 0) {
-+			red = ((lightness_colour + lightness_current) / 2) * 255;
++			red = (lightness_colour + lightness_current) / 2;
 +			green = red;
 +			blue = red;
 +		} else {
 +			float q;
-+			if (lightness_current < 0.5) {
-+				q = lightness_current * (1 + saturation);
++			if (lightness_current < 128) {
++				q = lightness_current * (1 + saturation / 255.0);
 +			} else {
-+				q = lightness_current + saturation - (lightness_current * saturation);
++				q = lightness_current + saturation - (lightness_current * saturation / 255.0);
 +			}
 +
 +			float p = (2 * lightness_current) - q;
 +
-+			float hue_k = hue / 360.0;
-+
 +			/* Red */
-+			float hue_r = hue_k + 1.0/3.0;
-+			if (hue_r > 1.0) {
-+				hue_r -= 1;
++			int hue_r = hue + 120;
++			if (hue_r > 360) {
++				hue_r -= 360;
 +			}
-+			if (hue_r < 1.0/6.0) {
-+				red = p + ((q - p) * 6 * hue_r);
-+			} else if (hue_r < 0.5){
++			if (hue_r < 60) {
++				red = p + ((q - p) * hue_r / 60.0);
++			} else if (hue_r < 180){
 +				red = q;
-+			} else if (hue_r < 2.0/3.0) {
-+				red = p + ((q - p) * 6 * (2.0/3.0 - hue_r));
++			} else if (hue_r < 240) {
++				red = p + ((q - p) * (4.0 - hue_r / 60.0));
 +			} else {
 +				red = p;
 +			}
-+			red = red * 255;
 +
 +			/* Green */
-+			float hue_g = hue_k;
++			int hue_g = hue;
 +
-+			if (hue_g < 1.0/6.0) {
-+				green = p + ((q - p) * 6 * hue_g);
-+			} else if (hue_g < 0.5){
++			if (hue_g < 60) {
++				green = p + ((q - p) * hue_g / 60.0);
++			} else if (hue_g < 180){
 +				green = q;
-+			} else if (hue_g < 2.0/3.0) {
-+				green = p + ((q - p) * 6 * (2.0/3.0 - hue_g));
++			} else if (hue_g < 240) {
++				green = p + ((q - p) * (4.0 - hue_g / 60.0));
 +			} else {
 +				green = p;
 +			}
-+			green = green * 255;
 +
 +			/* Blue */
-+			float hue_b = hue_k - 1.0/3.0;
++			int hue_b = hue - 120;
 +			if (hue_b < 0.0) {
-+				hue_b += 1;
++				hue_b += 360;
 +			} 
-+			if (hue_b < 1.0/6.0) {
-+				blue = p + ((q - p) * 6 * hue_b);
-+			} else if (hue_b < 0.5){
++			if (hue_b < 60) {
++				blue = p + ((q - p) * hue_b / 60.0);
++			} else if (hue_b < 180){
 +				blue = q;
-+			} else if (hue_b < 2.0/3.0) {
-+				blue = p + ((q - p) * 6 * (2.0/3.0 - hue_b));
++			} else if (hue_b < 240) {
++				blue = p + ((q - p) * (4.0 - hue_b / 60.0));
 +			} else {
 +				blue = p;
 +			}
-+			blue = blue * 255;
 +		}
 +
-+		return ComposeColour(0xff, (unsigned int)red, (unsigned int)green, (unsigned int)blue);
++		return ComposeColour(0xff, red, green, blue);
 +	}
 +
 +	/**
