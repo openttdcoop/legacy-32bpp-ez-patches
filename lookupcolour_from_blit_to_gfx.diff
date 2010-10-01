@@ -1,0 +1,224 @@
+# HG changeset patch
+# Parent e7a06ab64a44ec9fd545be8b56c4674d4d630636
+diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
+--- a/src/blitter/32bpp_optimized.cpp
++++ b/src/blitter/32bpp_optimized.cpp
+@@ -15,6 +15,15 @@
+ #include "../core/math_func.hpp"
+ #include "32bpp_optimized.hpp"
+ 
++static const int MAX_PALETTE_TABLES = 50;
++
++struct RecolourTable {
++	SpriteID   id;
++	Colour     tables[256];
++} _rgb_palettes[MAX_PALETTE_TABLES] = {{0,{{0}}}};
++
++Colour _rgb_stringremap[3] = {{0}};
++
+ static FBlitter_32bppOptimized iFBlitter_32bppOptimized;
+ 
+ /**
+@@ -48,8 +57,7 @@
+ 	uint32 *dst = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
+ 
+ 	/* store so we don't have to access it via bp everytime (compiler assumes pointer aliasing) */
+-	const byte *remap = bp->remap;
+-
++	const Colour *remap = (const Colour *)bp->remap;
+ 	for (int y = 0; y < bp->height; y++) {
+ 		/* next dst line begins here */
+ 		uint32 *dst_ln = dst + bp->pitch;
+@@ -122,10 +130,10 @@
+ 								*dst = ComposeColourRGBANoCheck(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
+ 							}
+ 						} else {
+-							uint r = remap[m];
+-							if (r != 0) {
++							Colour r = remap[m];
++							if (r.a != 0) {
+ 								uint src_col = ComposeColour(src_px->a, src_px->r, src_px->g, src_px->b);
+-								uint comp_col = ComposeColourBlend(this->LookupColourInPalette(r), src_col);
++								uint comp_col = ComposeColourBlend(r.data, src_col);
+ 								*dst = ComposeColourPA(comp_col, src_px->a, *dst);
+ 							}
+ 						}
+@@ -141,8 +149,10 @@
+ 						if (m == 0) {
+ 							*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
+ 						} else {
+-							uint r = remap[m];
+-							if (r != 0) *dst = ComposeColourPA(this->LookupColourInPalette(r), src_px->a, *dst);
++							Colour r = remap[m];
++							if (r.a != 0) {
++								*dst = ComposeColourPA(r.data, src_px->a, *dst);
++							}
+ 						}
+ 						dst++;
+ 						src_px++;
+@@ -150,15 +160,14 @@
+ 					} while (--n != 0);
+ 					break;
+ 				case BM_TRANSPARENT:
+-					/* Make the current color a bit more black, so it looks like this image is transparent */
+ 					do {
+ 						uint m = *src_n;
+ 						if (m == 0) {
+ 							*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a / 2, *dst);
+ 						} else {
+ 							if (remap){
+-								uint r = remap[m];
+-								if (r != 0) *dst = ComposeColourPA(this->LookupColourInPalette(r), src_px->a / 2, *dst);
++								Colour r = remap[m];
++								if (r.a != 0) *dst = ComposeColourPA(r.data, src_px->a / 2, *dst);
+ 							}
+ 							else {
+ 								*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a / 2, *dst);
+@@ -703,3 +712,19 @@
+ 		}
+ 	}
+ }
++
++byte *Blitter_32bppOptimized::FillRGBPalette(SpriteID id, byte *remap_data)
++{
++	for (int idx = 0; (idx < MAX_PALETTE_TABLES); idx++) {
++		if ((id == _rgb_palettes[idx].id) || (_rgb_palettes[idx].id == 0)) { 
++			_rgb_palettes[idx].id = id;
++			for (int col_idx = 0; col_idx < 256; col_idx++) { 
++				_rgb_palettes[idx].tables[col_idx].data = this->LookupColourInPalette(remap_data[col_idx + 1]);
++			}
++			return (byte *)&(_rgb_palettes[idx].tables[0]);
++		}
++	}
++	error("No more rgb palette tables available");
++	return NULL;
++}
++
+diff --git a/src/blitter/32bpp_optimized.hpp b/src/blitter/32bpp_optimized.hpp
+--- a/src/blitter/32bpp_optimized.hpp
++++ b/src/blitter/32bpp_optimized.hpp
+@@ -30,7 +30,7 @@
+ 					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
+ 															 SpriteLoader::Sprite *dest_sprite);
+ 					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
+-
++					  byte *FillRGBPalette(SpriteID id, byte *remap_data);
+ 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+ 
+ 	template <BlitterMode mode> void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom);
+diff --git a/src/gfx.cpp b/src/gfx.cpp
+--- a/src/gfx.cpp
++++ b/src/gfx.cpp
+@@ -15,6 +15,7 @@
+ #include "genworld.h"
+ #include "zoom_func.h"
+ #include "blitter/factory.hpp"
++#include "blitter/32bpp_optimized.hpp"
+ #include "video/video_driver.hpp"
+ #include "strings_func.h"
+ #include "settings_type.h"
+@@ -54,6 +55,7 @@
+ static byte _stringwidth_table[FS_END][224]; ///< Cache containing width of often used characters. @see GetCharacterWidth()
+ DrawPixelInfo *_cur_dpi;
+ byte _colour_gradient[COLOUR_END][8];
++Colour _colour_gradient_32bpp[COLOUR_END][8];
+ 
+ static void GfxMainBlitter(const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub = NULL, SpriteID sprite_id = SPR_CURSOR_MOUSE);
+ 
+@@ -147,7 +149,7 @@
+  */
+ void GfxFillRect(int left, int top, int right, int bottom, int colour, FillRectMode mode)
+ {
+-	Blitter *blitter = BlitterFactoryBase::GetCurrentBlitter();
++	Blitter_32bppOptimized *blitter = (Blitter_32bppOptimized *)BlitterFactoryBase::GetCurrentBlitter();
+ 	const DrawPixelInfo *dpi = _cur_dpi;
+ 	void *dst;
+ 	const int otop = top;
+@@ -277,6 +279,7 @@
+ 	GfxDrawLine(x + dx3, y + dy3, x + dx3 + dx2, y + dy3 + dy2, colour);
+ }
+ 
++Colour _string_colourremap_32bpp[3];
+ /**
+  * Set the colour remap to be for the given colour.
+  * @param colour the new colour of the remap.
+@@ -292,7 +295,10 @@
+ 		_string_colourremap[1] = _string_colourmap[_use_palette][colour].text;
+ 		_string_colourremap[2] = _string_colourmap[_use_palette][colour].shadow;
+ 	}
+-	_colour_remap_ptr = _string_colourremap;
++	for (int i = 0; i < 3; i++) {
++		_string_colourremap_32bpp[i].data = _cur_palette[_string_colourremap[i]].data;
++	}
++	_colour_remap_ptr = (byte *)_string_colourremap_32bpp;
+ }
+ 
+ #if !defined(WITH_ICU)
+@@ -1066,7 +1072,6 @@
+ 
+ switch_colour:;
+ 	SetColourRemap(params.cur_colour);
+-
+ check_bounds:
+ 	if (y + _max_char_height <= dpi->top || dpi->top + dpi->height <= y) {
+ skip_char:;
+@@ -1135,12 +1140,12 @@
+  * @param y    Top coordinate of image
+  * @param sub  If available, draw only specified part of the sprite
+  */
+-void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub)
++ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub)
+ {
+ 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
+ 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
+ 		if (pal != PAL_NONE) {
+-			_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
++			_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR);
+ 		}
+ 		else {
+ 			_colour_remap_ptr = NULL;
+@@ -1149,7 +1154,8 @@
+ 	} else if (HasBit(img, PALETTE_MODIFIER_SHADOW)){
+ 		GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_SHADOW, sub, real_sprite);
+ 	} else if (pal != PAL_NONE) {
+-		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
++		_colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR);
++		memcpy(&_colour_remap_ptr, _colour_remap_ptr + 257, sizeof(_colour_remap_ptr));
+ 		if(pal >= PALETTE_RECOLOUR_START) {
+ 			GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_COLOUR_REMAP, sub, real_sprite);
+ 		} else {
+diff --git a/src/gfx_func.h b/src/gfx_func.h
+--- a/src/gfx_func.h
++++ b/src/gfx_func.h
+@@ -196,6 +196,7 @@
+  * 8 colours per gradient from darkest (0) to lightest (7)
+  */
+ extern byte _colour_gradient[COLOUR_END][8];
++extern Colour _colour_gradient_32bpp[COLOUR_END][8];
+ 
+ extern PaletteType _use_palette;
+ extern bool _palette_remap_grf[];
+diff --git a/src/spritecache.cpp b/src/spritecache.cpp
+--- a/src/spritecache.cpp
++++ b/src/spritecache.cpp
+@@ -253,7 +253,7 @@
+ 		 * GRFs which are the same as 257 byte recolour sprites, but with the last
+ 		 * 240 bytes zeroed.  */
+ 		static const int RECOLOUR_SPRITE_SIZE = 257;
+-		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num));
++		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num) + sizeof(byte *));
+ 
+ 		sc->ptr[zoom] = dest;
+ 
+@@ -272,6 +272,11 @@
+ 			FioReadBlock(dest, num);
+ 		}
+ 
++		if (BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth() == 32){
++			Blitter_32bppOptimized *blitter = (Blitter_32bppOptimized *)BlitterFactoryBase::GetCurrentBlitter();
++			byte *tmp_ptr = blitter->FillRGBPalette(id, dest);
++			memcpy(&dest[257], &tmp_ptr, sizeof (tmp_ptr));
++		}
+ 		return sc->ptr[zoom];
+ 	}
+ 
