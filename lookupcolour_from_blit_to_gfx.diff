@@ -1,5 +1,7 @@
 # HG changeset patch
-# Parent e7a06ab64a44ec9fd545be8b56c4674d4d630636
+# Parent 91d145f0a4588c678d5359b114bd3ce2096d1e0b
+Cleanup: remove experiment leftovers
+
 diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
 --- a/src/blitter/32bpp_optimized.cpp
 +++ b/src/blitter/32bpp_optimized.cpp
@@ -117,15 +119,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  #include "video/video_driver.hpp"
  #include "strings_func.h"
  #include "settings_type.h"
-@@ -54,6 +55,7 @@
- static byte _stringwidth_table[FS_END][224]; ///< Cache containing width of often used characters. @see GetCharacterWidth()
- DrawPixelInfo *_cur_dpi;
- byte _colour_gradient[COLOUR_END][8];
-+Colour _colour_gradient_32bpp[COLOUR_END][8];
- 
- static void GfxMainBlitter(const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub = NULL, SpriteID sprite_id = SPR_CURSOR_MOUSE);
- 
-@@ -147,7 +149,7 @@
+@@ -147,7 +148,7 @@
   */
  void GfxFillRect(int left, int top, int right, int bottom, int colour, FillRectMode mode)
  {
@@ -134,7 +128,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  	const DrawPixelInfo *dpi = _cur_dpi;
  	void *dst;
  	const int otop = top;
-@@ -277,6 +279,7 @@
+@@ -277,6 +278,7 @@
  	GfxDrawLine(x + dx3, y + dy3, x + dx3 + dx2, y + dy3 + dy2, colour);
  }
  
@@ -142,7 +136,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  /**
   * Set the colour remap to be for the given colour.
   * @param colour the new colour of the remap.
-@@ -292,7 +295,10 @@
+@@ -292,7 +294,10 @@
  		_string_colourremap[1] = _string_colourmap[_use_palette][colour].text;
  		_string_colourremap[2] = _string_colourmap[_use_palette][colour].shadow;
  	}
@@ -154,7 +148,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  }
  
  #if !defined(WITH_ICU)
-@@ -1066,7 +1072,6 @@
+@@ -1066,7 +1071,6 @@
  
  switch_colour:;
  	SetColourRemap(params.cur_colour);
@@ -162,7 +156,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  check_bounds:
  	if (y + _max_char_height <= dpi->top || dpi->top + dpi->height <= y) {
  skip_char:;
-@@ -1135,12 +1140,12 @@
+@@ -1135,12 +1139,12 @@
   * @param y    Top coordinate of image
   * @param sub  If available, draw only specified part of the sprite
   */
@@ -177,7 +171,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  		}
  		else {
  			_colour_remap_ptr = NULL;
-@@ -1149,7 +1154,8 @@
+@@ -1149,7 +1153,8 @@
  	} else if (HasBit(img, PALETTE_MODIFIER_SHADOW)){
  		GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_SHADOW, sub, real_sprite);
  	} else if (pal != PAL_NONE) {
@@ -187,17 +181,6 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  		if(pal >= PALETTE_RECOLOUR_START) {
  			GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_COLOUR_REMAP, sub, real_sprite);
  		} else {
-diff --git a/src/gfx_func.h b/src/gfx_func.h
---- a/src/gfx_func.h
-+++ b/src/gfx_func.h
-@@ -196,6 +196,7 @@
-  * 8 colours per gradient from darkest (0) to lightest (7)
-  */
- extern byte _colour_gradient[COLOUR_END][8];
-+extern Colour _colour_gradient_32bpp[COLOUR_END][8];
- 
- extern PaletteType _use_palette;
- extern bool _palette_remap_grf[];
 diff --git a/src/spritecache.cpp b/src/spritecache.cpp
 --- a/src/spritecache.cpp
 +++ b/src/spritecache.cpp
