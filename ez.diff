@@ -1,4 +1,4 @@
-Codechange: optimize CC blend in blitter #1468
+Fix:prevent position change when zooming in/out fast with mousewheel
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
 --- a/src/blitter/32bpp_base.hpp
@@ -828,7 +828,7 @@ diff --git a/src/blitter/factory.hpp b/src/blitter/factory.hpp
 diff --git a/src/company_gui.cpp b/src/company_gui.cpp
 --- a/src/company_gui.cpp
 +++ b/src/company_gui.cpp
-@@ -967,7 +967,7 @@
+@@ -983,7 +983,7 @@
  			NWidget(NWID_VERTICAL),
  				NWidget(NWID_HORIZONTAL),
  					NWidget(NWID_SPACER), SetFill(1, 0),
@@ -837,7 +837,7 @@ diff --git a/src/company_gui.cpp b/src/company_gui.cpp
  					NWidget(NWID_SPACER), SetFill(1, 0),
  				EndContainer(),
  				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
-@@ -1395,7 +1395,14 @@
+@@ -1411,7 +1411,14 @@
  				break;
  
  			case SCMFM_WIDGET_FACE:
@@ -852,7 +852,7 @@ diff --git a/src/company_gui.cpp b/src/company_gui.cpp
  				break;
  		}
  	}
-@@ -1552,6 +1559,7 @@
+@@ -1568,6 +1575,7 @@
  	_nested_select_company_manager_face_widgets, lengthof(_nested_select_company_manager_face_widgets)
  );
  
@@ -1039,6 +1039,17 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
  
  static int _rename_id = 1;
  static int _rename_what = -1;
+@@ -169,8 +170,8 @@
+ 			break;
+ 	}
+ 	if (vp != NULL) { // the vp can be null when how == ZOOM_NONE
+-		vp->virtual_left = w->viewport->scrollpos_x;
+-		vp->virtual_top = w->viewport->scrollpos_y;
++		vp->virtual_left = UnScaleByZoom(w->viewport->scrollpos_x, vp->zoom);
++		vp->virtual_top = UnScaleByZoom(w->viewport->scrollpos_y, vp->zoom);
+ 	}
+ 	/* Update the windows that have zoom-buttons to perhaps disable their buttons */
+ 	w->InvalidateData();
 @@ -210,6 +211,9 @@
  	_nested_main_window_widgets, lengthof(_nested_main_window_widgets)
  );
@@ -1072,7 +1083,7 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
 diff --git a/src/openttd.cpp b/src/openttd.cpp
 --- a/src/openttd.cpp
 +++ b/src/openttd.cpp
-@@ -450,6 +450,10 @@
+@@ -453,6 +453,10 @@
  #endif
  	;
  
@@ -1083,7 +1094,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -644,7 +648,9 @@
+@@ -647,7 +651,9 @@
  
  	DEBUG(misc, 1, "Loading blitter...");
  	if (blitter == NULL && _ini_blitter != NULL) blitter = strdup(_ini_blitter);
@@ -1206,7 +1217,7 @@ diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
 diff --git a/src/roadveh_cmd.cpp b/src/roadveh_cmd.cpp
 --- a/src/roadveh_cmd.cpp
 +++ b/src/roadveh_cmd.cpp
-@@ -384,14 +384,14 @@
+@@ -359,14 +359,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1799,7 +1810,7 @@ diff --git a/src/spriteloader/spriteloader.hpp b/src/spriteloader/spriteloader.h
 diff --git a/src/table/settings.h b/src/table/settings.h
 --- a/src/table/settings.h
 +++ b/src/table/settings.h
-@@ -274,7 +274,7 @@
+@@ -275,7 +275,7 @@
  	 SDTG_BOOL("medium_aa",                  S, 0, _freetype.medium_aa,   false,    STR_NULL, NULL),
  	 SDTG_BOOL("large_aa",                   S, 0, _freetype.large_aa,    false,    STR_NULL, NULL),
  #endif
@@ -1873,7 +1884,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
 --- a/src/vehicle_gui.cpp
 +++ b/src/vehicle_gui.cpp
-@@ -2252,7 +2252,7 @@
+@@ -2240,7 +2240,7 @@
  			case VVW_WIDGET_CENTER_MAIN_VIEH: {// center main view
  				const Window *mainwindow = FindWindowById(WC_MAIN_WINDOW, 0);
  				/* code to allow the main window to 'follow' the vehicle if the ctrl key is pressed */
@@ -2364,7 +2375,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
 diff --git a/src/window.cpp b/src/window.cpp
 --- a/src/window.cpp
 +++ b/src/window.cpp
-@@ -532,7 +532,9 @@
+@@ -533,7 +533,9 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -2375,7 +2386,7 @@ diff --git a/src/window.cpp b/src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -544,6 +546,7 @@
+@@ -545,6 +547,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
