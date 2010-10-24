@@ -1,6 +1,6 @@
 # HG changeset patch
-# Parent 91d145f0a4588c678d5359b114bd3ce2096d1e0b
-Cleanup: remove experiment leftovers
+# Parent a4436ae94c4c5ac1aed9368f4c25c7862f8740de
+Codechange: update to trunk svn r21028 to prevent patch fuzz
 
 diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
 --- a/src/blitter/32bpp_optimized.cpp
