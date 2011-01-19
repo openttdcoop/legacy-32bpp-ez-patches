@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent a4436ae94c4c5ac1aed9368f4c25c7862f8740de
+# Parent 9b37657f8f8de7b9c3b78342aab2643d7cb6cb64
 Codechange: update to trunk svn r21028 to prevent patch fuzz
 
 diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
@@ -136,19 +136,20 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  /**
   * Set the colour remap to be for the given colour.
   * @param colour the new colour of the remap.
-@@ -292,7 +294,10 @@
- 		_string_colourremap[1] = _string_colourmap[_use_palette][colour].text;
- 		_string_colourremap[2] = _string_colourmap[_use_palette][colour].shadow;
- 	}
+@@ -293,7 +295,11 @@
+ 
+ 	_string_colourremap[1] = raw_colour ? (byte)colour : _string_colourmap[_use_palette][colour];
+ 	_string_colourremap[2] = no_shade ? 0 : (_use_palette == PAL_DOS ? 1 : 215);
 -	_colour_remap_ptr = _string_colourremap;
 +	for (int i = 0; i < 3; i++) {
 +		_string_colourremap_32bpp[i].data = _cur_palette[_string_colourremap[i]].data;
-+	}
++	}	
++
 +	_colour_remap_ptr = (byte *)_string_colourremap_32bpp;
  }
  
  #if !defined(WITH_ICU)
-@@ -1066,7 +1071,6 @@
+@@ -1067,7 +1073,6 @@
  
  switch_colour:;
  	SetColourRemap(params.cur_colour);
@@ -156,7 +157,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  check_bounds:
  	if (y + _max_char_height <= dpi->top || dpi->top + dpi->height <= y) {
  skip_char:;
-@@ -1135,12 +1139,12 @@
+@@ -1136,12 +1141,12 @@
   * @param y    Top coordinate of image
   * @param sub  If available, draw only specified part of the sprite
   */
@@ -171,7 +172,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  		}
  		else {
  			_colour_remap_ptr = NULL;
-@@ -1149,7 +1153,8 @@
+@@ -1150,7 +1155,8 @@
  	} else if (HasBit(img, PALETTE_MODIFIER_SHADOW)){
  		GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_SHADOW, sub, real_sprite);
  	} else if (pal != PAL_NONE) {
@@ -184,16 +185,16 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
 diff --git a/src/spritecache.cpp b/src/spritecache.cpp
 --- a/src/spritecache.cpp
 +++ b/src/spritecache.cpp
-@@ -253,7 +253,7 @@
+@@ -258,7 +258,7 @@
  		 * GRFs which are the same as 257 byte recolour sprites, but with the last
  		 * 240 bytes zeroed.  */
  		static const int RECOLOUR_SPRITE_SIZE = 257;
--		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num));
-+		byte *dest = (byte *)AllocSprite(max(RECOLOUR_SPRITE_SIZE, num) + sizeof(byte *));
+-		byte *dest = (byte *)allocator(max(RECOLOUR_SPRITE_SIZE, num));
++		byte *dest = (byte *)allocator(max(RECOLOUR_SPRITE_SIZE, num) + sizeof(byte *));
  
- 		sc->ptr[zoom] = dest;
- 
-@@ -272,6 +272,11 @@
+ 		if (_palette_remap_grf[sc->file_slot]) {
+ 			byte *dest_tmp = AllocaM(byte, max(RECOLOUR_SPRITE_SIZE, num));
+@@ -275,6 +275,11 @@
  			FioReadBlock(dest, num);
  		}
  
@@ -202,6 +203,41 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
 +			byte *tmp_ptr = blitter->FillRGBPalette(id, dest);
 +			memcpy(&dest[257], &tmp_ptr, sizeof (tmp_ptr));
 +		}
- 		return sc->ptr[zoom];
+ 		return dest;
  	}
  
+@@ -322,8 +327,6 @@
+ 	SpriteLoaderGrf sprite_loader;
+ 	SpriteLoader::Sprite sprite, dst_sprite;
+ 
+-
+-	sc->type = sprite_type;
+ 	if (!sprite_loader.LoadSprite(&sprite, file_slot, file_pos, sprite_type, ZOOM_LVL_NORMAL)) {
+ 		return NULL;
+ 	}
+@@ -348,7 +351,7 @@
+ 		} while (zoom_idx < zoom);
+ 	}
+ 
+-	return BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, &AllocSprite);
++	return BlitterFactoryBase::GetCurrentBlitter()->Encode(&sprite, allocator);
+ }
+ 
+ 
+@@ -676,12 +679,12 @@
+ 		/* Update LRU */
+ 		sc->lru = ++_sprite_lru_counter;
+ 
+-	zoom = ZoomLevel(_cur_dpi->zoom);
+-	void *p = sc->ptr[zoom];
++		zoom = ZoomLevel(_cur_dpi->zoom);
++
+ 		/* Load the sprite, if it is not loaded, yet */
+-		if (p == NULL) p = ReadSprite(sc, sprite, type, AllocSprite);
++		if (sc->ptr[zoom] == NULL) sc->ptr[zoom] = ReadSprite(sc, sprite, type, AllocSprite);
+ 
+-		return p;
++		return sc->ptr[zoom];
+ 	} else {
+ 		/* Do not use the spritecache, but a different allocator. */
+ 		return ReadSprite(sc, sprite, type, allocator);

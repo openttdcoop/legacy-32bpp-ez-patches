@@ -4,7 +4,7 @@
 diff -r f82b5f5f89d2 -r d9fb0befa5ff findversion.sh
 --- a/findversion.sh	Sat Sep 04 01:41:26 2010 +0200
 +++ b/findversion.sh	Sat Sep 04 01:46:33 2010 +0200
-@@ -126,4 +126,4 @@
+@@ -140,4 +140,4 @@
  	REV="${REV}-$BRANCH"
  fi
  
