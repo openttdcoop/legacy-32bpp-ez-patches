@@ -770,7 +770,7 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
 diff --git a/src/blitter/32bpp_optimized.hpp b/src/blitter/32bpp_optimized.hpp
 --- a/src/blitter/32bpp_optimized.hpp
 +++ b/src/blitter/32bpp_optimized.hpp
-@@ -24,6 +24,12 @@
+@@ -23,6 +23,12 @@
  
  	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
  	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
@@ -1083,7 +1083,7 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
 diff --git a/src/openttd.cpp b/src/openttd.cpp
 --- a/src/openttd.cpp
 +++ b/src/openttd.cpp
-@@ -455,6 +455,10 @@
+@@ -454,6 +454,10 @@
  #endif
  	;
  
@@ -1094,7 +1094,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -651,7 +655,9 @@
+@@ -650,7 +654,9 @@
  
  	DEBUG(misc, 1, "Loading blitter...");
  	if (blitter == NULL && _ini_blitter != NULL) blitter = strdup(_ini_blitter);
@@ -1108,7 +1108,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
 diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
 --- a/src/rail_cmd.cpp
 +++ b/src/rail_cmd.cpp
-@@ -1715,7 +1715,7 @@
+@@ -1732,7 +1732,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1117,7 +1117,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1723,7 +1723,7 @@
+@@ -1740,7 +1740,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1126,7 +1126,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1737,7 +1737,7 @@
+@@ -1754,7 +1754,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1135,7 +1135,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
-@@ -1745,7 +1745,7 @@
+@@ -1762,7 +1762,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1144,7 +1144,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
-@@ -2655,12 +2655,10 @@
+@@ -2672,12 +2672,10 @@
  
  		case RAIL_TILE_DEPOT:
  			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
@@ -1217,7 +1217,7 @@ diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
 diff --git a/src/roadveh_cmd.cpp b/src/roadveh_cmd.cpp
 --- a/src/roadveh_cmd.cpp
 +++ b/src/roadveh_cmd.cpp
-@@ -364,14 +364,14 @@
+@@ -363,14 +363,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1243,7 +1243,7 @@ diff --git a/src/roadveh_cmd.cpp b/src/roadveh_cmd.cpp
 diff --git a/src/saveload/misc_sl.cpp b/src/saveload/misc_sl.cpp
 --- a/src/saveload/misc_sl.cpp
 +++ b/src/saveload/misc_sl.cpp
-@@ -53,7 +53,7 @@
+@@ -52,7 +52,7 @@
  	w->viewport->dest_scrollpos_y = _saved_scrollpos_y;
  
  	ViewPort *vp = w->viewport;
@@ -1252,7 +1252,7 @@ diff --git a/src/saveload/misc_sl.cpp b/src/saveload/misc_sl.cpp
  	vp->virtual_width = ScaleByZoom(vp->width, vp->zoom);
  	vp->virtual_height = ScaleByZoom(vp->height, vp->zoom);
  
-@@ -61,7 +61,6 @@
+@@ -60,7 +60,6 @@
  	MarkWholeScreenDirty();
  }
  
@@ -1626,7 +1626,7 @@ diff --git a/src/spritecache.h b/src/spritecache.h
 diff --git a/src/spriteloader/grf.cpp b/src/spriteloader/grf.cpp
 --- a/src/spriteloader/grf.cpp
 +++ b/src/spriteloader/grf.cpp
-@@ -38,7 +38,7 @@
+@@ -39,7 +39,7 @@
  	return false;
  }
  
@@ -1638,10 +1638,10 @@ diff --git a/src/spriteloader/grf.cpp b/src/spriteloader/grf.cpp
 diff --git a/src/spriteloader/grf.hpp b/src/spriteloader/grf.hpp
 --- a/src/spriteloader/grf.hpp
 +++ b/src/spriteloader/grf.hpp
-@@ -19,7 +19,7 @@
- 	/**
- 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
- 	 */
+@@ -17,7 +17,7 @@
+ /** Sprite loader for graphics coming from a (New)GRF. */
+ class SpriteLoaderGrf : public SpriteLoader {
+ public:
 -	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, SpriteType sprite_type);
 +	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, SpriteType sprite_type, ZoomLevel zoom);
  };
@@ -1749,10 +1749,10 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
 diff --git a/src/spriteloader/png.hpp b/src/spriteloader/png.hpp
 --- a/src/spriteloader/png.hpp
 +++ b/src/spriteloader/png.hpp
-@@ -19,7 +19,7 @@
- 	/**
- 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
- 	 */
+@@ -17,7 +17,7 @@
+ /** Sprite loader for graphics coming from a PNG image. */
+ class SpriteLoaderPNG : public SpriteLoader {
+ public:
 -	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, SpriteType sprite_type);
 +	bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, SpriteType sprite_type, ZoomLevel zoom);
  };
@@ -1761,9 +1761,9 @@ diff --git a/src/spriteloader/png.hpp b/src/spriteloader/png.hpp
 diff --git a/src/spriteloader/spriteloader.hpp b/src/spriteloader/spriteloader.hpp
 --- a/src/spriteloader/spriteloader.hpp
 +++ b/src/spriteloader/spriteloader.hpp
-@@ -51,7 +51,8 @@
- 	/**
- 	 * Load a sprite from the disk and return a sprite struct which is the same for all loaders.
+@@ -56,7 +56,8 @@
+ 	 * @param sprite_type The type of sprite we're trying to load.
+ 	 * @return true iff loading went okay.
  	 */
 -	virtual bool LoadSprite(SpriteLoader::Sprite *sprite, uint8 file_slot, size_t file_pos, SpriteType sprite_type) = 0;
 +
@@ -1806,7 +1806,7 @@ diff --git a/src/table/sprites.h b/src/table/sprites.h
 diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 --- a/src/vehicle.cpp
 +++ b/src/vehicle.cpp
-@@ -888,9 +888,12 @@
+@@ -898,9 +898,12 @@
  	PaletteID pal = PAL_NONE;
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
@@ -1821,7 +1821,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  }
  
  void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -927,11 +930,7 @@
+@@ -937,11 +940,7 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1834,7 +1834,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -951,8 +950,8 @@
+@@ -961,8 +960,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -1848,7 +1848,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
 --- a/src/vehicle_gui.cpp
 +++ b/src/vehicle_gui.cpp
-@@ -2480,7 +2480,7 @@
+@@ -2479,7 +2479,7 @@
  			case VVW_WIDGET_CENTER_MAIN_VIEH: {// center main view
  				const Window *mainwindow = FindWindowById(WC_MAIN_WINDOW, 0);
  				/* code to allow the main window to 'follow' the vehicle if the ctrl key is pressed */
@@ -1860,7 +1860,7 @@ diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
 diff --git a/src/viewport.cpp b/src/viewport.cpp
 --- a/src/viewport.cpp
 +++ b/src/viewport.cpp
-@@ -127,7 +127,7 @@
+@@ -126,7 +126,7 @@
  /** Data structure storing rendering information */
  struct ViewportDrawer {
  	DrawPixelInfo dpi;
@@ -1869,7 +1869,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	StringSpriteToDrawVector string_sprites_to_draw;
  	TileSpriteToDrawVector tile_sprites_to_draw;
  	ParentSpriteToDrawVector parent_sprites_to_draw;
-@@ -294,16 +294,16 @@
+@@ -293,16 +293,16 @@
  	int i;
  	int left, top, width, height;
  
@@ -1892,7 +1892,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  	old_left -= x;
  	old_top -= y;
-@@ -378,9 +378,8 @@
+@@ -377,9 +377,8 @@
  				return pt;
  	}
  
@@ -1904,7 +1904,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	a = y - x;
  	b = y + x;
  
-@@ -605,10 +604,13 @@
+@@ -604,10 +603,13 @@
  	Point pt = RemapCoords(x, y, z);
  	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
  
@@ -1922,7 +1922,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		return;
  
  	const ParentSpriteToDraw *pstd = _vd.parent_sprites_to_draw.End() - 1;
-@@ -649,7 +651,6 @@
+@@ -648,7 +650,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1930,7 +1930,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  
  	if (_vd.combine_sprites == SPRITE_COMBINE_ACTIVE) {
-@@ -670,10 +671,16 @@
+@@ -669,10 +670,16 @@
  		bottom          = RemapCoords(x + w          , y + h          , z + bb_offset_z).y + 1;
  	} else {
  		const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
@@ -1951,7 +1951,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  
  	if (_draw_bounding_boxes && (image != SPR_EMPTY_BOUNDING_BOX)) {
-@@ -685,10 +692,10 @@
+@@ -684,10 +691,10 @@
  	}
  
  	/* Do not add the sprite to the viewport, if it is outside */
@@ -1966,7 +1966,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		return;
  	}
  
-@@ -805,7 +812,6 @@
+@@ -804,7 +811,6 @@
  	/* make the sprites transparent with the right palette */
  	if (transparent) {
  		SetBit(image, PALETTE_MODIFIER_TRANSPARENT);
@@ -1974,7 +1974,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  
  	*_vd.last_child = _vd.child_screen_sprites_to_draw.Length();
-@@ -814,8 +820,8 @@
+@@ -813,8 +819,8 @@
  	cs->image = image;
  	cs->pal = pal;
  	cs->sub = sub;
@@ -1985,7 +1985,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	cs->next = -1;
  
  	/* Append the sprite to the active ChildSprite list.
-@@ -1034,25 +1040,28 @@
+@@ -1033,25 +1039,28 @@
  
  static void ViewportAddLandscape()
  {
@@ -2027,7 +2027,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  	direction = false;
  
-@@ -1060,7 +1069,7 @@
+@@ -1059,7 +1068,7 @@
  		int width_cur = width;
  		uint x_cur = x;
  		uint y_cur = y;
@@ -2036,7 +2036,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -1089,24 +1098,17 @@
+@@ -1088,24 +1097,17 @@
  					tt = GetTileType(tile);
  				}
  			}
@@ -2071,7 +2071,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  			y_cur += 0x10;
  			x_cur -= 0x10;
  		} while (--width_cur);
-@@ -1116,7 +1118,7 @@
+@@ -1115,7 +1117,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -2080,7 +2080,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  }
  
  /**
-@@ -1141,6 +1143,13 @@
+@@ -1140,6 +1142,13 @@
  	int sign_height     = ScaleByZoom(VPSM_TOP + FONT_HEIGHT_NORMAL + VPSM_BOTTOM, dpi->zoom);
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
  
@@ -2094,7 +2094,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	if (bottom < sign->top ||
  			top   > sign->top + sign_height ||
  			right < sign->center - sign_half_width ||
-@@ -1255,7 +1264,14 @@
+@@ -1254,7 +1263,14 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -2110,7 +2110,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  }
  
-@@ -1319,16 +1335,22 @@
+@@ -1318,16 +1334,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -2136,7 +2136,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		}
  	}
  }
-@@ -1339,13 +1361,27 @@
+@@ -1338,13 +1360,27 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -2168,7 +2168,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
-@@ -1363,20 +1399,17 @@
+@@ -1362,20 +1398,17 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -2193,7 +2193,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1403,7 +1436,6 @@
+@@ -1402,7 +1435,6 @@
  				);
  			}
  		}
@@ -2201,7 +2201,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_HOR_CENTER);
  	}
  }
-@@ -1411,27 +1443,41 @@
+@@ -1410,27 +1442,41 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -2255,7 +2255,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
-@@ -1468,7 +1514,8 @@
+@@ -1467,7 +1513,8 @@
   */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2265,7 +2265,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1479,12 +1526,7 @@
+@@ -1478,12 +1525,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -2279,7 +2279,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  }
  
-@@ -1596,26 +1638,29 @@
+@@ -1595,26 +1637,29 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2325,7 +2325,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  }
  
  /**
-@@ -1782,8 +1827,8 @@
+@@ -1786,8 +1831,8 @@
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, vp->zoom);
  	int sign_height = ScaleByZoom(VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM, vp->zoom);
  
@@ -2339,7 +2339,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
 diff --git a/src/window.cpp b/src/window.cpp
 --- a/src/window.cpp
 +++ b/src/window.cpp
-@@ -544,7 +544,9 @@
+@@ -541,7 +541,9 @@
  void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
  {
  	Window *w;
@@ -2350,7 +2350,7 @@ diff --git a/src/window.cpp b/src/window.cpp
  	_cur_dpi = &bk;
  
  	FOR_ALL_WINDOWS_FROM_BACK(w) {
-@@ -556,6 +558,7 @@
+@@ -553,6 +555,7 @@
  			DrawOverlappedWindow(w, left, top, right, bottom);
  		}
  	}
