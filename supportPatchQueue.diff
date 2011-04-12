@@ -1,6 +1,6 @@
 # HG changeset patch
-# Parent a6584bd9b8fa98dc491450288e90b69a580c8324
-# Date 1302473481 -7200
+# Parent a88d0ef8a8985c81ef60e703f12f0296d0e240a3
+# Date 1302634821 -7200
 
 Flyspray: http://bugs.openttd.org/task/4588
 - Support for Mercurial Patch Queue
@@ -22,7 +22,7 @@ diff --git a/findversion.sh b/findversion.sh
 -	TAG="`hg id -t | grep -v 'tip$'`"
 +	if [ "`hg id -t | grep qtip`" ]; then
 +		# Mercurial Patch Queue
-+		TAG="`hg id -t -rqparent | sed "s@qparent@@" | cut -f1 -d' '`"
++		TAG="`hg id -t -rqparent | sed "s/ /\n/g" | grep -v qparent | head -n1`"
 +		REV_NR=`LC_ALL=C hg --debug log -rqparent | grep "extra:       convert_revision=svn:" | sed "s/.*@//"`
 +		MODIFIED="2"
 +	else
