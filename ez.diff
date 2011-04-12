@@ -1,3 +1,7 @@
+# HG changeset patch
+# Parent 6d4f73fdc13b7c6a2bfcfc208e4aa575e93a0409
+# Date 1302623497 -7200
+
 Fix:prevent position change when zooming in/out fast with mousewheel
 
 diff --git a/src/blitter/32bpp_base.hpp b/src/blitter/32bpp_base.hpp
@@ -1060,7 +1064,7 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
  enum {
  	GHK_QUIT,
  	GHK_ABANDON,
-@@ -405,7 +409,18 @@
+@@ -403,7 +407,18 @@
  				}
  				break;
  #endif
@@ -1083,7 +1087,7 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
 diff --git a/src/openttd.cpp b/src/openttd.cpp
 --- a/src/openttd.cpp
 +++ b/src/openttd.cpp
-@@ -454,6 +454,10 @@
+@@ -452,6 +452,10 @@
  #endif
  	;
  
@@ -1094,7 +1098,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
  	MyGetOptData mgo(argc - 1, argv + 1, optformat);
  
  	while ((i = MyGetOpt(&mgo)) != -1) {
-@@ -650,7 +654,9 @@
+@@ -648,7 +652,9 @@
  
  	DEBUG(misc, 1, "Loading blitter...");
  	if (blitter == NULL && _ini_blitter != NULL) blitter = strdup(_ini_blitter);
@@ -1108,7 +1112,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
 diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
 --- a/src/rail_cmd.cpp
 +++ b/src/rail_cmd.cpp
-@@ -1732,7 +1732,7 @@
+@@ -1731,7 +1731,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1117,7 +1121,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1740,7 +1740,7 @@
+@@ -1739,7 +1739,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1126,7 +1130,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1754,7 +1754,7 @@
+@@ -1753,7 +1753,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1135,7 +1139,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
-@@ -1762,7 +1762,7 @@
+@@ -1761,7 +1761,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1144,7 +1148,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
-@@ -2672,12 +2672,10 @@
+@@ -2671,12 +2671,10 @@
  
  		case RAIL_TILE_DEPOT:
  			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
@@ -1164,7 +1168,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
 diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
 --- a/src/road_cmd.cpp
 +++ b/src/road_cmd.cpp
-@@ -1218,25 +1218,32 @@
+@@ -1217,25 +1217,32 @@
  		case ROAD_TILE_CROSSING: {
  			if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
  
@@ -1205,7 +1209,7 @@ diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
  				DrawGroundSprite(road, pal);
  
  				SpriteID rail = GetCustomRailSprite(rti, ti->tile, RTSG_CROSSING) + axis;
-@@ -1251,8 +1258,6 @@
+@@ -1250,8 +1257,6 @@
  				if (GetCrossingRoadAxis(ti->tile) == AXIS_X) image++;
  				if (IsCrossingBarred(ti->tile)) image += 2;
  
@@ -1217,7 +1221,7 @@ diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
 diff --git a/src/roadveh_cmd.cpp b/src/roadveh_cmd.cpp
 --- a/src/roadveh_cmd.cpp
 +++ b/src/roadveh_cmd.cpp
-@@ -363,14 +363,14 @@
+@@ -372,14 +372,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1296,7 +1300,7 @@ diff --git a/src/sound.cpp b/src/sound.cpp
 diff --git a/src/sprite.h b/src/sprite.h
 --- a/src/sprite.h
 +++ b/src/sprite.h
-@@ -128,7 +128,7 @@
+@@ -130,7 +130,7 @@
   */
  static inline PaletteID SpriteLayoutPaletteTransform(SpriteID image, PaletteID pal, PaletteID default_pal)
  {
@@ -1774,7 +1778,7 @@ diff --git a/src/spriteloader/spriteloader.hpp b/src/spriteloader/spriteloader.h
 diff --git a/src/table/settings.h b/src/table/settings.h
 --- a/src/table/settings.h
 +++ b/src/table/settings.h
-@@ -279,7 +279,7 @@
+@@ -280,7 +280,7 @@
  	 SDTG_BOOL("medium_aa",                  S, 0, _freetype.medium_aa,   false,    STR_NULL, NULL),
  	 SDTG_BOOL("large_aa",                   S, 0, _freetype.large_aa,    false,    STR_NULL, NULL),
  #endif
@@ -1820,8 +1824,8 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 +		v->x_extent, v->y_extent, v->z_extent, v->z_pos, false);
  }
  
- void ViewportAddVehicles(DrawPixelInfo *dpi)
-@@ -937,11 +940,7 @@
+ /**
+@@ -941,11 +944,7 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1834,7 +1838,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -961,8 +960,8 @@
+@@ -972,8 +971,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -1848,7 +1852,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
 --- a/src/vehicle_gui.cpp
 +++ b/src/vehicle_gui.cpp
-@@ -2479,7 +2479,7 @@
+@@ -2507,7 +2507,7 @@
  			case VVW_WIDGET_CENTER_MAIN_VIEH: {// center main view
  				const Window *mainwindow = FindWindowById(WC_MAIN_WINDOW, 0);
  				/* code to allow the main window to 'follow' the vehicle if the ctrl key is pressed */
