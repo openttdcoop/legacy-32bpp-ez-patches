@@ -1,12 +1,14 @@
 # HG changeset patch
-# Parent f82b5f5f89d2f9df060ce2ceb871b1c38e454385
+# Date 1302636840 -7200
+# Parent ac3f836029d465022b3d36d44b1f884e5825b44a
 # User Ammler
-diff -r f82b5f5f89d2 -r d9fb0befa5ff findversion.sh
---- a/findversion.sh	Sat Sep 04 01:41:26 2010 +0200
-+++ b/findversion.sh	Sat Sep 04 01:46:33 2010 +0200
-@@ -140,4 +140,4 @@
+
+diff --git a/findversion.sh b/findversion.sh
+--- a/findversion.sh
++++ b/findversion.sh
+@@ -151,4 +151,4 @@
  	REV="${REV}-$BRANCH"
  fi
  
 -echo "$REV	$REV_NR	$MODIFIED	$CLEAN_REV"
-+echo "$REV	$REV_NR	$MODIFIED	r$REV_NR"
++echo "$REV	$REV_NR	$MODIFIED	$REV"
