@@ -1,21 +1,21 @@
 # HG changeset patch
-# Parent a63230391776a0dbb642f8fc2f7467c638559d3b
+# Parent 4932dd86690039279650ee7dd73710d94f27d6ea
 # User Ammler
-# Date 1302623864 -7200
+# Date 1302724975 -7200
 
 Don't add a "M" to version string so we can join MP servers
 
 diff --git a/findversion.sh b/findversion.sh
 --- a/findversion.sh
 +++ b/findversion.sh
-@@ -141,10 +141,6 @@
+@@ -142,9 +142,7 @@
  	REV_NR=""
  fi
  
 -if [ "$MODIFIED" -eq "2" ]; then
 -	REV="${REV}M"
 -fi
--
++MODIFIED="2"
+ 
  CLEAN_REV=${REV}
  
- if [ -n "$BRANCH" ]; then

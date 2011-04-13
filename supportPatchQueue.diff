@@ -1,6 +1,6 @@
 # HG changeset patch
-# Parent a88d0ef8a8985c81ef60e703f12f0296d0e240a3
-# Date 1302634821 -7200
+# Parent 810a562c741f182429a6a4d210b64e3bfea1d0ba
+# Date 1302724930 -7200
 
 Flyspray: http://bugs.openttd.org/task/4588
 - Support for Mercurial Patch Queue
@@ -9,7 +9,7 @@ Flyspray: http://bugs.openttd.org/task/4588
 diff --git a/findversion.sh b/findversion.sh
 --- a/findversion.sh
 +++ b/findversion.sh
-@@ -106,22 +106,29 @@
+@@ -106,22 +106,30 @@
  	fi
  elif [ -d "$ROOT_DIR/.hg" ]; then
  	# We are a hg checkout
@@ -35,6 +35,7 @@ diff --git a/findversion.sh b/findversion.sh
 +	if [ -z "$REV_NR" ]; then
 +		# No rev? try alternative way
 +		REV_NR=`LC_ALL=C hg log -f -k "(svn r" -l 1 --template "{desc|firstline}\n" | grep "^(svn r[0-9]*)" | sed "s@.*(svn r\([0-9]*\)).*@\1@"`
++		TAG=`LC_ALL=C hg log -f -k "(svn r" -l 1 --template "{tags}\n" | sed "s/ /\n/g" | grep -v qparent | head -n1`
 +	fi
  	if [ -n "$TAG" ]; then
  		BRANCH=""
