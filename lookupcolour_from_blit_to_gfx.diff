@@ -1,8 +1,5 @@
-# HG changeset patch
-# Parent 9b37657f8f8de7b9c3b78342aab2643d7cb6cb64
-Codechange: update to trunk svn r21028 to prevent patch fuzz
-
 diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
+index f428bb9..cbb3ff4 100644
 --- a/src/blitter/32bpp_optimized.cpp
 +++ b/src/blitter/32bpp_optimized.cpp
 @@ -15,6 +15,15 @@
@@ -18,10 +15,10 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
 +
 +Colour _rgb_stringremap[3] = {{0}};
 +
+ /** Instantiation of the optimized 32bpp blitter factory. */
  static FBlitter_32bppOptimized iFBlitter_32bppOptimized;
  
- /**
-@@ -48,8 +57,7 @@
+@@ -49,8 +58,7 @@ inline void Blitter_32bppOptimized::Draw(const Blitter::BlitterParams *bp, ZoomL
  	uint32 *dst = (uint32 *)bp->dst + bp->top * bp->pitch + bp->left;
  
  	/* store so we don't have to access it via bp everytime (compiler assumes pointer aliasing) */
@@ -31,7 +28,7 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
  	for (int y = 0; y < bp->height; y++) {
  		/* next dst line begins here */
  		uint32 *dst_ln = dst + bp->pitch;
-@@ -122,10 +130,10 @@
+@@ -123,10 +131,10 @@ inline void Blitter_32bppOptimized::Draw(const Blitter::BlitterParams *bp, ZoomL
  								*dst = ComposeColourRGBANoCheck(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
  							}
  						} else {
@@ -45,7 +42,7 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
  								*dst = ComposeColourPA(comp_col, src_px->a, *dst);
  							}
  						}
-@@ -141,8 +149,10 @@
+@@ -142,8 +150,10 @@ inline void Blitter_32bppOptimized::Draw(const Blitter::BlitterParams *bp, ZoomL
  						if (m == 0) {
  							*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a, *dst);
  						} else {
@@ -58,7 +55,7 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
  						}
  						dst++;
  						src_px++;
-@@ -150,15 +160,14 @@
+@@ -151,15 +161,14 @@ inline void Blitter_32bppOptimized::Draw(const Blitter::BlitterParams *bp, ZoomL
  					} while (--n != 0);
  					break;
  				case BM_TRANSPARENT:
@@ -76,7 +73,7 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
  							}
  							else {
  								*dst = ComposeColourRGBA(src_px->r, src_px->g, src_px->b, src_px->a / 2, *dst);
-@@ -703,3 +712,19 @@
+@@ -704,3 +713,19 @@ void Blitter_32bppOptimized::FillRGBFromPalette(SpriteLoader::Sprite *sprite)
  		}
  	}
  }
@@ -97,9 +94,10 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
 +}
 +
 diff --git a/src/blitter/32bpp_optimized.hpp b/src/blitter/32bpp_optimized.hpp
+index da70055..0060ffc 100644
 --- a/src/blitter/32bpp_optimized.hpp
 +++ b/src/blitter/32bpp_optimized.hpp
-@@ -30,7 +30,7 @@
+@@ -31,7 +31,7 @@ public:
  					  void RescaleSpriteDoubleSize(const SpriteLoader::Sprite *src_sprite,
  															 SpriteLoader::Sprite *dest_sprite);
  					  void FillRGBFromPalette(SpriteLoader::Sprite *sprite);
@@ -109,17 +107,18 @@ diff --git a/src/blitter/32bpp_optimized.hpp b/src/blitter/32bpp_optimized.hpp
  
  	template <BlitterMode mode> void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom);
 diff --git a/src/gfx.cpp b/src/gfx.cpp
+index 8a6b8a1..158ee02 100644
 --- a/src/gfx.cpp
 +++ b/src/gfx.cpp
 @@ -15,6 +15,7 @@
- #include "genworld.h"
+ #include "progress.h"
  #include "zoom_func.h"
  #include "blitter/factory.hpp"
 +#include "blitter/32bpp_optimized.hpp"
  #include "video/video_driver.hpp"
  #include "strings_func.h"
  #include "settings_type.h"
-@@ -147,7 +148,7 @@
+@@ -147,7 +148,7 @@ void GfxScroll(int left, int top, int width, int height, int xo, int yo)
   */
  void GfxFillRect(int left, int top, int right, int bottom, int colour, FillRectMode mode)
  {
@@ -128,7 +127,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  	const DrawPixelInfo *dpi = _cur_dpi;
  	void *dst;
  	const int otop = top;
-@@ -277,6 +278,7 @@
+@@ -279,6 +280,7 @@ void DrawBox(int x, int y, int dx1, int dy1, int dx2, int dy2, int dx3, int dy3)
  	GfxDrawLine(x + dx3, y + dy3, x + dx3 + dx2, y + dy3 + dy2, colour);
  }
  
@@ -136,11 +135,12 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  /**
   * Set the colour remap to be for the given colour.
   * @param colour the new colour of the remap.
-@@ -293,7 +295,11 @@
+@@ -295,7 +297,12 @@ static void SetColourRemap(TextColour colour)
  
- 	_string_colourremap[1] = raw_colour ? (byte)colour : _string_colourmap[_use_palette][colour];
- 	_string_colourremap[2] = no_shade ? 0 : (_use_palette == PAL_DOS ? 1 : 215);
+ 	_string_colourremap[1] = raw_colour ? (byte)colour : _string_colourmap[colour];
+ 	_string_colourremap[2] = no_shade ? 0 : 1;
 -	_colour_remap_ptr = _string_colourremap;
++
 +	for (int i = 0; i < 3; i++) {
 +		_string_colourremap_32bpp[i].data = _cur_palette[_string_colourremap[i]].data;
 +	}	
@@ -149,7 +149,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  }
  
  #if !defined(WITH_ICU)
-@@ -1067,7 +1073,6 @@
+@@ -1069,7 +1076,6 @@ static int ReallyDoDrawString(const UChar *string, int x, int y, DrawStringParam
  
  switch_colour:;
  	SetColourRemap(params.cur_colour);
@@ -157,7 +157,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  check_bounds:
  	if (y + _max_char_height <= dpi->top || dpi->top + dpi->height <= y) {
  skip_char:;
-@@ -1136,12 +1141,12 @@
+@@ -1144,12 +1150,12 @@ Dimension GetSpriteSize(SpriteID sprid, Point *offset)
   * @param y    Top coordinate of image
   * @param sub  If available, draw only specified part of the sprite
   */
@@ -172,7 +172,7 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  		}
  		else {
  			_colour_remap_ptr = NULL;
-@@ -1150,7 +1155,8 @@
+@@ -1158,7 +1164,8 @@ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub)
  	} else if (HasBit(img, PALETTE_MODIFIER_SHADOW)){
  		GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_SHADOW, sub, real_sprite);
  	} else if (pal != PAL_NONE) {
@@ -183,9 +183,10 @@ diff --git a/src/gfx.cpp b/src/gfx.cpp
  			GfxMainBlitter(GetSprite(real_sprite, ST_NORMAL), x, y, BM_COLOUR_REMAP, sub, real_sprite);
  		} else {
 diff --git a/src/spritecache.cpp b/src/spritecache.cpp
+index 481b885..d02f131 100644
 --- a/src/spritecache.cpp
 +++ b/src/spritecache.cpp
-@@ -258,7 +258,7 @@
+@@ -259,7 +259,7 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
  		 * GRFs which are the same as 257 byte recolour sprites, but with the last
  		 * 240 bytes zeroed.  */
  		static const int RECOLOUR_SPRITE_SIZE = 257;
@@ -194,7 +195,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  
  		if (_palette_remap_grf[sc->file_slot]) {
  			byte *dest_tmp = AllocaM(byte, max(RECOLOUR_SPRITE_SIZE, num));
-@@ -275,6 +275,11 @@
+@@ -276,6 +276,11 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
  			FioReadBlock(dest, num);
  		}
  
@@ -206,7 +207,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  		return dest;
  	}
  
-@@ -322,8 +327,6 @@
+@@ -323,8 +328,6 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
  	SpriteLoaderGrf sprite_loader;
  	SpriteLoader::Sprite sprite, dst_sprite;
  
@@ -215,7 +216,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  	if (!sprite_loader.LoadSprite(&sprite, file_slot, file_pos, sprite_type, ZOOM_LVL_NORMAL)) {
  		return NULL;
  	}
-@@ -348,7 +351,7 @@
+@@ -349,7 +352,7 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
  		} while (zoom_idx < zoom);
  	}
  
@@ -224,7 +225,7 @@ diff --git a/src/spritecache.cpp b/src/spritecache.cpp
  }
  
  
-@@ -676,12 +679,12 @@
+@@ -677,12 +680,12 @@ void *GetRawSprite(SpriteID sprite, SpriteType type, AllocatorProc *allocator)
  		/* Update LRU */
  		sc->lru = ++_sprite_lru_counter;
  
