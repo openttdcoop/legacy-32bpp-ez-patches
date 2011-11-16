@@ -391,21 +391,24 @@ diff --git a/src/blitter/32bpp_optimized.cpp b/src/blitter/32bpp_optimized.cpp
  					dst_px++;
  					dst_n++;
  				} else if (len == 1) {
-@@ -353,12 +340,10 @@
+@@ -352,15 +339,9 @@
+ 
  		lengths[z][0] = (byte *)dst_px_ln - (byte *)dst_px_orig[z]; // all are aligned to 4B boundary
  		lengths[z][1] = (byte *)dst_n_ln  - (byte *)dst_n_orig[z];
- 
+-
 -		free(src_orig->data);
--		free((void *)src_orig);
+-		free(src_orig);
  	}
  
- 	uint len = 0; // total length of data
+-	uint len = 0; // total length of data
 -	for (ZoomLevel z = ZOOM_LVL_BEGIN; z < ZOOM_LVL_END; z++) {
-+	for (ZoomLevel z = ZOOM_LVL_BEGIN; z <= ZOOM_LVL_BEGIN; z++) {
- 		len += lengths[z][0] + lengths[z][1];
- 	}
+-		len += lengths[z][0] + lengths[z][1];
+-	}
++	uint len = lengths[ZOOM_LVL_BEGIN][0] + lengths[ZOOM_LVL_BEGIN][1]; // total length of data
  
-@@ -371,16 +356,351 @@
+ 	Sprite *dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + sizeof(SpriteData) + len);
+ 
+@@ -371,16 +352,351 @@
  
  	SpriteData *dst = (SpriteData *)dest_sprite->data;
  
@@ -1081,7 +1084,7 @@ diff --git a/src/main_gui.cpp b/src/main_gui.cpp
 diff --git a/src/openttd.cpp b/src/openttd.cpp
 --- a/src/openttd.cpp
 +++ b/src/openttd.cpp
-@@ -462,6 +462,10 @@
+@@ -523,6 +523,10 @@
  	_switch_mode_errorstr = INVALID_STRING_ID;
  	_config_file = NULL;
  
@@ -1095,7 +1098,7 @@ diff --git a/src/openttd.cpp b/src/openttd.cpp
 diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
 --- a/src/rail_cmd.cpp
 +++ b/src/rail_cmd.cpp
-@@ -1730,7 +1730,7 @@
+@@ -1731,7 +1731,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1104,7 +1107,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1738,7 +1738,7 @@
+@@ -1739,7 +1739,7 @@
  	RailFenceOffset rfo = RFO_FLAT_X;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SW : RFO_SLOPE_NE;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1113,7 +1116,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NW_SE(const TileInfo *ti, SpriteID base_image)
-@@ -1752,7 +1752,7 @@
+@@ -1753,7 +1753,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1122,7 +1125,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_SW(const TileInfo *ti, SpriteID base_image)
-@@ -1760,7 +1760,7 @@
+@@ -1761,7 +1761,7 @@
  	RailFenceOffset rfo = RFO_FLAT_Y;
  	if (ti->tileh != SLOPE_FLAT) rfo = (ti->tileh & SLOPE_S) ? RFO_SLOPE_SE : RFO_SLOPE_NW;
  	AddSortableSpriteToDraw(base_image + rfo, _drawtile_track_palette,
@@ -1131,7 +1134,7 @@ diff --git a/src/rail_cmd.cpp b/src/rail_cmd.cpp
  }
  
  static void DrawTrackFence_NE_SW(const TileInfo *ti, SpriteID base_image)
-@@ -2666,12 +2666,10 @@
+@@ -2668,12 +2668,10 @@
  
  		case RAIL_TILE_DEPOT:
  			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
@@ -1204,7 +1207,7 @@ diff --git a/src/road_cmd.cpp b/src/road_cmd.cpp
 diff --git a/src/roadveh_cmd.cpp b/src/roadveh_cmd.cpp
 --- a/src/roadveh_cmd.cpp
 +++ b/src/roadveh_cmd.cpp
-@@ -375,14 +375,14 @@
+@@ -391,14 +391,14 @@
  {
  #define MKIT(a, b, c, d) ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF) << 0)
  	static const uint32 _delta_xy_table[8] = {
@@ -1674,7 +1677,7 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
  
  	/* Check the header */
  	FioReadBlock(header, 8);
-@@ -126,11 +133,15 @@
+@@ -126,13 +133,16 @@
  	bit_depth  = png_get_bit_depth(png_ptr, info_ptr);
  	colour_type = png_get_color_type(png_ptr, info_ptr);
  
@@ -1689,9 +1692,11 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
 +		png_set_packing(png_ptr);
 +	}
  
- 	bool win_palette = false;
+-	bool win_palette = false;
  	if (!mask) {
-@@ -186,13 +197,17 @@
+ 		if (bit_depth == 16) png_set_strip_16(png_ptr);
+ 
+@@ -186,13 +196,12 @@
  		for (uint x = 0; x < png_get_image_width(png_ptr, info_ptr); x++) {
  			if (mask) {
  				if (row_pointer[x * sizeof(uint8)] != 0) {
@@ -1699,12 +1704,9 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
 -					dst[x].g = 0;
 -					dst[x].b = 0;
 -					/* Alpha channel is used from the original image (to allow transparency in remap colours) */
-+					/* Alpha channel is used from the original image (to allow transparency in remap colours),
-+					 * but don't overwrite sprite rgb data if mask is present. */
- 					extern const byte _palmap_w2d[];
- 					byte color = row_pointer[x * sizeof(uint8)];
+-					extern const byte _palmap_w2d[];
+-					byte color = row_pointer[x * sizeof(uint8)];
 -					dst[x].m = win_palette ? _palmap_w2d[color] : color;
-+
 +					/* Force the value of the palette if it is not in the correct range */
 +					if (bit_depth < 8 && (row_pointer[x * sizeof(uint8)] < 196 || row_pointer[x * sizeof(uint8)] > 203)) {
 +						dst[x].m = 199;
@@ -1714,7 +1716,7 @@ diff --git a/src/spriteloader/png.cpp b/src/spriteloader/png.cpp
  				}
  			} else {
  				dst[x].r = row_pointer[x * sizeof(uint32) + 0];
-@@ -209,11 +224,13 @@
+@@ -209,11 +218,13 @@
  	return true;
  }
  
@@ -1793,7 +1795,7 @@ diff --git a/src/table/sprites.h b/src/table/sprites.h
 diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 --- a/src/vehicle.cpp
 +++ b/src/vehicle.cpp
-@@ -903,9 +903,6 @@
+@@ -951,9 +951,6 @@
  
  	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
  
@@ -1803,7 +1805,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  	if (v->type == VEH_EFFECT) {
  		/* Check whether the vehicle shall be transparent/invisible due to GUI settings.
  		 * However, transparent smoke and bubbles look weird, so always hide them. */
-@@ -913,8 +910,12 @@
+@@ -961,8 +958,12 @@
  		if (to != TO_INVALID && (IsTransparencySet(to) || IsInvisibilitySet(to))) return;
  	}
  
@@ -1817,7 +1819,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  }
  
  /**
-@@ -955,11 +956,7 @@
+@@ -1003,11 +1004,7 @@
  			const Vehicle *v = _vehicle_position_hash[x + y]; // already masked & 0xFFF
  
  			while (v != NULL) {
@@ -1830,7 +1832,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
  					DoDrawVehicle(v);
  				}
  				v = v->next_hash;
-@@ -986,8 +983,8 @@
+@@ -1034,8 +1031,8 @@
  
  	if ((uint)(x -= vp->left) >= (uint)vp->width || (uint)(y -= vp->top) >= (uint)vp->height) return NULL;
  
@@ -1844,7 +1846,7 @@ diff --git a/src/vehicle.cpp b/src/vehicle.cpp
 diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
 --- a/src/vehicle_gui.cpp
 +++ b/src/vehicle_gui.cpp
-@@ -2533,7 +2533,7 @@
+@@ -2551,7 +2551,7 @@
  			case VVW_WIDGET_CENTER_MAIN_VIEH: {// center main view
  				const Window *mainwindow = FindWindowById(WC_MAIN_WINDOW, 0);
  				/* code to allow the main window to 'follow' the vehicle if the ctrl key is pressed */
@@ -2032,11 +2034,10 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		do {
  			TileType tt = MP_VOID;
  
-@@ -1088,24 +1097,17 @@
- 					tt = GetTileType(tile);
+@@ -1089,22 +1098,17 @@
  				}
  			}
--
+ 
 -			_vd.foundation_part = FOUNDATION_PART_NONE;
 -			_vd.foundation[0] = -1;
 -			_vd.foundation[1] = -1;
@@ -2049,7 +2050,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
 -					(y_cur == (int)MapMaxY() * TILE_SIZE && IsInsideMM(x_cur, 0, MapMaxX() * TILE_SIZE + 1))) {
 -				TileIndex tile = TileVirtXY(x_cur, y_cur);
 -				ti.tile = tile;
--				ti.tileh = GetTileSlope(tile, &ti.z);
+-				ti.tileh = GetTilePixelSlope(tile, &ti.z);
 -				tt = GetTileType(tile);
 +			pt = RemapCoords(ti.x,ti.y,ti.z);
 +			if (pt.y < bottom) {
@@ -2063,11 +2064,10 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
 +				nof_sprites_drawn++;
  			}
 -			if (ti.tile != INVALID_TILE) DrawTileSelection(&ti);
--
+ 
  			y_cur += 0x10;
  			x_cur -= 0x10;
- 		} while (--width_cur);
-@@ -1115,7 +1117,7 @@
+@@ -1115,7 +1119,7 @@
  		} else {
  			x += 0x10;
  		}
@@ -2076,7 +2076,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  }
  
  /**
-@@ -1140,6 +1142,13 @@
+@@ -1140,6 +1144,13 @@
  	int sign_height     = ScaleByZoom(VPSM_TOP + FONT_HEIGHT_NORMAL + VPSM_BOTTOM, dpi->zoom);
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
  
@@ -2090,7 +2090,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	if (bottom < sign->top ||
  			top   > sign->top + sign_height ||
  			right < sign->center - sign_half_width ||
-@@ -1262,7 +1271,14 @@
+@@ -1262,7 +1273,14 @@
  {
  	const TileSpriteToDraw *tsend = tstdv->End();
  	for (const TileSpriteToDraw *ts = tstdv->Begin(); ts != tsend; ++ts) {
@@ -2106,7 +2106,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  }
  
-@@ -1326,16 +1342,22 @@
+@@ -1326,16 +1344,22 @@
  
  static void ViewportDrawParentSprites(const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
  {
@@ -2132,7 +2132,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		}
  	}
  }
-@@ -1346,13 +1368,27 @@
+@@ -1346,13 +1370,27 @@
   */
  static void ViewportDrawBoundingBoxes(const ParentSpriteToSortVector *psd)
  {
@@ -2164,7 +2164,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  		DrawBox(        pt1.x,         pt1.y,
  		        pt2.x - pt1.x, pt2.y - pt1.y,
-@@ -1370,20 +1406,17 @@
+@@ -1370,20 +1408,17 @@
  	dp = *dpi;
  
  	zoom = dp.zoom;
@@ -2189,7 +2189,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		int h = VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM;
  
  		SetDParam(0, ss->params[0]);
-@@ -1410,7 +1443,6 @@
+@@ -1410,7 +1445,6 @@
  				);
  			}
  		}
@@ -2197,7 +2197,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		DrawString(x + VPSM_LEFT, x + w - 1 - VPSM_RIGHT, y + VPSM_TOP, ss->string, colour, SA_HOR_CENTER);
  	}
  }
-@@ -1418,27 +1450,41 @@
+@@ -1418,27 +1452,41 @@
  void ViewportDoDraw(const ViewPort *vp, int left, int top, int right, int bottom)
  {
  	DrawPixelInfo *old_dpi = _cur_dpi;
@@ -2251,7 +2251,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  
  	ViewportAddTownNames(&_vd.dpi);
  	ViewportAddStationNames(&_vd.dpi);
-@@ -1475,7 +1521,8 @@
+@@ -1475,7 +1523,8 @@
   */
  static void ViewportDrawChk(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2261,7 +2261,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  		if ((bottom - top) > (right - left)) {
  			int t = (top + bottom) >> 1;
  			ViewportDrawChk(vp, left, top, right, t);
-@@ -1486,12 +1533,7 @@
+@@ -1486,12 +1535,7 @@
  			ViewportDrawChk(vp, t, top, right, bottom);
  		}
  	} else {
@@ -2275,7 +2275,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  	}
  }
  
-@@ -1603,26 +1645,29 @@
+@@ -1603,26 +1647,29 @@
   */
  static void MarkViewportDirty(const ViewPort *vp, int left, int top, int right, int bottom)
  {
@@ -2321,7 +2321,7 @@ diff --git a/src/viewport.cpp b/src/viewport.cpp
  }
  
  /**
-@@ -1799,8 +1844,8 @@
+@@ -1799,8 +1846,8 @@
  	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, vp->zoom);
  	int sign_height = ScaleByZoom(VPSM_TOP + (small ? FONT_HEIGHT_SMALL : FONT_HEIGHT_NORMAL) + VPSM_BOTTOM, vp->zoom);
  
